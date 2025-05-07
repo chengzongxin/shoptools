@@ -27,3 +27,30 @@
 
 - 请确保有足够的权限访问和修改目标文件夹
 - 建议在删除重复链接前备份重要文件 
+
+## win打包命令
+pyinstaller --windowed --name "链接检测工具" link_checker.py
+
+## mac打包命令
+# 环境配置
+brew install python-tk  # 安装 tkinter 支持
+pip3 install pyinstaller  # 安装打包工具
+
+# 基础打包命令（不建议使用）
+# pyinstaller --windowed --name "链接检测工具" link_checker.py
+
+# 推荐的Mac打包命令
+pyinstaller --windowed --debug all --name "链接检测工具" link_checker.py
+
+# 如果需要以管理员权限打包
+# sudo pyinstaller --windowed --name "链接检测工具" link_checker.py
+
+## 常见问题
+1. ModuleNotFoundError: No module named '_tkinter'
+   解决方案：执行 `brew install python-tk`
+
+2. 如果安装后仍然报错，尝试：
+   ```bash
+   brew uninstall python@3.13
+   brew install python@3.13
+   ```
