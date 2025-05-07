@@ -39,6 +39,14 @@ class LinkCheckerApp:
         )
         self.delete_button.grid(row=0, column=2, pady=5, padx=5)
         
+        # 创建清空按钮
+        self.clear_button = ttk.Button(
+            self.main_frame,
+            text="清空",
+            command=self.clear_all
+        )
+        self.clear_button.grid(row=0, column=3, pady=5, padx=5)
+        
         # 创建结果显示区域
         self.result_frame = ttk.LabelFrame(self.main_frame, text="检测结果", padding="5")
         self.result_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
@@ -69,6 +77,7 @@ class LinkCheckerApp:
     def check_duplicate_links(self, folder_path):
         """检查文件夹中的重复链接"""
         # 清空文本框和存储的重复链接
+        self.text_area.config(state='normal')  # 临时启用文本框以清空内容
         self.text_area.delete(1.0, tk.END)
         self.duplicate_links.clear()
         
@@ -182,6 +191,23 @@ class LinkCheckerApp:
             
         except Exception as e:
             messagebox.showerror("错误", f"删除过程中出现错误：{str(e)}")
+
+    def clear_all(self):
+        """清空所有内容"""
+        # 清空当前文件夹
+        self.current_folder = ""
+        self.folder_label.config(text="未选择文件夹")
+        
+        # 清空文本框
+        self.text_area.config(state='normal')  # 临时启用文本框以清空内容
+        self.text_area.delete(1.0, tk.END)
+        self.text_area.config(state='disabled')  # 恢复只读状态
+        
+        # 清空重复链接数据
+        self.duplicate_links.clear()
+        
+        # 禁用删除按钮
+        self.delete_button.config(state='disabled')
 
 def main():
     root = tk.Tk()
