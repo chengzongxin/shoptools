@@ -41,10 +41,26 @@ function FillColumns_JSA() {
 
     // 定义映射字典（添加更多映射以覆盖可能的键）
     var dict = new Object();
+    dict["CUSHION"] = "CU-0608";
     dict["Cushion"] = "CU-0608";
+
     dict["SLEEVE"] = "BE-0608";
-    dict["CUSHION"] = "CU-0608"; // 添加大写键以处理大小写不敏感情况
-    dict["Sleeve"] = "BE-0608";  // 添加首字母大写情况
+    dict["Sleeve"] = "BE-0608";
+
+    dict["SH"] = "SH-0608";
+    dict["sh"] = "SH-0608";
+
+    dict["CB"] = "CB-0608";
+    dict["cb"] = "CB-0608";
+
+    dict["Sock"] = "SO-0608";
+    dict["sock"] = "SO-0608";
+
+    dict["drawing"] = "CB-0608";
+    dict["Drawing"] = "CB-0608";
+
+    dict["Scarf"] = "BE-0608";
+    dict["scarf"] = "BE-0608";
 
     var lastRow = sheet
         .Range("D" + sheet.Rows.Count)
