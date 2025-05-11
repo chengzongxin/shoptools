@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景圆形 -->
+    <circle cx="64" cy="64" r="60" fill="#4285f4"/>
+    
+    <!-- 复制图标 -->
+    <g fill="white" transform="translate(24, 24) scale(0.625)">
+        <path d="M32 0H8C3.58 0 0 3.58 0 8v32c0 4.42 3.58 8 8 8h24c4.42 0 8-3.58 8-8V8c0-4.42-3.58-8-8-8zm0 40H8V8h24v32z"/>
+        <path d="M72 0H48c-4.42 0-8 3.58-8 8v8h8V8h24v32H48v8h24c4.42 0 8-3.58 8-8V8c0-4.42-3.58-8-8-8z"/>
+    </g>
+</svg> 

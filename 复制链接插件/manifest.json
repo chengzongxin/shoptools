@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "图片链接复制工具",
+  "version": "1.0",
+  "description": "复制图片链接的Chrome扩展",
+  "permissions": [
+    "storage",
+    "clipboardWrite",
+    "notifications"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+} 

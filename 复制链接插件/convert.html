@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG to PNG Converter</title>
+</head>
+<body>
+    <canvas id="canvas48" width="48" height="48"></canvas>
+    <canvas id="canvas128" width="128" height="128"></canvas>
+    <script>
+        // 加载SVG
+        const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="64" cy="64" r="60" fill="#4285f4"/>
+    <g fill="white" transform="translate(24, 24) scale(0.625)">
+        <path d="M32 0H8C3.58 0 0 3.58 0 8v32c0 4.42 3.58 8 8 8h24c4.42 0 8-3.58 8-8V8c0-4.42-3.58-8-8-8zm0 40H8V8h24v32z"/>
+        <path d="M72 0H48c-4.42 0-8 3.58-8 8v8h8V8h24v32H48v8h24c4.42 0 8-3.58 8-8V8c0-4.42-3.58-8-8-8z"/>
+    </g>
+</svg>`;
+
+        // 创建图片对象
+        const img = new Image();
+        img.onload = function() {
+            // 绘制48x48版本
+            const ctx48 = document.getElementById('canvas48').getContext('2d');
+            ctx48.drawImage(img, 0, 0, 48, 48);
+            
+            // 绘制128x128版本
+            const ctx128 = document.getElementById('canvas128').getContext('2d');
+            ctx128.drawImage(img, 0, 0, 128, 128);
+            
+            // 下载PNG文件
+            const link48 = document.createElement('a');
+            link48.download = 'icon48.png';
+            link48.href = document.getElementById('canvas48').toDataURL('image/png');
+            link48.click();
+            
+            const link128 = document.createElement('a');
+            link128.download = 'icon128.png';
+            link128.href = document.getElementById('canvas128').toDataURL('image/png');
+            link128.click();
+        };
+        img.src = 'data:image/svg+xml;base64,' + btoa(svg);
+    </script>
+</body>
+</html> 

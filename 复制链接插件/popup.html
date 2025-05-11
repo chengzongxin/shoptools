@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            width: 200px;
+            padding: 10px;
+            font-family: Arial, sans-serif;
+        }
+        .switch {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .switch input {
+            margin-right: 8px;
+        }
+        .switch label {
+            font-size: 14px;
+            color: #333;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #3367d6;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .success {
+            background: #e6f4ea;
+            color: #137333;
+        }
+        .error {
+            background: #fce8e6;
+            color: #c5221f;
+        }
+    </style>
+</head>
+<body>
+    <div class="switch">
+        <input type="checkbox" id="pluginEnabled" checked>
+        <label for="pluginEnabled">启用插件</label>
+    </div>
+    <div class="switch">
+        <input type="checkbox" id="autoShowButton">
+        <label for="autoShowButton">自动显示按钮</label>
+    </div>
+    <button id="toggleNotepad">显示/隐藏记事本</button>
+    <div id="status" class="status" style="display: none;"></div>
+    <script src="popup.js"></script>
+</body>
+</html> 
