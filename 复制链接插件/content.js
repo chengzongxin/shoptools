@@ -1,7 +1,12 @@
 /**
- * 图片链接复制工具 v1.2.0
+ * 图片链接复制工具 v1.3.0
  * 
  * 更新日志：
+ * 
+ * v1.3.0 (2025-05-11)
+ * - 修复清空失败
+ * - 添加全局实例共享
+ * 
  * v1.2.0 (2024-03-21)
  * - 修复存储限制导致的链接丢失问题
  * - 优化存储机制，使用双重备份
@@ -20,7 +25,7 @@
 
 // 创建插件的命名空间
 window.ImageCopyPlugin = window.ImageCopyPlugin || {
-    version: '1.2.0',
+    version: '1.3.0',
     enabled: true, // 添加全局开关状态
     initialized: false,
     autoShowButton: false,
@@ -74,7 +79,16 @@ function showToast(message, type = 'success') {
     }
 
     // 设置样式
-    toast.style.backgroundColor = type === 'success' ? '#4285f4' : '#f44336';
+    switch(type) {
+        case 'warn':
+            toast.style.backgroundColor = '#ff9800'; // 警告使用橙色
+            break;
+        case 'error':
+            toast.style.backgroundColor = '#f44336'; // 错误使用红色
+            break;
+        default:
+            toast.style.backgroundColor = '#4285f4'; // 成功使用蓝色
+    }
     
     // 设置内容
     toast.textContent = message;
@@ -237,67 +251,12 @@ function createNotepad() {
                 const allLinks = links.join('\n');
                 try {
                     await navigator.clipboard.writeText(allLinks);
-                    // 在记事本中间显示提示
-                    const message = document.createElement('div');
-                    message.textContent = '已复制 ' + links.length + ' 个链接！';
-                    message.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background: rgba(66, 133, 244, 0.9);
-                        color: white;
-                        padding: 12px 24px;
-                        border-radius: 4px;
-                        font-size: 14px;
-                        text-align: center;
-                        z-index: 1000;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                        pointer-events: none;
-                    `;
-                    notepad.appendChild(message);
-                    setTimeout(() => message.remove(), 2000);
+                    showNotepadMessage(`已复制 ${links.length} 个链接！`, 'success');
                 } catch (error) {
-                    const message = document.createElement('div');
-                    message.textContent = '复制失败：' + error.message;
-                    message.style.cssText = `
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        background: rgba(244, 67, 54, 0.9);
-                        color: white;
-                        padding: 12px 24px;
-                        border-radius: 4px;
-                        font-size: 14px;
-                        text-align: center;
-                        z-index: 1000;
-                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                        pointer-events: none;
-                    `;
-                    notepad.appendChild(message);
-                    setTimeout(() => message.remove(), 2000);
+                    showNotepadMessage('复制失败：' + error.message, 'error');
                 }
             } else {
-                const message = document.createElement('div');
-                message.textContent = '记事本为空！';
-                message.style.cssText = `
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(244, 67, 54, 0.9);
-                    color: white;
-                    padding: 12px 24px;
-                    border-radius: 4px;
-                    font-size: 14px;
-                    text-align: center;
-                    z-index: 1000;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                    pointer-events: none;
-                `;
-                notepad.appendChild(message);
-                setTimeout(() => message.remove(), 2000);
+                showNotepadMessage('记事本为空！', 'warn');
             }
         };
 
@@ -364,11 +323,22 @@ function createNotepad() {
                 cursor: pointer;
             `;
             
-            confirmBtn.onclick = () => {
-                const content = notepad.querySelector('._notepadContent');
-                content.innerHTML = '';
-                confirmDialog.remove();
-                showToast('已清空所有链接！', 'success');
+            confirmBtn.onclick = async () => {
+                try {
+                    const content = notepad.querySelector('._notepadContent');
+                    // 清空DOM内容
+                    content.innerHTML = '';
+                    
+                    // 清空存储的链接
+                    await chrome.storage.local.remove('savedLinks');
+                    log('已清空存储的链接');
+                    
+                    confirmDialog.remove();
+                    showToast('已清空所有链接！', 'success');
+                } catch (error) {
+                    log('清空链接失败: ' + error.message, 'error');
+                    showToast('清空链接失败！', 'error');
+                }
             };
             
             cancelBtn.onclick = () => {
@@ -569,15 +539,8 @@ function loadLinksFromStorage() {
                         log(`发现 ${result.savedLinks.length - validLinks.length} 个无效链接`, 'warn');
                     }
                     
-                    // 清空当前记事本内容
-                    if (window.ImageCopyPlugin.notepad) {
-                        window.ImageCopyPlugin.notepad.content.innerHTML = '';
-                    }
-                    
-                    // 添加所有有效的链接
-                    validLinks.forEach(link => {
-                        addToNotepad(link);
-                    });
+                    // 直接使用 updateNotepadContent 更新记事本内容
+                    updateNotepadContent(validLinks);
                     
                     // 如果有效链接数量与原始数量不同，更新存储
                     if (validLinks.length !== result.savedLinks.length) {
@@ -597,92 +560,86 @@ function loadLinksFromStorage() {
     });
 }
 
-// 添加链接到记事本
+// 添加新的弹窗函数
+function showNotepadMessage(message, type = 'success') {
+    try {
+        if (!window.ImageCopyPlugin.notepad?.notepad) return;
+        
+        const notepad = window.ImageCopyPlugin.notepad.notepad;
+        const messageElement = document.createElement('div');
+        
+        // 设置消息样式
+        messageElement.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: white;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+
+        // 根据类型设置不同的背景色
+        switch(type) {
+            case 'warn':
+                messageElement.style.backgroundColor = 'rgba(255, 152, 0, 0.9)'; // 警告使用橙色
+                break;
+            case 'error':
+                messageElement.style.backgroundColor = 'rgba(244, 67, 54, 0.9)'; // 错误使用红色
+                break;
+            default:
+                messageElement.style.backgroundColor = 'rgba(66, 133, 244, 0.9)'; // 成功使用蓝色
+        }
+
+        messageElement.textContent = message;
+        notepad.appendChild(messageElement);
+
+        // 显示消息
+        requestAnimationFrame(() => {
+            messageElement.style.opacity = '1';
+        });
+
+        // 2秒后移除消息
+        setTimeout(() => {
+            messageElement.style.opacity = '0';
+            setTimeout(() => messageElement.remove(), 300);
+        }, 2000);
+    } catch (error) {
+        log('显示记事本消息失败: ' + error.message, 'error');
+    }
+}
+
+// 修改 addToNotepad 函数，使用新的弹窗方法
 async function addToNotepad(link) {
     try {
         if (!window.ImageCopyPlugin.notepad) {
             window.ImageCopyPlugin.notepad = createNotepad();
         }
 
-        const content = window.ImageCopyPlugin.notepad.content;
-        const linkCount = content.children.length + 1;
-        log(`准备添加第 ${linkCount} 个链接: ${link}`);
-
-        // 创建链接容器
-        const linkContainer = document.createElement('div');
-        linkContainer.style.cssText = `
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-            padding: 2px;
-            border-bottom: 1px solid #eee;
-        `;
-
-        // 创建序号
-        const number = document.createElement('span');
-        number.textContent = `${linkCount}.`;
-        number.style.cssText = `
-            color: #666;
-            min-width: 24px;
-        `;
-
-        // 创建链接文本
-        const linkText = document.createElement('a');
-        linkText.href = link;
-        linkText.textContent = link;
-        linkText.target = '_blank';
-        linkText.style.cssText = `
-            color: #0066cc;
-            text-decoration: none;
-            flex: 1;
-            word-break: break-all;
-            font-size: 12px;
-            line-height: 1.2;
-        `;
-
-        // 创建删除按钮
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '删除';
-        deleteBtn.title = '删除此链接';
-        deleteBtn.style.cssText = `
-            padding: 2px 6px;
-            border: 1px solid #ccc;
-            background: white;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 12px;
-        `;
-        deleteBtn.onclick = () => {
-            linkContainer.remove();
-            // 更新剩余链接的序号
-            const links = content.children;
-            for (let i = 0; i < links.length; i++) {
-                const numSpan = links[i].querySelector('span');
-                if (numSpan) {
-                    numSpan.textContent = `${i + 1}.`;
-                }
-            }
-            // 保存更新后的链接列表
-            saveLinksToStorage();
-        };
-
-        // 组装链接容器
-        linkContainer.appendChild(number);
-        linkContainer.appendChild(linkText);
-        linkContainer.appendChild(deleteBtn);
-        content.appendChild(linkContainer);
-
-        // 获取所有当前链接
-        const currentLinks = Array.from(content.querySelectorAll('a')).map(a => a.href);
-        log(`当前记事本共有 ${currentLinks.length} 个链接`);
+        // 获取当前存储的链接
+        const result = await chrome.storage.local.get(['savedLinks']);
+        const currentLinks = result.savedLinks || [];
         
-        // 等待保存完成
-        await saveLinksToStorage();
-        log(`第 ${linkCount} 个链接添加完成`);
-
+        // 添加新链接
+        if (!currentLinks.includes(link)) {
+            currentLinks.push(link);
+            // 更新存储
+            await chrome.storage.local.set({ 'savedLinks': currentLinks });
+            log(`新链接已添加: ${link}`);
+        } else {
+            log('链接已存在，跳过添加');
+            showNotepadMessage('链接已存在于记事本中！', 'warn');
+        }
     } catch (error) {
         log('添加链接到记事本失败: ' + error.message, 'error');
+        showNotepadMessage('添加链接失败！', 'error');
     }
 }
 
@@ -930,6 +887,13 @@ async function initialize() {
                     window.ImageCopyPlugin.notepad = notepad;
                     log('记事本创建成功');
                     
+                    // 订阅存储变化事件
+                    chrome.storage.onChanged.addListener((changes, namespace) => {
+                        if (namespace === 'local' && changes.savedLinks) {
+                            updateNotepadContent(changes.savedLinks.newValue || []);
+                        }
+                    });
+                    
                     // 等待加载保存的链接
                     await loadLinksFromStorage();
                     
@@ -1119,5 +1083,85 @@ function setupMutationObserver() {
         }
     } catch (error) {
         log('设置MutationObserver失败: ' + error.message, 'error');
+    }
+}
+
+// 添加新函数：更新记事本内容
+function updateNotepadContent(links) {
+    try {
+        if (!window.ImageCopyPlugin.notepad) return;
+        
+        const content = window.ImageCopyPlugin.notepad.content;
+        content.innerHTML = ''; // 清空当前内容
+        
+        // 重新添加所有链接
+        links.forEach((link, index) => {
+            // 创建链接容器
+            const linkContainer = document.createElement('div');
+            linkContainer.style.cssText = `
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin-bottom: 4px;
+                padding: 2px;
+                border-bottom: 1px solid #eee;
+            `;
+
+            // 创建序号
+            const number = document.createElement('span');
+            number.textContent = `${index + 1}.`;
+            number.style.cssText = `
+                color: #666;
+                min-width: 24px;
+            `;
+
+            // 创建链接文本
+            const linkText = document.createElement('a');
+            linkText.href = link;
+            linkText.textContent = link;
+            linkText.target = '_blank';
+            linkText.style.cssText = `
+                color: #0066cc;
+                text-decoration: none;
+                flex: 1;
+                word-break: break-all;
+                font-size: 12px;
+                line-height: 1.2;
+            `;
+
+            // 创建删除按钮
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '删除';
+            deleteBtn.title = '删除此链接';
+            deleteBtn.style.cssText = `
+                padding: 2px 6px;
+                border: 1px solid #ccc;
+                background: white;
+                cursor: pointer;
+                border-radius: 4px;
+                font-size: 12px;
+            `;
+            deleteBtn.onclick = async () => {
+                linkContainer.remove();
+                // 获取更新后的所有链接
+                const remainingLinks = Array.from(content.querySelectorAll('a')).map(a => a.href);
+                // 更新存储
+                await chrome.storage.local.set({ 'savedLinks': remainingLinks });
+                // 更新序号
+                content.querySelectorAll('span').forEach((span, i) => {
+                    span.textContent = `${i + 1}.`;
+                });
+            };
+
+            // 组装链接容器
+            linkContainer.appendChild(number);
+            linkContainer.appendChild(linkText);
+            linkContainer.appendChild(deleteBtn);
+            content.appendChild(linkContainer);
+        });
+        
+        log(`记事本已更新，当前共有 ${links.length} 个链接`);
+    } catch (error) {
+        log('更新记事本内容失败: ' + error.message, 'error');
     }
 } 
