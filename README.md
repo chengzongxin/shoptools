@@ -54,3 +54,14 @@ pyinstaller --windowed --debug all --name "链接检测工具" link_checker.py
    brew uninstall python@3.13
    brew install python@3.13
    ```
+
+3. 无法读取文件 .DS_Store 错误
+   - 这是正常现象，程序会自动跳过 Mac 系统文件
+   - 不会影响检测结果
+
+## 技术说明
+- 程序会自动跳过以下系统文件：
+  * .DS_Store (Mac系统文件)
+  * Thumbs.db (Windows缩略图文件)
+  * .git (Git版本控制文件)
+  * __pycache__ (Python缓存文件)
