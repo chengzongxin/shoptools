@@ -7,7 +7,7 @@ from collections import defaultdict
 class LinkCheckerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("链接重复检测工具")
+        self.root.title("链接重复检测工具 V1.1.0")
         self.root.geometry("800x600")
         
         # 存储当前检测到的重复链接
@@ -39,6 +39,14 @@ class LinkCheckerApp:
         )
         self.delete_button.grid(row=0, column=2, pady=5, padx=5)
         
+        # 创建清空按钮
+        self.clear_button = ttk.Button(
+            self.main_frame,
+            text="清空",
+            command=self.clear_all
+        )
+        self.clear_button.grid(row=0, column=3, pady=5, padx=5)
+        
         # 创建结果显示区域
         self.result_frame = ttk.LabelFrame(self.main_frame, text="检测结果", padding="5")
         self.result_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
@@ -69,15 +77,19 @@ class LinkCheckerApp:
     def check_duplicate_links(self, folder_path):
         """检查文件夹中的重复链接"""
         # 清空文本框和存储的重复链接
+        self.text_area.config(state='normal')
         self.text_area.delete(1.0, tk.END)
         self.duplicate_links.clear()
         
         # 用于存储链接和它们出现的文件
         link_dict = defaultdict(list)
-        file_links = defaultdict(lambda: defaultdict(int))  # 存储每个文件中的链接出现次数
+        file_links = defaultdict(lambda: defaultdict(int))
         
         # 遍历文件夹中的所有文件
         for filename in os.listdir(folder_path):
+            if should_skip_file(filename):  # 添加文件检查
+                continue
+            
             file_path = os.path.join(folder_path, filename)
             if os.path.isfile(file_path):
                 try:
@@ -88,6 +100,9 @@ class LinkCheckerApp:
                         for url in urls:
                             link_dict[url].append(filename)
                             file_links[filename][url] += 1
+                except UnicodeDecodeError:
+                    # 如果是二进制文件或编码不支持，直接跳过
+                    continue
                 except Exception as e:
                     self.text_area.insert(tk.END, f"无法读取文件 {filename}: {str(e)}\n")
         
@@ -98,13 +113,17 @@ class LinkCheckerApp:
         for url, files in link_dict.items():
             if len(set(files)) > 1:  # 确保链接出现在不同文件中
                 found_duplicates = True
+                # 按文件名排序，使用排序后的第一个文件作为主文件
+                unique_files = sorted(set(files))
+                
                 self.duplicate_links[url] = {
                     'type': 'cross_file',
-                    'files': list(set(files))
+                    'files': unique_files  # 使用排序后的文件列表
                 }
                 self.text_area.insert(tk.END, f"\n跨文件重复链接: {url}\n")
-                self.text_area.insert(tk.END, f"出现在以下文件中:\n")
-                for file in self.duplicate_links[url]['files']:
+                self.text_area.insert(tk.END, f"将保留在文件 {unique_files[0]} 中的链接\n")
+                self.text_area.insert(tk.END, f"将从以下文件中删除:\n")
+                for file in unique_files[1:]:
                     self.text_area.insert(tk.END, f"- {file}\n")
         
         # 然后检查单个文件中的重复链接
@@ -182,6 +201,56 @@ class LinkCheckerApp:
             
         except Exception as e:
             messagebox.showerror("错误", f"删除过程中出现错误：{str(e)}")
+
+    def clear_all(self):
+        """清空所有内容"""
+        # 清空当前文件夹
+        self.current_folder = ""
+        self.folder_label.config(text="未选择文件夹")
+        
+        # 清空文本框
+        self.text_area.config(state='normal')  # 临时启用文本框以清空内容
+        self.text_area.delete(1.0, tk.END)
+        self.text_area.config(state='disabled')  # 恢复只读状态
+        
+        # 清空重复链接数据
+        self.duplicate_links.clear()
+        
+        # 禁用删除按钮
+        self.delete_button.config(state='disabled')
+
+def should_skip_file(filename):
+    """检查是否应该跳过某些文件"""
+    skip_files = {
+        '.DS_Store',  # Mac系统文件
+        'Thumbs.db',  # Windows缩略图文件
+        '.git',       # Git相关文件
+        '__pycache__' # Python缓存文件
+    }
+    return any(skip in filename for skip in skip_files)
+
+def read_file_content(file_path):
+    """安全地读取文件内容"""
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except UnicodeDecodeError:
+        # 如果是二进制文件或编码不支持，直接跳过
+        return ""
+    except Exception as e:
+        print(f"无法读取文件 {file_path}: {str(e)}")
+        return ""
+
+def scan_directory(directory):
+    """扫描目录中的文件"""
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            if should_skip_file(file):
+                continue  # 跳过系统文件
+            
+            content = read_file_content(file_path)
+            # 处理文件内容的其他代码...
 
 def main():
     root = tk.Tk()
