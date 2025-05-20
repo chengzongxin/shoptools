@@ -158,6 +158,9 @@ class LinkCheckerApp:
         if not messagebox.askyesno("确认", "确定要删除重复的链接吗？\n这将保留每个链接的第一次出现，删除后续重复项。"):
             return
 
+        # 记录处理失败的文件
+        failed_files = []
+
         try:
             # 处理所有重复链接
             for url, info in self.duplicate_links.items():
@@ -165,37 +168,65 @@ class LinkCheckerApp:
                     # 处理跨文件的重复链接
                     for i, file in enumerate(info['files']):
                         file_path = os.path.join(self.current_folder, file)
-                        with open(file_path, 'r', encoding='utf-8') as f:
-                            content = f.read()
-                        
-                        if i == 0:  # 第一个文件保留所有链接
-                            continue
-                        
-                        # 删除重复的链接
-                        new_content = content.replace(url, '')
-                        
-                        # 写回文件
-                        with open(file_path, 'w', encoding='utf-8') as f:
-                            f.write(new_content)
+                        try:
+                            # 在 Mac 系统上修改文件权限
+                            if os.name == 'posix':  # Mac/Linux 系统
+                                try:
+                                    os.chmod(file_path, 0o666)  # 给予读写权限
+                                except Exception as e:
+                                    failed_files.append(f"{file} (无法修改权限: {str(e)})")
+                                    continue
+
+                            with open(file_path, 'r', encoding='utf-8') as f:
+                                content = f.read()
+                            
+                            if i == 0:  # 第一个文件保留所有链接
+                                continue
+                            
+                            # 删除重复的链接
+                            new_content = content.replace(url, '')
+                            
+                            # 写回文件
+                            with open(file_path, 'w', encoding='utf-8') as f:
+                                f.write(new_content)
+                        except Exception as e:
+                            failed_files.append(f"{file} ({str(e)})")
                 else:  # single_file
                     # 处理单个文件中的重复链接
                     file = info['files'][0]
                     file_path = os.path.join(self.current_folder, file)
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        content = f.read()
-                    
-                    # 保留第一个链接，删除其他重复的链接
-                    first_occurrence = content.find(url)
-                    if first_occurrence != -1:
-                        # 删除第一个链接之后的所有相同链接
-                        new_content = content[:first_occurrence + len(url)]
-                        new_content += content[first_occurrence + len(url):].replace(url, '')
-                        
-                        # 写回文件
-                        with open(file_path, 'w', encoding='utf-8') as f:
-                            f.write(new_content)
+                    try:
+                        # 在 Mac 系统上修改文件权限
+                        if os.name == 'posix':  # Mac/Linux 系统
+                            try:
+                                os.chmod(file_path, 0o666)  # 给予读写权限
+                            except Exception as e:
+                                failed_files.append(f"{file} (无法修改权限: {str(e)})")
+                                continue
 
-            messagebox.showinfo("成功", "重复链接已删除！")
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        
+                        # 保留第一个链接，删除其他重复的链接
+                        first_occurrence = content.find(url)
+                        if first_occurrence != -1:
+                            # 删除第一个链接之后的所有相同链接
+                            new_content = content[:first_occurrence + len(url)]
+                            new_content += content[first_occurrence + len(url):].replace(url, '')
+                            
+                            # 写回文件
+                            with open(file_path, 'w', encoding='utf-8') as f:
+                                f.write(new_content)
+                    except Exception as e:
+                        failed_files.append(f"{file} ({str(e)})")
+
+            # 显示处理结果
+            if failed_files:
+                error_message = "以下文件处理失败：\n" + "\n".join(failed_files)
+                messagebox.showwarning("警告", error_message)
+            else:
+                messagebox.showinfo("成功", "重复链接已删除！")
+            
             # 重新检查文件夹
             self.check_duplicate_links(self.current_folder)
             
