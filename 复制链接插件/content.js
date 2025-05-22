@@ -1,7 +1,10 @@
 /**
- * 图片链接复制工具 v1.3.0
+ * 图片链接复制工具 v1.4.0
  * 
  * 更新日志：
+ * v1.4.0 (2025-05-22)
+ * - 添加沉浸式按钮模式
+ * 
  * 
  * v1.3.0 (2025-05-11)
  * - 修复清空失败
@@ -25,10 +28,11 @@
 
 // 创建插件的命名空间
 window.ImageCopyPlugin = window.ImageCopyPlugin || {
-    version: '1.3.0',
+    version: '1.4.0',
     enabled: true, // 添加全局开关状态
     initialized: false,
     autoShowButton: false,
+    immersiveButton: false, // 添加沉浸式按钮模式开关
     notepad: null,
     observer: null
 };
@@ -36,7 +40,7 @@ window.ImageCopyPlugin = window.ImageCopyPlugin || {
 // 调试日志函数
 function log(message, type = 'info') {
     const prefix = '[图片复制插件]';
-    switch(type) {
+    switch (type) {
         case 'error':
             console.error(prefix, message);
             break;
@@ -79,7 +83,7 @@ function showToast(message, type = 'success') {
     }
 
     // 设置样式
-    switch(type) {
+    switch (type) {
         case 'warn':
             toast.style.backgroundColor = '#ff9800'; // 警告使用橙色
             break;
@@ -89,10 +93,10 @@ function showToast(message, type = 'success') {
         default:
             toast.style.backgroundColor = '#4285f4'; // 成功使用蓝色
     }
-    
+
     // 设置内容
     toast.textContent = message;
-    
+
     // 显示提示
     requestAnimationFrame(() => {
         toast.style.opacity = '1';
@@ -107,45 +111,57 @@ function showToast(message, type = 'success') {
 }
 
 // 创建复制按钮
-function createCopyButton() {
+function createCopyButton(img) {
     const button = document.createElement('button');
     button.className = 'copy-link-button';
     button.innerHTML = '复制链接';
-    
+
+    // 检查是否应该使用沉浸式按钮
+    const shouldUseImmersive = window.ImageCopyPlugin.immersiveButton &&
+        img.alt &&
+        img.alt.includes('Item preview');
+
     // 设置按钮样式
     Object.assign(button.style, {
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: shouldUseImmersive ? 'flex-start' : 'center',
+        justifyContent: shouldUseImmersive ? 'flex-end' : 'center',
         position: 'absolute',
-        top: '10px',
-        right: '10px',
+        top: shouldUseImmersive ? '0' : '10px',
+        right: shouldUseImmersive ? '0' : '10px',
+        bottom: shouldUseImmersive ? '0' : 'auto',
+        left: shouldUseImmersive ? '0' : 'auto',
+        width: shouldUseImmersive ? '100%' : 'auto',
+        height: shouldUseImmersive ? '100%' : 'auto',
         zIndex: '999999',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        color: 'white',
-        border: 'none',
-        borderRadius: '4px',
-        padding: '6px 12px',
-        fontSize: '12px',
+        backgroundColor: shouldUseImmersive ? 'transparent' : 'rgba(0, 0, 0, 0.7)',
+        color: shouldUseImmersive ? '#fff' : 'white',
+        border: shouldUseImmersive ? 'none' : 'none',
+        borderRadius: shouldUseImmersive ? '0' : '4px',
+        padding: shouldUseImmersive ? '10px' : '6px 12px',
+        fontSize: shouldUseImmersive ? '14px' : '12px',
         cursor: 'pointer',
         pointerEvents: 'auto',
         transition: 'all 0.2s ease',
         opacity: '0',
         transform: 'translateY(-10px)',
-        minWidth: '70px' // 确保按钮宽度不会因为文字变化而改变
+        minWidth: shouldUseImmersive ? 'auto' : '70px',
+        textShadow: shouldUseImmersive ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none'
     });
 
-    // 添加悬停效果
-    button.addEventListener('mouseenter', () => {
-        if (button.innerHTML === '复制链接') {
-            button.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        }
-    });
-    button.addEventListener('mouseleave', () => {
-        if (button.innerHTML === '复制链接') {
-            button.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        }
-    });
+    // 只为非沉浸式按钮添加悬停效果
+    if (!shouldUseImmersive) {
+        button.addEventListener('mouseenter', () => {
+            if (button.innerHTML === '复制链接') {
+                button.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            }
+        });
+        button.addEventListener('mouseleave', () => {
+            if (button.innerHTML === '复制链接') {
+                button.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+            }
+        });
+    }
 
     return button;
 }
@@ -289,18 +305,18 @@ function createNotepad() {
                 text-align: center;
                 min-width: 200px;
             `;
-            
+
             const message = document.createElement('p');
             message.textContent = '确定要清空所有链接吗？';
             message.style.marginBottom = '15px';
-            
+
             const buttonContainer = document.createElement('div');
             buttonContainer.style.cssText = `
                 display: flex;
                 gap: 10px;
                 justify-content: center;
             `;
-            
+
             const confirmBtn = document.createElement('button');
             confirmBtn.textContent = '确定';
             confirmBtn.style.cssText = `
@@ -311,7 +327,7 @@ function createNotepad() {
                 border-radius: 4px;
                 cursor: pointer;
             `;
-            
+
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = '取消';
             cancelBtn.style.cssText = `
@@ -322,17 +338,17 @@ function createNotepad() {
                 border-radius: 4px;
                 cursor: pointer;
             `;
-            
+
             confirmBtn.onclick = async () => {
                 try {
                     const content = notepad.querySelector('._notepadContent');
                     // 清空DOM内容
                     content.innerHTML = '';
-                    
+
                     // 清空存储的链接
                     await chrome.storage.local.remove('savedLinks');
                     log('已清空存储的链接');
-                    
+
                     confirmDialog.remove();
                     showToast('已清空所有链接！', 'success');
                 } catch (error) {
@@ -340,11 +356,11 @@ function createNotepad() {
                     showToast('清空链接失败！', 'error');
                 }
             };
-            
+
             cancelBtn.onclick = () => {
                 confirmDialog.remove();
             };
-            
+
             buttonContainer.appendChild(confirmBtn);
             buttonContainer.appendChild(cancelBtn);
             confirmDialog.appendChild(message);
@@ -484,7 +500,7 @@ function saveLinksToStorage() {
             if (window.ImageCopyPlugin.notepad) {
                 const content = window.ImageCopyPlugin.notepad.content;
                 const links = Array.from(content.querySelectorAll('a')).map(a => a.href);
-                
+
                 // 数据验证
                 if (!Array.isArray(links)) {
                     log('保存的链接数据格式错误', 'error');
@@ -494,9 +510,9 @@ function saveLinksToStorage() {
 
                 // 记录当前链接数量
                 log(`准备保存 ${links.length} 个链接`);
-                
+
                 // 保存到 chrome.storage
-                chrome.storage.local.set({ 'savedLinks': links }, function() {
+                chrome.storage.local.set({ 'savedLinks': links }, function () {
                     if (chrome.runtime.lastError) {
                         log('保存链接失败: ' + chrome.runtime.lastError.message, 'error');
                         reject(chrome.runtime.lastError);
@@ -520,8 +536,8 @@ function loadLinksFromStorage() {
     return new Promise((resolve, reject) => {
         try {
             log('开始从存储加载链接...');
-            
-            chrome.storage.local.get(['savedLinks'], function(result) {
+
+            chrome.storage.local.get(['savedLinks'], function (result) {
                 if (chrome.runtime.lastError) {
                     log('加载链接失败: ' + chrome.runtime.lastError.message, 'error');
                     reject(chrome.runtime.lastError);
@@ -530,24 +546,24 @@ function loadLinksFromStorage() {
 
                 if (result.savedLinks && Array.isArray(result.savedLinks) && result.savedLinks.length > 0) {
                     log(`从存储读取到 ${result.savedLinks.length} 个链接`);
-                    
+
                     // 验证链接数据
                     const validLinks = result.savedLinks.filter(link => typeof link === 'string' && link.startsWith('http'));
                     log(`验证后有效链接数量: ${validLinks.length}`);
-                    
+
                     if (validLinks.length !== result.savedLinks.length) {
                         log(`发现 ${result.savedLinks.length - validLinks.length} 个无效链接`, 'warn');
                     }
-                    
+
                     // 直接使用 updateNotepadContent 更新记事本内容
                     updateNotepadContent(validLinks);
-                    
+
                     // 如果有效链接数量与原始数量不同，更新存储
                     if (validLinks.length !== result.savedLinks.length) {
                         log('更新存储中的链接数据...');
                         chrome.storage.local.set({ 'savedLinks': validLinks });
                     }
-                    
+
                     resolve(validLinks);
                 } else {
                     resolve([]);
@@ -564,10 +580,10 @@ function loadLinksFromStorage() {
 function showNotepadMessage(message, type = 'success') {
     try {
         if (!window.ImageCopyPlugin.notepad?.notepad) return;
-        
+
         const notepad = window.ImageCopyPlugin.notepad.notepad;
         const messageElement = document.createElement('div');
-        
+
         // 设置消息样式
         messageElement.style.cssText = `
             position: absolute;
@@ -587,7 +603,7 @@ function showNotepadMessage(message, type = 'success') {
         `;
 
         // 根据类型设置不同的背景色
-        switch(type) {
+        switch (type) {
             case 'warn':
                 messageElement.style.backgroundColor = 'rgba(255, 152, 0, 0.9)'; // 警告使用橙色
                 break;
@@ -626,7 +642,7 @@ async function addToNotepad(link) {
         // 获取当前存储的链接
         const result = await chrome.storage.local.get(['savedLinks']);
         const currentLinks = result.savedLinks || [];
-        
+
         // 添加新链接
         if (!currentLinks.includes(link)) {
             currentLinks.push(link);
@@ -651,7 +667,7 @@ async function copyToClipboard(text) {
         const tooltip = document.createElement('div');
         tooltip.className = 'copy-tooltip';
         tooltip.textContent = '已复制！';
-        
+
         // 使用更明显的样式
         Object.assign(tooltip.style, {
             position: 'fixed',
@@ -669,7 +685,7 @@ async function copyToClipboard(text) {
         });
 
         document.body.appendChild(tooltip);
-        
+
         // 2秒后移除提示
         setTimeout(() => {
             tooltip.remove();
@@ -706,7 +722,7 @@ function handleCopyClick(img) {
 
         // 获取按钮元素
         const button = img._buttonContainer.querySelector('.copy-link-button');
-        
+
         // 如果已经复制过，直接返回
         if (button.innerHTML === '已复制') {
             return;
@@ -715,7 +731,7 @@ function handleCopyClick(img) {
         // 查找父级a标签
         const parentAnchor = findParentAnchor(img);
         let link = '';
-        
+
         if (parentAnchor && parentAnchor.href) {
             link = parentAnchor.href;
         } else if (img.src) {
@@ -727,23 +743,24 @@ function handleCopyClick(img) {
 
         // 复制到剪贴板
         copyToClipboard(link);
-        
+
         // 确保记事本存在
         if (!window.ImageCopyPlugin.notepad) {
             window.ImageCopyPlugin.notepad = createNotepad();
         }
-        
+
         // 添加到记事本
         addToNotepad(link);
-        
+
         // 立即保存到存储
         saveLinksToStorage();
-        
+
         log('已复制链接: ' + link);
 
         // 修改按钮文字和样式
         button.innerHTML = '已复制';
-        button.style.backgroundColor = 'rgba(76, 175, 80, 0.8)'; // 绿色背景
+        button.style.color = window.ImageCopyPlugin.immersiveButton ? 'rgba(76, 175, 80, 1)' : 'white';
+        button.style.backgroundColor = window.ImageCopyPlugin.immersiveButton ? 'transparent' : 'rgba(76, 175, 80, 0.8)'; // 绿色背景
 
     } catch (error) {
         log('处理复制点击事件时出错', error, 'error');
@@ -766,8 +783,8 @@ function handleMouseEnter(event) {
         img._buttonContainer = container;
         img.parentNode.insertBefore(container, img.nextSibling);
 
-        // 创建按钮
-        const button = createCopyButton();
+        // 创建按钮，传入img参数
+        const button = createCopyButton(img);
         container.appendChild(button);
 
         // 显示按钮
@@ -790,11 +807,11 @@ function handleMouseEnter(event) {
             const rect = container.getBoundingClientRect();
             const x = e.clientX;
             const y = e.clientY;
-            
+
             if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
                 return; // 如果鼠标在容器内，不触发mouseleave
             }
-            
+
             if (originalMouseLeave) {
                 originalMouseLeave.call(img, e);
             }
@@ -810,13 +827,13 @@ function handleMouseEnter(event) {
 function handleMouseLeave(img) {
     try {
         log('鼠标离开图片', img.src);
-        
+
         // 如果启用了自动显示，不移除按钮
         if (window.ImageCopyPlugin.autoShowButton) {
             log('自动显示已启用，保持按钮显示');
             return;
         }
-        
+
         // 检查按钮容器是否存在
         if (img._buttonContainer) {
             const button = img._buttonContainer.querySelector('.copy-link-button');
@@ -824,7 +841,7 @@ function handleMouseLeave(img) {
                 // 添加淡出动画
                 button.style.opacity = '0';
                 button.style.transform = 'translateY(-10px)';
-                
+
                 // 等待动画完成后移除
                 setTimeout(() => {
                     if (img._buttonContainer && img._buttonContainer.parentNode) {
@@ -845,10 +862,10 @@ function addImageListeners() {
         // 获取所有图片元素
         const images = document.querySelectorAll('img');
         const newImages = Array.from(images).filter(img => !img.hasAttribute('data-copy-listener'));
-        
+
         if (newImages.length > 0) {
             log(`为 ${newImages.length} 个新图片添加事件监听器`);
-            
+
             // 为每个新图片添加事件监听器
             newImages.forEach(img => {
                 img.setAttribute('data-copy-listener', 'true');
@@ -876,27 +893,28 @@ async function initialize() {
         }
 
         // 从存储中获取插件状态
-        chrome.storage.sync.get(['pluginEnabled', 'autoShowButton'], async function(result) {
+        chrome.storage.sync.get(['pluginEnabled', 'autoShowButton', 'immersiveButton'], async function (result) {
             window.ImageCopyPlugin.enabled = result.pluginEnabled !== false; // 默认为启用
             window.ImageCopyPlugin.autoShowButton = result.autoShowButton || false;
-            
+            window.ImageCopyPlugin.immersiveButton = result.immersiveButton || false;
+
             if (window.ImageCopyPlugin.enabled) {
                 // 创建记事本
                 const notepad = createNotepad();
                 if (notepad) {
                     window.ImageCopyPlugin.notepad = notepad;
                     log('记事本创建成功');
-                    
+
                     // 订阅存储变化事件
                     chrome.storage.onChanged.addListener((changes, namespace) => {
                         if (namespace === 'local' && changes.savedLinks) {
                             updateNotepadContent(changes.savedLinks.newValue || []);
                         }
                     });
-                    
+
                     // 等待加载保存的链接
                     await loadLinksFromStorage();
-                    
+
                     // 默认隐藏记事本
                     hideNotepad();
                 }
@@ -918,7 +936,7 @@ async function initialize() {
                 setupMutationObserver();
             }
         });
-        
+
         window.ImageCopyPlugin.initialized = true;
         log('插件初始化成功');
     } catch (error) {
@@ -941,7 +959,7 @@ window.addEventListener('load', () => {
 });
 
 // 添加消息监听器
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     try {
         switch (request.action) {
             case 'togglePlugin':
@@ -995,13 +1013,75 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
             case 'toggleAutoShow':
                 if (window.ImageCopyPlugin.enabled) {
                     handleAutoShow(request.value);
-                    sendResponse({ 
-                        success: true, 
-                        message: request.value ? '已启用自动显示' : '已禁用自动显示' 
+                    sendResponse({
+                        success: true,
+                        message: request.value ? '已启用自动显示' : '已禁用自动显示'
                     });
                 } else {
                     sendResponse({ success: false, message: '插件未启用' });
                 }
+                break;
+
+            case 'toggleImmersiveButton':
+                window.ImageCopyPlugin.immersiveButton = request.value;
+                // 更新所有现有按钮的样式
+                const images = document.querySelectorAll('img');
+                images.forEach(img => {
+                    if (img._buttonContainer) {
+                        const button = img._buttonContainer.querySelector('.copy-link-button');
+                        if (button) {
+                            // 检查是否应该使用沉浸式按钮
+                            const shouldUseImmersive = request.value &&
+                                img.alt &&
+                                img.alt.includes('Item preview');
+
+                            // 更新按钮样式
+                            button.style.top = shouldUseImmersive ? '0' : '10px';
+                            button.style.right = shouldUseImmersive ? '0' : '10px';
+                            button.style.bottom = shouldUseImmersive ? '0' : 'auto';
+                            button.style.left = shouldUseImmersive ? '0' : 'auto';
+                            button.style.width = shouldUseImmersive ? '100%' : 'auto';
+                            button.style.height = shouldUseImmersive ? '100%' : 'auto';
+                            button.style.backgroundColor = shouldUseImmersive ? 'transparent' : 'rgba(0, 0, 0, 0.7)';
+                            button.style.borderRadius = shouldUseImmersive ? '0' : '4px';
+                            button.style.padding = shouldUseImmersive ? '10px' : '6px 12px';
+                            button.style.fontSize = shouldUseImmersive ? '14px' : '12px';
+                            button.style.minWidth = shouldUseImmersive ? 'auto' : '70px';
+                            button.style.textShadow = shouldUseImmersive ? '0 1px 2px rgba(0, 0, 0, 0.5)' : 'none';
+                            button.style.alignItems = shouldUseImmersive ? 'flex-start' : 'center';
+                            button.style.justifyContent = shouldUseImmersive ? 'flex-end' : 'center';
+
+                            // 移除所有现有的鼠标事件监听器
+                            const newButton = button.cloneNode(true);
+                            button.parentNode.replaceChild(newButton, button);
+
+                            // 只为非沉浸式按钮添加新的鼠标事件监听器
+                            if (!shouldUseImmersive) {
+                                newButton.addEventListener('mouseenter', () => {
+                                    if (newButton.innerHTML === '复制链接') {
+                                        newButton.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                                    }
+                                });
+                                newButton.addEventListener('mouseleave', () => {
+                                    if (newButton.innerHTML === '复制链接') {
+                                        newButton.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+                                    }
+                                });
+                            }
+
+                            // 添加点击事件
+                            newButton.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleCopyClick(img);
+                            });
+                        }
+                    }
+                });
+                sendResponse({
+                    success: true,
+                    message: request.value ? '已启用沉浸式按钮' : '已禁用沉浸式按钮'
+                });
                 break;
 
             default:
@@ -1019,7 +1099,7 @@ function handleAutoShow(value) {
     try {
         window.ImageCopyPlugin.autoShowButton = value;
         log('自动显示状态已更新: ' + value);
-        
+
         if (value) {
             // 为所有图片添加按钮
             const images = document.querySelectorAll('img');
@@ -1054,7 +1134,7 @@ function setupMutationObserver() {
                     mutations.forEach((mutation) => {
                         if (mutation.addedNodes.length) {
                             addImageListeners();
-                            
+
                             // 如果启用了自动显示，为新添加的图片添加按钮
                             if (window.ImageCopyPlugin.autoShowButton) {
                                 mutation.addedNodes.forEach(node => {
@@ -1090,10 +1170,10 @@ function setupMutationObserver() {
 function updateNotepadContent(links) {
     try {
         if (!window.ImageCopyPlugin.notepad) return;
-        
+
         const content = window.ImageCopyPlugin.notepad.content;
         content.innerHTML = ''; // 清空当前内容
-        
+
         // 重新添加所有链接
         links.forEach((link, index) => {
             // 创建链接容器
@@ -1159,7 +1239,7 @@ function updateNotepadContent(links) {
             linkContainer.appendChild(deleteBtn);
             content.appendChild(linkContainer);
         });
-        
+
         log(`记事本已更新，当前共有 ${links.length} 个链接`);
     } catch (error) {
         log('更新记事本内容失败: ' + error.message, 'error');

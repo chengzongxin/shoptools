@@ -1,6 +1,7 @@
 // 获取DOM元素
 const pluginEnabledSwitch = document.getElementById('pluginEnabled');
 const autoShowButtonSwitch = document.getElementById('autoShowButton');
+const immersiveButtonSwitch = document.getElementById('immersiveButton');
 const toggleNotepadButton = document.getElementById('toggleNotepad');
 const statusDiv = document.getElementById('status');
 
@@ -37,9 +38,10 @@ function sendMessageToContentScript(message) {
 }
 
 // 从存储中加载设置
-chrome.storage.sync.get(['pluginEnabled', 'autoShowButton'], function(result) {
+chrome.storage.sync.get(['pluginEnabled', 'autoShowButton', 'immersiveButton'], function(result) {
     pluginEnabledSwitch.checked = result.pluginEnabled !== false; // 默认为启用
     autoShowButtonSwitch.checked = result.autoShowButton || false;
+    immersiveButtonSwitch.checked = result.immersiveButton || false;
 });
 
 // 监听插件启用/禁用开关
@@ -66,6 +68,23 @@ autoShowButtonSwitch.addEventListener('change', async function() {
         await chrome.storage.sync.set({ autoShowButton: enabled });
         const response = await sendMessageToContentScript({
             action: 'toggleAutoShow',
+            value: enabled
+        });
+        showStatus(response.message);
+    } catch (error) {
+        showStatus(error.message, true);
+        // 恢复开关状态
+        this.checked = !this.checked;
+    }
+});
+
+// 监听沉浸式按钮开关
+immersiveButtonSwitch.addEventListener('change', async function() {
+    try {
+        const enabled = this.checked;
+        await chrome.storage.sync.set({ immersiveButton: enabled });
+        const response = await sendMessageToContentScript({
+            action: 'toggleImmersiveButton',
             value: enabled
         });
         showStatus(response.message);
