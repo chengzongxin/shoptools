@@ -3,6 +3,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import sys
@@ -226,6 +227,30 @@ class WebAutomation:
             print(f"打开新标签页失败: {str(e)}")
             raise
 
+    def click_batch_upload_button(self):
+        """
+        点击批量上传合规信息按钮
+        """
+        try:
+            if DEBUG:
+                print("正在查找批量上传按钮...")
+            
+            # 等待按钮出现并点击
+            # 注意：这里的选择器需要根据实际页面元素来调整
+            button = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(text(), '批量上传合规信息')]"))
+            )
+            
+            # 点击按钮
+            button.click()
+            
+            if DEBUG:
+                print("成功点击批量上传按钮")
+                
+        except Exception as e:
+            print(f"点击批量上传按钮失败: {str(e)}")
+            raise
+
     def close(self):
         """
         关闭浏览器
@@ -253,11 +278,16 @@ def main():
         automation = WebAutomation()
         
         if DEBUG:
-            print("正在打开新标签页...")
+            print("正在打开商品合规信息页面...")
         
-        # 打开新标签页并访问百度
-        automation.open_new_tab("https://www.baidu.com")
-        time.sleep(2)  # 等待2秒
+        # 打开商品合规信息页面
+        automation.open_new_tab("https://agentseller.temu.com/govern/information-supplementation")
+        
+        # 等待页面加载
+        time.sleep(3)
+        
+        # 点击批量上传按钮
+        automation.click_batch_upload_button()
         
         if DEBUG:
             print("自动化操作完成！")
