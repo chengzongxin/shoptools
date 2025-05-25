@@ -12,6 +12,7 @@ import requests
 import zipfile
 import io
 from config import BROWSER_CONFIG, WAIT_CONFIG, DEBUG
+from modules.price_review import PriceReview
 
 class WebAutomation:
     def __init__(self):
@@ -277,17 +278,11 @@ def main():
         # 创建自动化实例
         automation = WebAutomation()
         
-        if DEBUG:
-            print("正在打开商品合规信息页面...")
+        # 创建价格审核实例
+        price_review = PriceReview(automation.driver, automation.wait, DEBUG)
         
-        # 打开商品合规信息页面
-        automation.open_new_tab("https://agentseller.temu.com/govern/information-supplementation")
-        
-        # 等待页面加载
-        time.sleep(3)
-        
-        # 点击批量上传按钮
-        automation.click_batch_upload_button()
+        # 开始价格审核流程
+        price_review.start_review()
         
         if DEBUG:
             print("自动化操作完成！")
