@@ -62,6 +62,9 @@ function FillColumns_JSA() {
     dict["Scarf"] = "BE-0608";
     dict["scarf"] = "BE-0608";
 
+    dict["Apron"] = "AP-0608";
+    dict["apron"] = "AP-0608";
+
     var lastRow = sheet
         .Range("D" + sheet.Rows.Count)
         .End(-4162)
