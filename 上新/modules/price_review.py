@@ -78,11 +78,55 @@ class PriceReview:
             print(f"打开价格审核页面失败: {str(e)}")
             raise
 
+    def check_product_info_pending(self):
+        """
+        检查商品信息待确认按钮的状态，如果有待确认则点击取消选中
+        :return: 是否有待确认的商品信息
+        """
+        try:
+            if self.debug:
+                print("正在检查商品信息待确认按钮状态...")
+
+            # 使用XPath定位商品信息待确认按钮
+            button = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/div/div/div[1]/div[1]/div[2]/div[2]/div[1]/span[2]/span'))
+            )
+            
+            # 获取按钮文本
+            button_text = button.text
+            
+            if self.debug:
+                print(f"商品信息待确认按钮状态: {button_text}")
+
+            # 如果按钮文本包含数字，说明有待确认的商品信息
+            if any(char.isdigit() for char in button_text):
+                if self.debug:
+                    print("发现有待确认的商品信息，点击按钮取消选中状态")
+                # 点击父元素取消选中状态
+                parent_button = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/div/div/div/div[1]/div[1]/div[2]/div[2]/div[1]'))
+                )
+                parent_button.click()
+                # 等待一下确保状态更新
+                time.sleep(1)
+                return True
+
+            return False
+
+        except Exception as e:
+            print(f"检查商品信息待确认按钮状态失败: {str(e)}")
+            return False
+
     def click_price_pending_button(self):
         """
         点击价格待确认按钮
         """
         try:
+            # 首先检查商品信息待确认按钮状态
+            if self.check_product_info_pending():
+                if self.debug:
+                    print("发现有待确认的商品信息，请先处理商品信息待确认")
+
             if self.debug:
                 print("正在查找价格待确认按钮...")
 
@@ -101,10 +145,12 @@ class PriceReview:
             
             if self.debug:
                 print("成功点击价格待确认按钮")
+            
+            return True
 
         except Exception as e:
             print(f"点击价格待确认按钮失败: {str(e)}")
-            raise
+            return False
 
     def get_page_info(self):
         """
