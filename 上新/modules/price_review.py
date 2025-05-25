@@ -106,28 +106,31 @@ class PriceReview:
             print(f"点击价格待确认按钮失败: {str(e)}")
             raise
 
-    def get_product_list(self):
+    def get_current_row(self, index):
         """
-        获取商品列表
-        :return: 商品列表元素
+        获取当前行的元素
+        :param index: 行索引（从1开始）
+        :return: 当前行元素
         """
         try:
-            if self.debug:
-                print("正在获取商品列表...")
-
             # 等待商品列表加载
             product_list = self.wait.until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
             )
             
-            if self.debug:
-                print("商品列表加载完成")
+            # 获取所有行
+            rows = product_list.find_elements(By.TAG_NAME, "tr")
             
-            return product_list
-
+            if index <= len(rows):
+                return rows[index - 1]
+            else:
+                if self.debug:
+                    print(f"行索引 {index} 超出范围，总行数: {len(rows)}")
+                return None
+                
         except Exception as e:
-            print(f"获取商品列表失败: {str(e)}")
-            raise
+            print(f"获取当前行元素失败: {str(e)}")
+            return None
 
     def get_product_info(self, row_element):
         """
@@ -280,61 +283,51 @@ class PriceReview:
         except Exception as e:
             print(f"滚动到元素位置失败: {str(e)}")
 
-    def wait_and_refresh_elements(self, max_retries=3):
+    def get_total_rows(self):
         """
-        等待并刷新商品列表元素
-        :param max_retries: 最大重试次数
-        :return: 商品列表元素
+        获取商品总数
+        :return: 商品总数
         """
-        for attempt in range(max_retries):
-            try:
-                # 等待页面加载
-                time.sleep(2)
-                
-                # 重新获取商品列表
-                product_list = self.wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
-                )
-                
-                # 获取所有商品行
-                rows = product_list.find_elements(By.TAG_NAME, "tr")
-                
-                if self.debug:
-                    print(f"成功获取商品列表，共 {len(rows)} 个商品")
-                
-                return rows
-                
-            except StaleElementReferenceException:
-                if attempt < max_retries - 1:
-                    if self.debug:
-                        print(f"元素已过期，正在重试 ({attempt + 1}/{max_retries})...")
-                    time.sleep(2)
-                else:
-                    raise
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    if self.debug:
-                        print(f"获取元素失败，正在重试 ({attempt + 1}/{max_retries})...")
-                    time.sleep(2)
-                else:
-                    raise
+        try:
+            # 等待商品列表加载
+            product_list = self.wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
+            )
+            
+            # 获取所有行
+            rows = product_list.find_elements(By.TAG_NAME, "tr")
+            
+            if self.debug:
+                print(f"商品总数: {len(rows)}")
+            
+            return len(rows)
+            
+        except Exception as e:
+            print(f"获取商品总数失败: {str(e)}")
+            return 0
 
     def process_product_list(self):
         """
         处理商品列表
         """
         try:
-            # 获取商品列表
-            rows = self.wait_and_refresh_elements()
+            # 获取商品总数
+            total_rows = self.get_total_rows()
             
             if self.debug:
-                print(f"\n找到 {len(rows)} 个商品")
+                print(f"\n找到 {total_rows} 个商品")
 
             # 处理每一行商品
-            for index, row in enumerate(rows, 1):
+            for index in range(1, total_rows + 1):
                 try:
                     if self.debug:
                         print(f"\n处理第 {index} 个商品:")
+                    
+                    # 获取当前行元素
+                    row = self.get_current_row(index)
+                    if row is None:
+                        print(f"无法获取第 {index} 个商品，跳过")
+                        continue
                     
                     # 滚动到当前商品位置
                     self.scroll_to_element(row)
@@ -361,10 +354,9 @@ class PriceReview:
                     
                 except StaleElementReferenceException:
                     if self.debug:
-                        print(f"处理第 {index} 个商品时元素已过期，重新获取商品列表...")
-                    # 重新获取商品列表
-                    rows = self.wait_and_refresh_elements()
-                    # 跳过已处理的商品
+                        print(f"处理第 {index} 个商品时元素已过期，重试...")
+                    # 重试当前商品
+                    index -= 1
                     continue
                 except Exception as e:
                     print(f"处理第 {index} 个商品时发生错误: {str(e)}")
