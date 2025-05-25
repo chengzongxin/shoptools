@@ -137,10 +137,16 @@ class PriceReview:
         :return: 是否成功跳转
         """
         try:
-            # 等待下一页按钮可点击
-            next_button = self.wait.until(
-                EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[11]'))
+            # 等待分页组件加载
+            pagination = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul'))
             )
+            
+            # 在分页组件中查找下一页按钮
+            next_button = pagination.find_element(By.CLASS_NAME, 'PGT_next_5-117-0')
+            
+            # 确保按钮可点击
+            self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'PGT_next_5-117-0')))
             
             # 点击下一页按钮
             next_button.click()
