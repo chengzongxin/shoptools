@@ -164,23 +164,19 @@ class PriceReview:
         :return: 当前行元素
         """
         try:
-            # 等待商品列表加载
-            product_list = self.wait.until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
+            # 使用XPath直接定位到具体的行
+            xpath = f'//*[@id="root"]/div/div/div/div[3]/div[1]/div/div[2]/div/div/table/tbody/tr[{index}]'
+            row = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, xpath))
             )
             
-            # 获取所有行
-            rows = product_list.find_elements(By.TAG_NAME, "tr")
+            if self.debug:
+                print(f"成功获取第 {index} 行元素")
             
-            if index <= len(rows):
-                return rows[index - 1]
-            else:
-                if self.debug:
-                    print(f"行索引 {index} 超出范围，总行数: {len(rows)}")
-                return None
+            return row
                 
         except Exception as e:
-            print(f"获取当前行元素失败: {str(e)}")
+            print(f"获取第 {index} 行元素失败: {str(e)}")
             return None
 
     def get_product_info(self, row_element):
@@ -323,13 +319,27 @@ class PriceReview:
         :param element: 目标元素
         """
         try:
-            # 使用JavaScript滚动到元素位置
-            self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
-            # 等待一下，确保滚动完成
+            # 获取元素位置
+            element_location = element.location
+            element_size = element.size
+            
+            # 计算元素中心点
+            element_center = element_location['y'] + element_size['height'] / 2
+            
+            # 获取视窗高度
+            viewport_height = self.driver.execute_script("return window.innerHeight")
+            
+            # 计算需要滚动的距离
+            scroll_distance = element_center - viewport_height / 2
+            
+            # 使用JavaScript平滑滚动
+            self.driver.execute_script(f"window.scrollTo({{top: {scroll_distance}, behavior: 'smooth'}});")
+            
+            # 等待滚动完成
             time.sleep(1)
             
             if self.debug:
-                print("已滚动到元素位置")
+                print(f"已滚动到元素位置，滚动距离: {scroll_distance}px")
                 
         except Exception as e:
             print(f"滚动到元素位置失败: {str(e)}")
@@ -379,8 +389,10 @@ class PriceReview:
                         # 获取当前行元素
                         row = self.get_current_row(index)
                         if row is None:
-                            print(f"无法获取第 {index} 个商品，跳过")
-                            continue
+                            if self.debug:
+                                print(f"无法获取第 {index} 个商品，可能已达到当前页最大虚拟节点数，尝试切换到下一页")
+                            # 跳出当前页的循环，进入下一页
+                            break
                         
                         # 滚动到当前商品位置
                         self.scroll_to_element(row)
