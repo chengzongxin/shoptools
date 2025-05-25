@@ -179,7 +179,7 @@ class PriceReview:
 
     def go_to_next_page(self):
         """
-        跳转到下一页
+        跳转到下一页，如果已经是最后一页则返回第一页
         :return: 是否成功跳转
         """
         try:
@@ -188,25 +188,41 @@ class PriceReview:
                 EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul'))
             )
             
-            # 在分页组件中查找下一页按钮
-            next_button = pagination.find_element(By.CLASS_NAME, 'PGT_next_5-117-0')
-            
-            # 确保按钮可点击
-            self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'PGT_next_5-117-0')))
-            
-            # 点击下一页按钮
-            next_button.click()
-            
-            # 等待页面加载
-            time.sleep(2)
-            
-            if self.debug:
-                print("已跳转到下一页")
-            
-            return True
+            try:
+                # 在分页组件中查找下一页按钮
+                next_button = pagination.find_element(By.CLASS_NAME, 'PGT_next_5-117-0')
+                
+                # 确保按钮可点击
+                self.wait.until(EC.element_to_be_clickable((By.CLASS_NAME, 'PGT_next_5-117-0')))
+                
+                # 点击下一页按钮
+                next_button.click()
+                
+                if self.debug:
+                    print("已跳转到下一页")
+                
+                return True
+                
+            except Exception as e:
+                if self.debug:
+                    print("已到达最后一页，准备返回第一页")
+                
+                # 点击第一页按钮
+                first_page_button = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[4]'))
+                )
+                first_page_button.click()
+                
+                # 等待页面加载
+                time.sleep(2)
+                
+                if self.debug:
+                    print("已返回第一页")
+                
+                return True
             
         except Exception as e:
-            print(f"跳转到下一页失败: {str(e)}")
+            print(f"页面跳转失败: {str(e)}")
             return False
 
     def get_current_row(self, index):
