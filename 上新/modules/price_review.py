@@ -2,6 +2,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
+from datetime import datetime
+import os
 from .price_mapper import PriceMapper
 
 class PriceReview:
@@ -16,6 +18,43 @@ class PriceReview:
         self.wait = wait
         self.debug = debug
         self.price_mapper = PriceMapper(debug)
+        
+        # 创建日志目录
+        self.log_dir = "logs"
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+        
+        # 创建日志文件（使用日期作为文件名）
+        self.log_file = os.path.join(self.log_dir, f"price_review_{datetime.now().strftime('%Y%m%d')}.log")
+        
+        # 如果文件不存在，添加表头
+        if not os.path.exists(self.log_file):
+            with open(self.log_file, "w", encoding="utf-8") as f:
+                f.write("=" * 80 + "\n")
+                f.write(f"价格审核日志 - {datetime.now().strftime('%Y-%m-%d')}\n")
+                f.write("=" * 80 + "\n\n")
+
+    def log_record(self, sku, spu, min_price, new_price, action):
+        """
+        记录价格审核日志
+        :param sku: 货号
+        :param spu: SPU信息
+        :param min_price: 最低核价
+        :param new_price: 新申报价格
+        :param action: 执行的操作
+        """
+        try:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            log_entry = f"[{timestamp}] 货号: {sku}, SPU: {spu}, 最低核价: {min_price}, 新申报价格: {new_price}, 操作: {action}\n"
+            
+            with open(self.log_file, "a", encoding="utf-8") as f:
+                f.write(log_entry)
+                
+            if self.debug:
+                print(f"已记录日志: {log_entry.strip()}")
+                
+        except Exception as e:
+            print(f"记录日志失败: {str(e)}")
 
     def open_price_review_page(self):
         """
@@ -130,6 +169,99 @@ class PriceReview:
             print(f"获取商品信息失败: {str(e)}")
             raise
 
+    def handle_price_confirmation(self, min_price, sku, spu):
+        """
+        处理价格确认弹窗
+        :param min_price: 最低核价
+        :param sku: 货号
+        :param spu: SPU信息
+        :return: 是否成功处理
+        """
+        try:
+            if self.debug:
+                print("\n开始处理价格确认弹窗...")
+
+            # 等待弹窗出现
+            modal = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/div/div/div[1]"))
+            )
+            
+            # 获取新申报价格
+            new_price_element = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/div/div/div[1]/div[2]/form/div/div/div/table/tbody/tr/td[5]/div/div/div/div/span/span[2]"))
+            )
+            new_price = float(new_price_element.text)
+            
+            if self.debug:
+                print(f"最低核价: {min_price}")
+                print(f"新申报价格: {new_price}")
+
+            # 比较价格
+            if new_price > min_price:
+                if self.debug:
+                    print("新申报价格大于最低核价，直接确认")
+
+                
+                # 等待用户观察
+                if self.debug:
+                    print("等待5秒，请观察确认结果...")
+                time.sleep(5)
+                
+                # 点击确认提交按钮
+                confirm_button = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, "/html/body/div[7]/div/div/div[1]/div[3]/div[2]/button[1]"))
+                )
+                confirm_button.click()
+                
+                # 记录日志
+                self.log_record(sku, spu, min_price, new_price, "确认提交")
+                
+                
+            else:
+                if self.debug:
+                    print("新申报价格小于等于最低核价，选择放弃调整报价")
+                
+                # 点击下拉框
+                dropdown = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, "//*[@id='operatorType']/div/div/div/div/div/div/div/div/div/div"))
+                )
+                dropdown.click()
+                
+                # 选择"放弃调整报价"选项
+                abandon_option = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, "/html/body/div[8]/div/div/div/div/ul/li[3]"))
+                )
+                abandon_option.click()
+
+                # 等待用户观察
+                if self.debug:
+                    print("等待5秒，请观察确认结果...")
+                time.sleep(5)
+                
+                # 点击确认提交按钮
+                confirm_button = self.wait.until(
+                    EC.element_to_be_clickable((By.XPATH, "/html/body/div[7]/div/div/div[1]/div[3]/div[2]/button[1]"))
+                )
+                confirm_button.click()
+                
+                # 记录日志
+                self.log_record(sku, spu, min_price, new_price, "放弃调整报价")
+                
+
+            # 等待弹窗消失
+            time.sleep(2)
+            
+            if self.debug:
+                print("价格确认处理完成")
+            
+            return True
+
+        except Exception as e:
+            print(f"处理价格确认弹窗失败: {str(e)}")
+            # 记录错误日志
+            self.log_record(sku, spu, min_price, "获取失败", f"处理失败: {str(e)}")
+            return False
+
     def process_product_list(self):
         """
         处理商品列表
@@ -155,8 +287,16 @@ class PriceReview:
                 # 点击价格确认按钮
                 product_info['price_button'].click()
                 
+                # 处理价格确认弹窗
+                if product_info['min_price'] is not None:
+                    self.handle_price_confirmation(
+                        product_info['min_price'],
+                        product_info['sku'],
+                        product_info['spu']
+                    )
+                
                 if self.debug:
-                    print(f"已点击第 {index} 个商品的价格确认按钮")
+                    print(f"已处理第 {index} 个商品")
                 
                 # 等待一下，避免操作太快
                 time.sleep(1)
