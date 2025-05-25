@@ -106,6 +106,57 @@ class PriceReview:
             print(f"点击价格待确认按钮失败: {str(e)}")
             raise
 
+    def get_page_info(self):
+        """
+        获取分页信息
+        :return: (当前页码, 总页数, 每页数量)
+        """
+        try:
+            # 等待分页信息加载
+            page_info = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[2]/div/div/div/div/div/div/div/div[1]/div'))
+            )
+            
+            # 解析分页信息（格式：1/10 条/页）
+            info_text = page_info.text
+            current_page, total_pages = map(int, info_text.split('/')[0].split('-'))
+            items_per_page = int(info_text.split('/')[1].split()[0])
+            
+            if self.debug:
+                print(f"分页信息: 当前页 {current_page}/{total_pages}, 每页 {items_per_page} 条")
+            
+            return current_page, total_pages, items_per_page
+            
+        except Exception as e:
+            print(f"获取分页信息失败: {str(e)}")
+            return 1, 100, 50  # 默认值
+
+    def go_to_next_page(self):
+        """
+        跳转到下一页
+        :return: 是否成功跳转
+        """
+        try:
+            # 等待下一页按钮可点击
+            next_button = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[11]'))
+            )
+            
+            # 点击下一页按钮
+            next_button.click()
+            
+            # 等待页面加载
+            time.sleep(2)
+            
+            if self.debug:
+                print("已跳转到下一页")
+            
+            return True
+            
+        except Exception as e:
+            print(f"跳转到下一页失败: {str(e)}")
+            return False
+
     def get_current_row(self, index):
         """
         获取当前行的元素
@@ -208,8 +259,8 @@ class PriceReview:
                 
                 # 等待用户观察
                 if self.debug:
-                    print("等待5秒，请观察确认结果...")
-                time.sleep(5)
+                    print("等待1秒，请观察确认结果...")
+                time.sleep(1)
                 
                 # 点击确认提交按钮
                 confirm_button = self.wait.until(
@@ -239,8 +290,8 @@ class PriceReview:
 
                 # 等待用户观察
                 if self.debug:
-                    print("等待5秒，请观察确认结果...")
-                time.sleep(5)
+                    print("等待1秒，请观察确认结果...")
+                time.sleep(1)
                 
                 # 点击确认提交按钮
                 confirm_button = self.wait.until(
@@ -311,64 +362,78 @@ class PriceReview:
         处理商品列表
         """
         try:
-            # 获取商品总数
-            total_rows = self.get_total_rows()
-            
-            if self.debug:
-                print(f"\n找到 {total_rows} 个商品")
+            current_page = 1
+            while True:
+                # 获取分页信息
+                current_page, total_pages, items_per_page = self.get_page_info()
+                
+                if self.debug:
+                    print(f"\n开始处理第 {current_page}/{total_pages} 页")
 
-            # 处理每一行商品
-            for index in range(1, total_rows + 1):
-                try:
-                    if self.debug:
-                        print(f"\n处理第 {index} 个商品:")
-                    
-                    # 获取当前行元素
-                    row = self.get_current_row(index)
-                    if row is None:
-                        print(f"无法获取第 {index} 个商品，跳过")
+                # 处理当前页的每一行商品
+                for index in range(1, items_per_page + 1):
+                    try:
+                        if self.debug:
+                            print(f"\n处理第 {index} 个商品:")
+                        
+                        # 获取当前行元素
+                        row = self.get_current_row(index)
+                        if row is None:
+                            print(f"无法获取第 {index} 个商品，跳过")
+                            continue
+                        
+                        # 滚动到当前商品位置
+                        self.scroll_to_element(row)
+                        
+                        # 重新获取商品信息
+                        product_info = self.get_product_info(row)
+                        
+                        # 点击价格确认按钮
+                        product_info['price_button'].click()
+                        
+                        # 处理价格确认弹窗
+                        if product_info['min_price'] is not None:
+                            self.handle_price_confirmation(
+                                product_info['min_price'],
+                                product_info['sku'],
+                                product_info['spu']
+                            )
+                        
+                        if self.debug:
+                            print(f"已处理第 {index} 个商品")
+                        
+                        # 等待一下，避免操作太快
+                        time.sleep(2)
+                        
+                    except StaleElementReferenceException:
+                        if self.debug:
+                            print(f"处理第 {index} 个商品时元素已过期，重试...")
+                        # 重试当前商品
+                        index -= 1
                         continue
-                    
-                    # 滚动到当前商品位置
-                    self.scroll_to_element(row)
-                    
-                    # 重新获取商品信息
-                    product_info = self.get_product_info(row)
-                    
-                    # 点击价格确认按钮
-                    product_info['price_button'].click()
-                    
-                    # 处理价格确认弹窗
-                    if product_info['min_price'] is not None:
-                        self.handle_price_confirmation(
-                            product_info['min_price'],
-                            product_info['sku'],
-                            product_info['spu']
+                    except Exception as e:
+                        print(f"处理第 {index} 个商品时发生错误: {str(e)}")
+                        # 记录错误日志
+                        self.log_record(
+                            f"第{index}个商品",
+                            "获取失败",
+                            "获取失败",
+                            "获取失败",
+                            f"处理失败: {str(e)}"
                         )
-                    
-                    if self.debug:
-                        print(f"已处理第 {index} 个商品")
-                    
-                    # 等待一下，避免操作太快
+                        continue
+
+                # 检查是否需要翻页
+                if current_page < total_pages:
+                    if not self.go_to_next_page():
+                        print("无法跳转到下一页，处理结束")
+                        break
+                    # 等待页面加载
                     time.sleep(2)
-                    
-                except StaleElementReferenceException:
+                else:
                     if self.debug:
-                        print(f"处理第 {index} 个商品时元素已过期，重试...")
-                    # 重试当前商品
-                    index -= 1
-                    continue
-                except Exception as e:
-                    print(f"处理第 {index} 个商品时发生错误: {str(e)}")
-                    # 记录错误日志
-                    self.log_record(
-                        f"第{index}个商品",
-                        "获取失败",
-                        "获取失败",
-                        "获取失败",
-                        f"处理失败: {str(e)}"
-                    )
-                    continue
+                        print("已处理完所有页面")
+                    break
 
         except Exception as e:
             print(f"处理商品列表失败: {str(e)}")
