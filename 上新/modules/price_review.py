@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import StaleElementReferenceException
 import time
 from datetime import datetime
 import os
@@ -262,44 +263,120 @@ class PriceReview:
             self.log_record(sku, spu, min_price, "获取失败", f"处理失败: {str(e)}")
             return False
 
+    def scroll_to_element(self, element):
+        """
+        滚动到元素位置
+        :param element: 目标元素
+        """
+        try:
+            # 使用JavaScript滚动到元素位置
+            self.driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", element)
+            # 等待一下，确保滚动完成
+            time.sleep(1)
+            
+            if self.debug:
+                print("已滚动到元素位置")
+                
+        except Exception as e:
+            print(f"滚动到元素位置失败: {str(e)}")
+
+    def wait_and_refresh_elements(self, max_retries=3):
+        """
+        等待并刷新商品列表元素
+        :param max_retries: 最大重试次数
+        :return: 商品列表元素
+        """
+        for attempt in range(max_retries):
+            try:
+                # 等待页面加载
+                time.sleep(2)
+                
+                # 重新获取商品列表
+                product_list = self.wait.until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
+                )
+                
+                # 获取所有商品行
+                rows = product_list.find_elements(By.TAG_NAME, "tr")
+                
+                if self.debug:
+                    print(f"成功获取商品列表，共 {len(rows)} 个商品")
+                
+                return rows
+                
+            except StaleElementReferenceException:
+                if attempt < max_retries - 1:
+                    if self.debug:
+                        print(f"元素已过期，正在重试 ({attempt + 1}/{max_retries})...")
+                    time.sleep(2)
+                else:
+                    raise
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    if self.debug:
+                        print(f"获取元素失败，正在重试 ({attempt + 1}/{max_retries})...")
+                    time.sleep(2)
+                else:
+                    raise
+
     def process_product_list(self):
         """
         处理商品列表
         """
         try:
             # 获取商品列表
-            product_list = self.get_product_list()
-            
-            # 获取所有商品行
-            rows = product_list.find_elements(By.TAG_NAME, "tr")
+            rows = self.wait_and_refresh_elements()
             
             if self.debug:
                 print(f"\n找到 {len(rows)} 个商品")
 
             # 处理每一行商品
             for index, row in enumerate(rows, 1):
-                if self.debug:
-                    print(f"\n处理第 {index} 个商品:")
-                
-                # 获取商品信息
-                product_info = self.get_product_info(row)
-                
-                # 点击价格确认按钮
-                product_info['price_button'].click()
-                
-                # 处理价格确认弹窗
-                if product_info['min_price'] is not None:
-                    self.handle_price_confirmation(
-                        product_info['min_price'],
-                        product_info['sku'],
-                        product_info['spu']
+                try:
+                    if self.debug:
+                        print(f"\n处理第 {index} 个商品:")
+                    
+                    # 滚动到当前商品位置
+                    self.scroll_to_element(row)
+                    
+                    # 重新获取商品信息
+                    product_info = self.get_product_info(row)
+                    
+                    # 点击价格确认按钮
+                    product_info['price_button'].click()
+                    
+                    # 处理价格确认弹窗
+                    if product_info['min_price'] is not None:
+                        self.handle_price_confirmation(
+                            product_info['min_price'],
+                            product_info['sku'],
+                            product_info['spu']
+                        )
+                    
+                    if self.debug:
+                        print(f"已处理第 {index} 个商品")
+                    
+                    # 等待一下，避免操作太快
+                    time.sleep(2)
+                    
+                except StaleElementReferenceException:
+                    if self.debug:
+                        print(f"处理第 {index} 个商品时元素已过期，重新获取商品列表...")
+                    # 重新获取商品列表
+                    rows = self.wait_and_refresh_elements()
+                    # 跳过已处理的商品
+                    continue
+                except Exception as e:
+                    print(f"处理第 {index} 个商品时发生错误: {str(e)}")
+                    # 记录错误日志
+                    self.log_record(
+                        f"第{index}个商品",
+                        "获取失败",
+                        "获取失败",
+                        "获取失败",
+                        f"处理失败: {str(e)}"
                     )
-                
-                if self.debug:
-                    print(f"已处理第 {index} 个商品")
-                
-                # 等待一下，避免操作太快
-                time.sleep(1)
+                    continue
 
         except Exception as e:
             print(f"处理商品列表失败: {str(e)}")
