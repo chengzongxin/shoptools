@@ -150,6 +150,39 @@ class PriceReview:
             print(f"检查或关闭弹窗失败: {str(e)}")
             return False
 
+    def set_page_size(self):
+        """
+        设置每页显示10条记录
+        :return: 是否设置成功
+        """
+        try:
+            if self.debug:
+                print("正在设置每页显示数量...")
+
+            # 点击分页输入框
+            page_size_input = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[2]/div/div/div/div/div/div'))
+            )
+            page_size_input.click()
+            
+            # 等待下拉选项出现并点击"10"选项
+            option_10 = self.wait.until(
+                EC.element_to_be_clickable((By.XPATH, '/html/body/div[6]/div/div/div/div/ul/li[1]'))
+            )
+            option_10.click()
+            
+            # 等待页面刷新
+            time.sleep(2)
+            
+            if self.debug:
+                print("已设置每页显示10条记录")
+            
+            return True
+
+        except Exception as e:
+            print(f"设置每页显示数量失败: {str(e)}")
+            return False
+
     def click_price_pending_button(self):
         """
         点击价格待确认按钮
@@ -157,6 +190,9 @@ class PriceReview:
         try:
             # 首先检查并关闭可能存在的弹窗
             self.check_and_close_popup()
+
+            # 设置每页显示10条记录
+            self.set_page_size()
 
             # 首先检查商品信息待确认按钮状态
             if self.check_product_info_pending():
@@ -194,24 +230,30 @@ class PriceReview:
         :return: (当前页码, 总页数, 每页数量)
         """
         try:
-            # 等待分页信息加载
-            page_info = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[2]/div/div/div/div/div/div/div/div[1]/div'))
+            # 等待分页组件加载
+            pagination = self.wait.until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul'))
             )
             
-            # 解析分页信息（格式：1/10 条/页）
-            info_text = page_info.text
-            current_page, total_pages = map(int, info_text.split('/')[0].split('-'))
-            items_per_page = int(info_text.split('/')[1].split()[0])
+            # 获取总条数
+            total_items_element = pagination.find_element(By.XPATH, './li[1]')
+            total_items_text = total_items_element.text
+            total_items = int(''.join(filter(str.isdigit, total_items_text)))
+            
+            # 获取当前页码
+            current_page = 1
+            
+            # 计算总页数（每页10条）
+            total_pages = (total_items + 9) // 10  # 向上取整
             
             if self.debug:
-                print(f"分页信息: 当前页 {current_page}/{total_pages}, 每页 {items_per_page} 条")
+                print(f"分页信息: 总条数 {total_items}, 当前页 {current_page}/{total_pages}, 每页 10 条")
             
-            return current_page, total_pages, items_per_page
+            return current_page, total_pages, 10  # 固定返回每页10条
             
         except Exception as e:
             print(f"获取分页信息失败: {str(e)}")
-            return 1, 100, 50  # 默认值
+            return 1, 100, 10  # 默认值改为每页10条
 
     def go_to_next_page(self):
         """
@@ -268,16 +310,23 @@ class PriceReview:
         :return: 当前行元素
         """
         try:
-            # 使用XPath直接定位到具体的行
-            xpath = f'//*[@id="root"]/div/div/div/div[3]/div[1]/div/div[2]/div/div/table/tbody/tr[{index}]'
-            row = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, xpath))
+            # 等待商品列表加载
+            product_list = self.wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
             )
             
-            if self.debug:
-                print(f"成功获取第 {index} 行元素")
+            # 获取所有商品行
+            rows = product_list.find_elements(By.TAG_NAME, "tr")
             
-            return row
+            # 确保索引在有效范围内
+            if 0 <= index - 1 < len(rows):
+                if self.debug:
+                    print(f"成功获取第 {index} 行元素")
+                return rows[index - 1]
+            else:
+                if self.debug:
+                    print(f"索引 {index} 超出范围，总行数: {len(rows)}")
+                return None
                 
         except Exception as e:
             print(f"获取第 {index} 行元素失败: {str(e)}")
@@ -422,6 +471,7 @@ class PriceReview:
         滚动到元素位置
         :param element: 目标元素
         """
+
         try:
             # 获取元素位置
             element_location = element.location
@@ -459,7 +509,7 @@ class PriceReview:
                 EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
             )
             
-            # 获取所有行
+            # 获取所有商品行
             rows = product_list.find_elements(By.TAG_NAME, "tr")
             
             if self.debug:
@@ -484,24 +534,22 @@ class PriceReview:
                 if self.debug:
                     print(f"\n开始处理第 {current_page}/{total_pages} 页")
 
+                # 获取当前页的所有商品行
+                product_list = self.wait.until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody'))
+                )
+                rows = product_list.find_elements(By.TAG_NAME, "tr")
+
                 # 处理当前页的每一行商品
-                for index in range(1, items_per_page + 1):
+                for index, row in enumerate(rows, 1):
                     try:
                         if self.debug:
                             print(f"\n处理第 {index} 个商品:")
                         
-                        # 获取当前行元素
-                        row = self.get_current_row(index)
-                        if row is None:
-                            if self.debug:
-                                print(f"无法获取第 {index} 个商品，可能已达到当前页最大虚拟节点数，尝试切换到下一页")
-                            # 跳出当前页的循环，进入下一页
-                            break
-                        
                         # 滚动到当前商品位置
                         self.scroll_to_element(row)
                         
-                        # 重新获取商品信息
+                        # 获取商品信息
                         product_info = self.get_product_info(row)
                         
                         # 点击价格确认按钮
@@ -548,8 +596,25 @@ class PriceReview:
                     time.sleep(2)
                 else:
                     if self.debug:
-                        print("已处理完所有页面")
-                    break
+                        print("已处理完所有页面，准备重新从第一页开始检查")
+                    
+                    # 点击第一页按钮
+                    first_page_button = self.wait.until(
+                        EC.element_to_be_clickable((By.XPATH, '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul/li[4]'))
+                    )
+                    first_page_button.click()
+                    
+                    # 等待页面加载
+                    time.sleep(2)
+                    
+                    # 重新获取分页信息
+                    current_page, total_pages, items_per_page = self.get_page_info()
+                    
+                    if self.debug:
+                        print("已返回第一页，开始第二轮检查")
+                    
+                    # 继续处理第一页
+                    continue
 
         except Exception as e:
             print(f"处理商品列表失败: {str(e)}")
