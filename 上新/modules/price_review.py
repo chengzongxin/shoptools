@@ -117,11 +117,47 @@ class PriceReview:
             print(f"检查商品信息待确认按钮状态失败: {str(e)}")
             return False
 
+    def check_and_close_popup(self):
+        """
+        检查并关闭弹窗
+        :return: 是否发现并关闭了弹窗
+        """
+        try:
+            # 检查是否存在弹窗标题
+            popup_title = self.driver.find_elements(By.CLASS_NAME, 'PP_popoverTitle_5-114-0')
+            
+            if popup_title:
+                if self.debug:
+                    print("发现弹窗，准备关闭...")
+                
+                # 点击关闭按钮
+                close_button = self.wait.until(
+                    EC.element_to_be_clickable((By.CLASS_NAME, 'new-bell_container__eWEgQ'))
+                )
+                close_button.click()
+                
+                # 等待弹窗消失
+                time.sleep(1)
+                
+                if self.debug:
+                    print("弹窗已关闭")
+                
+                return True
+            
+            return False
+
+        except Exception as e:
+            print(f"检查或关闭弹窗失败: {str(e)}")
+            return False
+
     def click_price_pending_button(self):
         """
         点击价格待确认按钮
         """
         try:
+            # 首先检查并关闭可能存在的弹窗
+            self.check_and_close_popup()
+
             # 首先检查商品信息待确认按钮状态
             if self.check_product_info_pending():
                 if self.debug:
