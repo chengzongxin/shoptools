@@ -8,20 +8,23 @@ import time
 import socket
 import subprocess
 from .chrome_driver_manager import ChromeDriverManager
+import os
 
 class BrowserManager:
     """
     浏览器管理类
     负责浏览器的初始化、配置和管理
     """
-    def __init__(self, debug=True):
+    def __init__(self, debug=True, chromedriver_path=None):
         """
         初始化浏览器管理器
         :param debug: 是否开启调试模式
+        :param chromedriver_path: ChromeDriver的路径，如果为None则自动下载
         """
         self.driver = None
         self.wait = None
         self.debug = debug
+        self.chromedriver_path = chromedriver_path
         # print("开始检查浏览器状态...")
         # self.check_and_start_browser()
         # print("开始配置Chrome选项...")
@@ -119,11 +122,14 @@ class BrowserManager:
                 print("Chrome选项配置完成")
                 print("正在检查ChromeDriver...")
             
-            # 下载并设置ChromeDriver
+            # 使用指定的ChromeDriver或下载新的
             try:
-                driver_manager = ChromeDriverManager(self.debug)
-                driver_path = driver_manager.download_chromedriver()
-                service = Service(driver_path)
+                if self.chromedriver_path and os.path.exists(self.chromedriver_path):
+                    service = Service(self.chromedriver_path)
+                else:
+                    driver_manager = ChromeDriverManager(self.debug)
+                    driver_path = driver_manager.download_chromedriver()
+                    service = Service(driver_path)
             except Exception as e:
                 print(f"ChromeDriver安装失败: {str(e)}")
                 raise
