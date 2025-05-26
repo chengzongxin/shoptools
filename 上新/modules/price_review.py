@@ -240,8 +240,11 @@ class PriceReview:
             total_items_text = total_items_element.text
             total_items = int(''.join(filter(str.isdigit, total_items_text)))
             
-            # 获取当前页码
-            current_page = 1
+            # 获取当前页码（通过class获取激活的页码）
+            current_page_element = self.wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '.PGT_pagerItem_5-117-0.PGT_pagerItemActive_5-117-0'))
+            )
+            current_page = int(current_page_element.text)
             
             # 计算总页数（每页10条）
             total_pages = (total_items + 9) // 10  # 向上取整
