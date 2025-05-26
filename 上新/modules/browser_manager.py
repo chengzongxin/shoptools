@@ -5,6 +5,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 import time
+import socket
+import subprocess
 from .chrome_driver_manager import ChromeDriverManager
 
 class BrowserManager:
@@ -20,7 +22,86 @@ class BrowserManager:
         self.driver = None
         self.wait = None
         self.debug = debug
+        # print("开始检查浏览器状态...")
+        # self.check_and_start_browser()
+        # print("开始配置Chrome选项...")
         self.setup_driver()
+
+    def check_port(self, port):
+        """
+        检查指定端口是否在监听
+        :param port: 端口号
+        :return: 是否在监听
+        """
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = sock.connect_ex(('127.0.0.1', port))
+            sock.close()
+            return result == 0
+        except Exception as e:
+            print(f"检查端口失败: {str(e)}")
+            return False
+
+    def start_chrome(self):
+        """
+        启动Chrome浏览器
+        :return: 是否启动成功
+        """
+        try:
+            chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+            user_data_dir = r"C:\selenum\ChromeProfile"
+            
+            # 构建启动命令
+            cmd = f'"{chrome_path}" --remote-debugging-port=9222 --user-data-dir="{user_data_dir}"'
+            
+            if self.debug:
+                print("正在启动Chrome浏览器...")
+            
+            # 使用subprocess启动浏览器
+            subprocess.Popen(cmd, shell=True)
+            
+            # 等待浏览器启动
+            time.sleep(5)
+            
+            if self.debug:
+                print("Chrome浏览器启动完成")
+            
+            return True
+            
+        except Exception as e:
+            print(f"启动Chrome浏览器失败: {str(e)}")
+            return False
+
+    def check_and_start_browser(self):
+        """
+        检查并启动浏览器
+        """
+        try:
+            if self.debug:
+                print("检查浏览器状态...")
+            
+            # 检查9222端口是否在监听
+            if not self.check_port(9222):
+                if self.debug:
+                    print("浏览器未启动，准备启动...")
+                
+                # 启动浏览器
+                if not self.start_chrome():
+                    raise Exception("启动浏览器失败")
+                
+                # 再次检查端口
+                if not self.check_port(9222):
+                    raise Exception("浏览器启动后端口仍未就绪")
+                
+                if self.debug:
+                    print("浏览器启动成功")
+            else:
+                if self.debug:
+                    print("浏览器已经在运行")
+                
+        except Exception as e:
+            print(f"检查并启动浏览器失败: {str(e)}")
+            raise
 
     def setup_driver(self):
         """
