@@ -5,6 +5,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+build/
+dist/
 
 # 忽略IDE配置文件
 .vscode/

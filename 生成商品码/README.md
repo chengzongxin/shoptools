@@ -1,7 +1,41 @@
-https://seller.kuajingmaihuo.com/bg-visage-mms/product/skc/pageQuery
-page
-: 
-2
-pageSize
-: 
-20
+# 商品数据爬取工具
+
+这是一个用于爬取商品数据的GUI工具。
+
+## 功能特点
+
+- 支持设置爬取页数和每页数据量
+- 自动保存配置信息
+- 生成商品码模板
+- 生成库存模板
+- 实时显示爬取进度
+- 保存历史记录
+
+## 使用方法
+
+1. 双击运行 `商品数据爬取工具.exe`
+2. 在界面中输入：
+   - Cookie值
+   - Anti-content值
+   - MallID值
+   - 需要爬取的页数
+   - 每页数据量
+3. 点击"开始爬取"按钮
+4. 等待爬取完成
+5. 在data目录下查看生成的Excel文件
+
+## 注意事项
+
+- 请确保网络连接正常
+- Cookie等信息需要从浏览器开发者工具中获取
+- 生成的文件会保存在程序所在目录的data文件夹中
+
+## 文件说明
+
+- `product_list_*.xlsx`: 原始数据文件
+- `product_code_template_*.xlsx`: 商品码模板文件
+- `inventory_template_*.xlsx`: 库存模板文件
+
+## 技术支持
+
+如有问题，请联系技术支持。

@@ -11,6 +11,14 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import os
+import sys
+
+if getattr(sys, 'frozen', False):
+    # 打包后
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    # 源码运行
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 配置日志
 logging.basicConfig(
@@ -196,7 +204,7 @@ class ProductListCrawler:
             
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"product_list_{timestamp}.xlsx"
+            filename = os.path.join(BASE_DIR, 'data', f"product_list_{timestamp}.xlsx")
             
         try:
             # 准备Excel数据
@@ -268,7 +276,7 @@ class ProductListCrawler:
         
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"product_code_template_{timestamp}.xlsx"
+            filename = os.path.join(BASE_DIR, 'data', f"product_code_template_{timestamp}.xlsx")
         
         try:
             # 准备Excel数据
@@ -350,7 +358,7 @@ class ProductListCrawler:
         
         if not filename:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"inventory_template_{timestamp}.xlsx"
+            filename = os.path.join(BASE_DIR, 'data', f"inventory_template_{timestamp}.xlsx")
         
         try:
             # 准备Excel数据
@@ -440,8 +448,8 @@ class ProductCrawlerGUI:
     def load_last_params(self):
         """加载上次保存的参数"""
         try:
-            if os.path.exists('config.json'):
-                with open('config.json', 'r', encoding='utf-8') as f:
+            if os.path.exists(os.path.join(BASE_DIR, 'config.json')):
+                with open(os.path.join(BASE_DIR, 'config.json'), 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.last_cookie = config.get('cookie', '')
                     self.last_anti_content = config.get('anti_content', '')
@@ -474,7 +482,7 @@ class ProductCrawlerGUI:
                 'pages': self.pages_var.get().strip(),
                 'page_size': self.page_size_var.get().strip()
             }
-            with open('config.json', 'w', encoding='utf-8') as f:
+            with open(os.path.join(BASE_DIR, 'config.json'), 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
             logging.info("参数已保存")
         except Exception as e:
@@ -666,20 +674,20 @@ class ProductCrawlerGUI:
                 logging.info(f"共获取到 {len(all_data)} 条数据")
                 
                 # 创建data目录（如果不存在）
-                if not os.path.exists('data'):
-                    os.makedirs('data')
+                if not os.path.exists(os.path.join(BASE_DIR, 'data')):
+                    os.makedirs(os.path.join(BASE_DIR, 'data'))
                 
                 # 保存原始数据
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                crawler.save_to_excel(all_data, os.path.join('data', f'product_list_{timestamp}.xlsx'))
+                crawler.save_to_excel(all_data, os.path.join(BASE_DIR, 'data', f'product_list_{timestamp}.xlsx'))
                 logging.info("原始数据保存完成")
                 
                 # 生成商品码模板
-                crawler.create_product_code_template(all_data, os.path.join('data', f'product_code_template_{timestamp}.xlsx'))
+                crawler.create_product_code_template(all_data, os.path.join(BASE_DIR, 'data', f'product_code_template_{timestamp}.xlsx'))
                 logging.info("商品码模板生成完成")
                 
                 # 生成库存模板
-                crawler.create_inventory_template(all_data, os.path.join('data', f'inventory_template_{timestamp}.xlsx'))
+                crawler.create_inventory_template(all_data, os.path.join(BASE_DIR, 'data', f'inventory_template_{timestamp}.xlsx'))
                 logging.info("库存模板生成完成")
             else:
                 logging.warning("未获取到任何数据")
