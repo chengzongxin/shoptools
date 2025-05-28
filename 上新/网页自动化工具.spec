@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('C:\\Users\\Administrator\\Desktop\\shoptools\\上新\\drivers\\chromedriver.exe', 'drivers'), ('C:\\Users\\Administrator\\Desktop\\shoptools\\上新\\drivers\\chromedriver-win64', 'drivers/chromedriver-win64')],
+    datas=[('/Users/chengzongxin/shoptools/上新/drivers/chromedriver', 'drivers'), ('/Users/chengzongxin/shoptools/上新/drivers/chromedriver-mac-x64', 'drivers/chromedriver-mac-x64')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 import time
 import socket
 import subprocess
+import platform
 from .chrome_driver_manager import ChromeDriverManager
 import os
 
@@ -25,6 +26,7 @@ class BrowserManager:
         self.wait = None
         self.debug = debug
         self.chromedriver_path = chromedriver_path
+        self.system = platform.system()
         # print("开始检查浏览器状态...")
         # self.check_and_start_browser()
         # print("开始配置Chrome选项...")
@@ -51,11 +53,21 @@ class BrowserManager:
         :return: 是否启动成功
         """
         try:
-            chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-            user_data_dir = r"C:\selenum\ChromeProfile"
+            if self.system == "Windows":
+                chrome_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+                user_data_dir = r"C:\selenum\ChromeProfile"
+            else:
+                chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                user_data_dir = os.path.expanduser("~/selenium/ChromeProfile")
+            
+            # 确保用户数据目录存在
+            os.makedirs(user_data_dir, exist_ok=True)
             
             # 构建启动命令
-            cmd = f'"{chrome_path}" --remote-debugging-port=9222 --user-data-dir="{user_data_dir}"'
+            if self.system == "Windows":
+                cmd = f'"{chrome_path}" --remote-debugging-port=9222 --user-data-dir="{user_data_dir}"'
+            else:
+                cmd = f'"{chrome_path}" --remote-debugging-port=9222 --user-data-dir="{user_data_dir}"'
             
             if self.debug:
                 print("正在启动Chrome浏览器...")

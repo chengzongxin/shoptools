@@ -388,16 +388,16 @@ class PriceReview:
             if self.debug:
                 print("\n开始处理价格确认弹窗...")
 
-            # 等待弹窗出现
+            # 1. 等待弹窗出现
             modal = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/div/div/div[1]"))
+                EC.presence_of_element_located((By.CLASS_NAME, "MDL_innerWrapper_5-111-0"))
             )
             
-            # 获取新申报价格
-            new_price_element = self.wait.until(
-                EC.presence_of_element_located((By.XPATH, "/html/body/div[7]/div/div/div[1]/div[2]/form/div/div/div/table/tbody/tr/td[5]/div/div/div/div/span/span[2]"))
+            # 2. 获取新申报价格
+            price_element = self.wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, ".TB_whiteTr_5-111-0 td:nth-child(5) span:nth-child(2)"))
             )
-            new_price = float(new_price_element.text)
+            new_price = float(price_element.text)
             
             if self.debug:
                 print(f"最低核价: {min_price}")
@@ -407,53 +407,47 @@ class PriceReview:
             if new_price > min_price:
                 if self.debug:
                     print("新申报价格大于最低核价，直接确认")
-
                 
-                # 等待用户观察
-                if self.debug:
-                    print("等待1秒，请观察确认结果...")
-                time.sleep(1)
-                
-                # 点击确认提交按钮
+                # 3. 点击确认按钮
                 confirm_button = self.wait.until(
-                    EC.element_to_be_clickable((By.XPATH, "/html/body/div[7]/div/div/div[1]/div[3]/div[2]/button[1]"))
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, ".MDL_okBtn_5-111-0"))
                 )
+
+
+                time.sleep(1000)
+
                 confirm_button.click()
                 
                 # 记录日志
                 self.log_record(sku, spu, min_price, new_price, "确认提交")
                 
-                
             else:
                 if self.debug:
                     print("新申报价格小于等于最低核价，选择放弃调整报价")
                 
-                # 点击下拉框
+                # 4. 点击下拉框
                 dropdown = self.wait.until(
-                    EC.element_to_be_clickable((By.XPATH, "//*[@id='operatorType']/div/div/div/div/div/div/div/div/div/div"))
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, "#operatorType .ST_head_5-111-0"))
                 )
                 dropdown.click()
                 
-                # 选择"放弃调整报价"选项
+                # 5. 选择"放弃调整报价"选项
                 abandon_option = self.wait.until(
-                    EC.element_to_be_clickable((By.XPATH, "/html/body/div[8]/div/div/div/div/ul/li[3]"))
+                    EC.element_to_be_clickable((By.XPATH, "//div[contains(@class, 'ST_option_5-111-0')]//span[contains(text(), '放弃调整报价')]"))
                 )
                 abandon_option.click()
 
-                # 等待用户观察
-                if self.debug:
-                    print("等待1秒，请观察确认结果...")
-                time.sleep(1)
-                
-                # 点击确认提交按钮
+                # 6. 点击确认按钮
                 confirm_button = self.wait.until(
-                    EC.element_to_be_clickable((By.XPATH, "/html/body/div[7]/div/div/div[1]/div[3]/div[2]/button[1]"))
+                    EC.element_to_be_clickable((By.CSS_SELECTOR, ".MDL_okBtn_5-111-0"))
                 )
+
+                time.sleep(1000)
+
                 confirm_button.click()
                 
                 # 记录日志
                 self.log_record(sku, spu, min_price, new_price, "放弃调整报价")
-                
 
             # 等待弹窗消失
             time.sleep(2)

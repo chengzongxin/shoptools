@@ -2,8 +2,12 @@ import os
 import requests
 import zipfile
 import io
-import winreg
+import platform
 from webdriver_manager.chrome import ChromeDriverManager
+
+# 根据操作系统导入不同的模块
+if platform.system() == 'Windows':
+    import winreg
 
 class ChromeDriverManager:
     """
@@ -16,6 +20,7 @@ class ChromeDriverManager:
         :param debug: 是否开启调试模式
         """
         self.debug = debug
+        self.system = platform.system()
 
     def check_local_chromedriver(self):
         """
@@ -23,7 +28,8 @@ class ChromeDriverManager:
         :return: ChromeDriver路径或None
         """
         driver_dir = os.path.join(os.getcwd(), "drivers")
-        driver_path = os.path.join(driver_dir, "chromedriver.exe")
+        driver_name = "chromedriver.exe" if self.system == "Windows" else "chromedriver"
+        driver_path = os.path.join(driver_dir, driver_name)
         
         if os.path.exists(driver_path):
             if self.debug:
@@ -40,10 +46,20 @@ class ChromeDriverManager:
             # 尝试使用webdriver_manager获取版本
             return ChromeDriverManager().driver.get_version()
         except:
-            # 如果失败，尝试从注册表获取
-            key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Google\Chrome\BLBeacon")
-            version, _ = winreg.QueryValueEx(key, "version")
-            return version
+            if self.system == "Windows":
+                # Windows系统从注册表获取
+                key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Google\Chrome\BLBeacon")
+                version, _ = winreg.QueryValueEx(key, "version")
+                return version
+            else:
+                # Mac系统从应用程序包获取
+                chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+                if os.path.exists(chrome_path):
+                    import subprocess
+                    result = subprocess.run([chrome_path, '--version'], capture_output=True, text=True)
+                    version = result.stdout.strip().split()[-1]
+                    return version
+                raise Exception("无法获取Chrome版本")
 
     def get_version_numbers(self, chrome_version):
         """
@@ -101,8 +117,15 @@ class ChromeDriverManager:
                     if self.debug:
                         print(f"尝试ChromeDriver版本: {version}")
                     
-                    # 构建下载URL
-                    download_url = f"https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/{version}/win64/chromedriver-win64.zip"
+                    # 根据操作系统选择正确的下载URL
+                    if self.system == "Windows":
+                        download_url = f"https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/{version}/win64/chromedriver-win64.zip"
+                        zip_path = "chromedriver-win64/chromedriver.exe"
+                        driver_name = "chromedriver.exe"
+                    else:
+                        download_url = f"https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/{version}/mac-x64/chromedriver-mac-x64.zip"
+                        zip_path = "chromedriver-mac-x64/chromedriver"
+                        driver_name = "chromedriver"
                     
                     if self.debug:
                         print(f"正在下载ChromeDriver...")
@@ -118,15 +141,19 @@ class ChromeDriverManager:
                         os.makedirs(driver_dir, exist_ok=True)
                         
                         # 解压文件
-                        zip_file.extract("chromedriver-win64/chromedriver.exe", driver_dir)
+                        zip_file.extract(zip_path, driver_dir)
                         
                         # 移动文件到正确位置
-                        old_path = os.path.join(driver_dir, "chromedriver-win64", "chromedriver.exe")
-                        new_path = os.path.join(driver_dir, "chromedriver.exe")
+                        old_path = os.path.join(driver_dir, zip_path)
+                        new_path = os.path.join(driver_dir, driver_name)
                         
                         if os.path.exists(new_path):
                             os.remove(new_path)
                         os.rename(old_path, new_path)
+                        
+                        # 在Mac上设置执行权限
+                        if self.system != "Windows":
+                            os.chmod(new_path, 0o755)
                         
                         if self.debug:
                             print(f"ChromeDriver已下载到: {new_path}")
