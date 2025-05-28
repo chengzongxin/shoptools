@@ -254,6 +254,147 @@ class ProductListCrawler:
             logger.error(f"保存Excel文件时发生错误: {str(e)}")
             raise  # 添加这行以显示详细错误信息
 
+    def create_product_code_template(self, data: List[Dict], filename: str = None):
+        """
+        创建商品码模板Excel
+        
+        Args:
+            data: 商品数据列表
+            filename: 文件名（可选）
+        """
+        if not data:
+            logger.warning("没有数据可保存")
+            return
+        
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"product_code_template_{timestamp}.xlsx"
+        
+        try:
+            # 准备Excel数据
+            excel_data = []
+            
+            # 定义映射字典
+            code_mapping = {
+                "CUSHION": "CU-0608",
+                "Cushion": "CU-0608",
+                "SLEEVE": "BE-0608",
+                "Sleeve": "BE-0608",
+                "SH": "SH-0608",
+                "sh": "SH-0608",
+                "CB": "CB-0608",
+                "cb": "CB-0608",
+                "Sock": "SO-0608",
+                "sock": "SO-0608",
+                "drawing": "CB-0608",
+                "Drawing": "CB-0608",
+                "Scarf": "BE-0608",
+                "scarf": "BE-0608",
+                "Apron": "AP-0608",
+                "apron": "AP-0608"
+            }
+            
+            for product in data:
+                product_id = product['productId']
+                
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    sku_code = sku['extCode']
+                    # 获取下划线前的部分
+                    key = sku_code.split('_')[0] if '_' in sku_code else sku_code
+                    
+                    # 查找对应的商品码
+                    product_code = code_mapping.get(key, "未定义")
+                    
+                    excel_data.append({
+                        'SPUID': product_id,
+                        '商品识别码': product_code
+                    })
+            
+            # 创建DataFrame
+            df = pd.DataFrame(excel_data)
+            
+            # 设置列顺序
+            columns_order = ['SPUID', '商品识别码']
+            df = df[columns_order]
+            
+            # 保存为Excel
+            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Sheet1')
+                
+                # 获取工作表
+                worksheet = writer.sheets['Sheet1']
+                
+                # 设置标题行格式
+                for col in range(1, 3):  # A和B列
+                    cell = worksheet.cell(row=1, column=col)
+                    cell.value = f"{cell.value}（标题-提示信息）"
+            
+            logger.info(f"商品码模板已保存到文件: {filename}")
+            
+        except Exception as e:
+            logger.error(f"保存商品码模板时发生错误: {str(e)}")
+            raise
+
+    def create_inventory_template(self, data: List[Dict], filename: str = None):
+        """
+        创建库存模板Excel
+        
+        Args:
+            data: 商品数据列表
+            filename: 文件名（可选）
+        """
+        if not data:
+            logger.warning("没有数据可保存")
+            return
+        
+        if not filename:
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"inventory_template_{timestamp}.xlsx"
+        
+        try:
+            # 准备Excel数据
+            excel_data = []
+            
+            for product in data:
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    excel_data.append({
+                        'SKU ID': sku['productSkuId']
+                    })
+            
+            # 创建DataFrame
+            df = pd.DataFrame(excel_data)
+            
+            # 设置列顺序
+            columns_order = ['SKU ID']
+            df = df[columns_order]
+            
+            # 保存为Excel
+            with pd.ExcelWriter(filename, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False, sheet_name='Sheet1')
+                
+                # 获取工作表
+                worksheet = writer.sheets['Sheet1']
+                
+                # 设置标题行格式
+                worksheet.cell(row=1, column=1).value = "SKU ID（标题-提示信息）"
+                worksheet.cell(row=1, column=4).value = "修改后库存（标题-提示信息）"
+                
+                # 添加第二行说明
+                worksheet.cell(row=2, column=1).value = "必填指Temu的SKU ID（标题-提示信息）"
+                worksheet.cell(row=2, column=4).value = "条件必填指当前的实际总库存，导入成功后将直接覆盖线上已有库存（标题-提示信息）"
+            
+                # 从D3开始填充库存值1000
+                for row in range(3, len(excel_data) + 3):  # +3是因为有标题行和说明行
+                    worksheet.cell(row=row, column=4).value = 1000
+        
+            logger.info(f"库存模板已保存到文件: {filename}")
+            
+        except Exception as e:
+            logger.error(f"保存库存模板时发生错误: {str(e)}")
+            raise
+
 class ProductCrawlerGUI:
     def __init__(self):
         self.root = tk.Tk()
@@ -523,8 +664,23 @@ class ProductCrawlerGUI:
             # 保存数据
             if all_data:
                 logging.info(f"共获取到 {len(all_data)} 条数据")
-                crawler.save_to_excel(all_data)
-                logging.info("数据保存完成")
+                
+                # 创建data目录（如果不存在）
+                if not os.path.exists('data'):
+                    os.makedirs('data')
+                
+                # 保存原始数据
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                crawler.save_to_excel(all_data, os.path.join('data', f'product_list_{timestamp}.xlsx'))
+                logging.info("原始数据保存完成")
+                
+                # 生成商品码模板
+                crawler.create_product_code_template(all_data, os.path.join('data', f'product_code_template_{timestamp}.xlsx'))
+                logging.info("商品码模板生成完成")
+                
+                # 生成库存模板
+                crawler.create_inventory_template(all_data, os.path.join('data', f'inventory_template_{timestamp}.xlsx'))
+                logging.info("库存模板生成完成")
             else:
                 logging.warning("未获取到任何数据")
                 
