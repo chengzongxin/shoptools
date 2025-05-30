@@ -23,6 +23,24 @@ class ProductListTab(ttk.Frame):
         # 设置UI
         self.setup_ui()
         
+        # 绑定变量变化事件
+        self.bind_variable_changes()
+        
+    def bind_variable_changes(self):
+        """绑定变量变化事件，实现自动保存"""
+        self.pages_var.trace_add('write', lambda *args: self.auto_save())
+        self.page_size_var.trace_add('write', lambda *args: self.auto_save())
+        self.cookie_var.trace_add('write', lambda *args: self.auto_save())
+        self.anti_content_var.trace_add('write', lambda *args: self.auto_save())
+        self.mallid_var.trace_add('write', lambda *args: self.auto_save())
+        
+    def auto_save(self):
+        """自动保存配置"""
+        try:
+            self.save_params()
+        except Exception as e:
+            logging.error(f"自动保存配置失败: {str(e)}")
+
     def setup_ui(self):
         """设置UI界面"""
         # 创建输入框和标签
@@ -55,6 +73,7 @@ class ProductListTab(ttk.Frame):
                     self.last_mallid = config.get('mallid', '634418223796259')
                     self.last_pages = config.get('pages', '2')
                     self.last_page_size = config.get('page_size', '20')
+                logging.info("已加载上次保存的配置")
         except Exception as e:
             logging.error(f"加载配置文件失败: {str(e)}")
             # 使用默认值
@@ -63,6 +82,7 @@ class ProductListTab(ttk.Frame):
             self.last_mallid = '634418223796259'
             self.last_pages = '2'
             self.last_page_size = '20'
+            logging.info("使用默认配置")
 
     def save_params(self):
         """保存当前参数"""
@@ -77,9 +97,10 @@ class ProductListTab(ttk.Frame):
             config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-            logging.info("参数已保存")
+            logging.info("配置已保存")
         except Exception as e:
             logging.error(f"保存配置文件失败: {str(e)}")
+            messagebox.showerror("错误", f"保存配置失败: {str(e)}")
 
     def create_input_fields(self):
         """创建输入字段"""
