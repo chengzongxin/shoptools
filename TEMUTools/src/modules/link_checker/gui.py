@@ -3,8 +3,6 @@ from tkinter import ttk, filedialog, messagebox
 import os
 import re
 from collections import defaultdict
-from modules.product_list.gui import ProductListTab
-from modules.link_checker.gui import LinkCheckerTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -257,29 +255,4 @@ def should_skip_file(filename):
         '.git',       # Git相关文件
         '__pycache__' # Python缓存文件
     }
-    return any(skip in filename for skip in skip_files)
-
-class TEMUToolsApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("TEMU工具集")
-        
-        # 创建notebook（选项卡控件）
-        self.notebook = ttk.Notebook(root)
-        self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
-        
-        # 创建商品列表管理选项卡
-        self.product_list_tab = ProductListTab(self.notebook)
-        self.notebook.add(self.product_list_tab, text='商品列表管理')
-        
-        # 创建链接重复检测选项卡
-        self.link_checker_tab = LinkCheckerTab(self.notebook)
-        self.notebook.add(self.link_checker_tab, text='链接重复检测')
-
-def main():
-    root = tk.Tk()
-    app = TEMUToolsApp(root)
-    root.mainloop()
-
-if __name__ == "__main__":
-    main() 
+    return any(skip in filename for skip in skip_files) 
