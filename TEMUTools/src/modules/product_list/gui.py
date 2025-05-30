@@ -6,6 +6,9 @@ import os
 import logging
 import csv
 from datetime import datetime
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 from .crawler import ProductListCrawler
 
 class ProductListTab(ttk.Frame):
@@ -201,14 +204,48 @@ class ProductListTab(ttk.Frame):
         )
         self.save_button.pack(side=tk.LEFT, padx=5)
         
-        # 导出数据按钮
-        self.export_button = ttk.Button(
-            button_frame,
-            text="导出数据",
-            command=self.export_data,
+        # 导出按钮框架
+        export_frame = ttk.LabelFrame(button_frame, text="导出", padding="5")
+        export_frame.pack(side=tk.LEFT, padx=5)
+        
+        # 一键导出按钮
+        self.export_all_button = ttk.Button(
+            export_frame,
+            text="一键导出所有模板",
+            command=self.export_all_templates,
             state=tk.DISABLED
         )
-        self.export_button.pack(side=tk.LEFT, padx=5)
+        self.export_all_button.pack(side=tk.LEFT, padx=2)
+        
+        # 分隔线
+        ttk.Separator(export_frame, orient='vertical').pack(side=tk.LEFT, padx=5, fill='y')
+        
+        # 导出商品列表按钮
+        self.export_list_button = ttk.Button(
+            export_frame,
+            text="导出商品列表",
+            command=self.export_product_list,
+            state=tk.DISABLED
+        )
+        self.export_list_button.pack(side=tk.LEFT, padx=2)
+        
+        # 导出商品码模板按钮
+        self.export_code_button = ttk.Button(
+            export_frame,
+            text="导出商品码模板",
+            command=self.export_product_code_template,
+            state=tk.DISABLED
+        )
+        self.export_code_button.pack(side=tk.LEFT, padx=2)
+        
+        # 导出库存模板按钮
+        self.export_inventory_button = ttk.Button(
+            export_frame,
+            text="导出库存模板",
+            command=self.export_inventory_template,
+            state=tk.DISABLED
+        )
+        self.export_inventory_button.pack(side=tk.LEFT, padx=2)
         
     def setup_logging(self):
         """设置日志处理器"""
@@ -306,18 +343,24 @@ class ProductListTab(ttk.Frame):
                 self.current_data = all_data  # 保存当前数据
                 logging.info(f"共获取到 {len(all_data)} 条数据")
                 # 启用导出按钮
-                self.export_button.configure(state='normal')
+                self.export_list_button.configure(state='normal')
+                self.export_code_button.configure(state='normal')
+                self.export_inventory_button.configure(state='normal')
             else:
                 self.current_data = []  # 清空当前数据
                 logging.warning("未获取到任何数据")
                 # 禁用导出按钮
-                self.export_button.configure(state='disabled')
+                self.export_list_button.configure(state='disabled')
+                self.export_code_button.configure(state='disabled')
+                self.export_inventory_button.configure(state='disabled')
                 
         except Exception as e:
             self.current_data = []  # 清空当前数据
             logging.error(f"程序执行出错: {str(e)}")
             # 禁用导出按钮
-            self.export_button.configure(state='disabled')
+            self.export_list_button.configure(state='disabled')
+            self.export_code_button.configure(state='disabled')
+            self.export_inventory_button.configure(state='disabled')
         finally:
             # 恢复界面状态
             self.after(0, self.reset_ui)
@@ -337,36 +380,573 @@ class ProductListTab(ttk.Frame):
         self.start_button.configure(state='normal')
         self.stop_button.configure(state='disabled')
         # 根据是否有数据来设置导出按钮状态
-        self.export_button.configure(state='normal' if self.current_data else 'disabled')
+        has_data = bool(self.current_data)
+        self.export_all_button.configure(state='normal' if has_data else 'disabled')
+        self.export_list_button.configure(state='normal' if has_data else 'disabled')
+        self.export_code_button.configure(state='normal' if has_data else 'disabled')
+        self.export_inventory_button.configure(state='normal' if has_data else 'disabled')
 
-    def export_data(self):
-        """导出数据到CSV文件"""
+    def export_product_list(self):
+        """导出商品列表到Excel文件"""
         if not self.current_data:
             messagebox.showwarning("警告", "没有可导出的数据")
             return
             
         try:
             # 获取保存路径
-            default_filename = f"商品列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            default_filename = f"商品列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             file_path = filedialog.asksaveasfilename(
-                defaultextension=".csv",
-                filetypes=[("CSV文件", "*.csv")],
+                defaultextension=".xlsx",
+                filetypes=[("Excel文件", "*.xlsx")],
                 initialfile=default_filename
             )
             
             if not file_path:  # 用户取消保存
                 return
                 
-            # 写入CSV文件
-            with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
-                writer = csv.DictWriter(f, fieldnames=self.current_data[0].keys())
-                writer.writeheader()
-                writer.writerows(self.current_data)
+            # 准备Excel数据
+            excel_data = []
+            
+            for product in self.current_data:
+                # 基本信息
+                base_info = {
+                    '商品ID': product['productId'],
+                    '商品名称': product['productName'],
+                    '商品类型': product['productType'],
+                    '来源类型': product['sourceType'],
+                    '商品编码': product['goodsId'],
+                    '主图URL': product['mainImageUrl'],
+                    '创建时间': datetime.fromtimestamp(product['createdAt']/1000).strftime('%Y-%m-%d %H:%M:%S'),
+                    '类目ID': product['leafCat']['catId'],
+                    '类目名称': product['leafCat']['catName']
+                }
                 
-            logging.info(f"数据已导出到: {file_path}")
-            messagebox.showinfo("成功", "数据导出成功！")
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    sku_info = base_info.copy()
+                    sku_info.update({
+                        'SKU ID': sku['productSkuId'],
+                        'SKU编码': sku['extCode'],
+                        '供应商价格': sku['supplierPrice'] / 100,  # 转换为元
+                        'SKU图片': sku['thumbUrl']
+                    })
+                    
+                    # 处理规格信息
+                    for spec in sku['productSkuSpecList']:
+                        sku_info[f'{spec["parentSpecName"]}'] = spec['specName']
+                    
+                    excel_data.append(sku_info)
+            
+            # 创建工作簿
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "商品列表"
+            
+            # 设置样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # 设置列顺序
+            columns_order = [
+                '商品ID', '商品名称', '商品类型', '来源类型', '商品编码',
+                '类目ID', '类目名称', 'SKU ID', 'SKU编码', '供应商价格',
+                '颜色', '尺码', '主图URL', 'SKU图片', '创建时间'
+            ]
+            
+            # 写入表头
+            for col, header in enumerate(columns_order, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = border
+                # 设置列宽
+                ws.column_dimensions[get_column_letter(col)].width = 20
+            
+            # 写入数据
+            for row, data in enumerate(excel_data, 2):
+                for col, header in enumerate(columns_order, 1):
+                    value = data.get(header, '')
+                    cell = ws.cell(row=row, column=col, value=value)
+                    cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+                    cell.border = border
+            
+            # 保存文件
+            wb.save(file_path)
+            
+            logging.info(f"商品列表已导出到Excel: {file_path}")
+            messagebox.showinfo("成功", "商品列表导出成功！")
             
         except Exception as e:
-            error_msg = f"导出数据失败: {str(e)}"
+            error_msg = f"导出商品列表失败: {str(e)}"
             logging.error(error_msg)
-            messagebox.showerror("错误", error_msg) 
+            messagebox.showerror("错误", error_msg)
+
+    def export_product_code_template(self):
+        """导出商品码模板"""
+        if not self.current_data:
+            messagebox.showwarning("警告", "没有可导出的数据")
+            return
+            
+        try:
+            # 获取保存路径
+            default_filename = f"商品码模板_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".xlsx",
+                filetypes=[("Excel文件", "*.xlsx")],
+                initialfile=default_filename
+            )
+            
+            if not file_path:  # 用户取消保存
+                return
+                
+            # 准备Excel数据
+            excel_data = []
+            
+            # 定义映射字典
+            code_mapping = {
+                "CUSHION": "CU-0608",
+                "Cushion": "CU-0608",
+                "SLEEVE": "BE-0608",
+                "Sleeve": "BE-0608",
+                "SH": "SH-0608",
+                "sh": "SH-0608",
+                "CB": "CB-0608",
+                "cb": "CB-0608",
+                "Sock": "SO-0608",
+                "sock": "SO-0608",
+                "drawing": "CB-0608",
+                "Drawing": "CB-0608",
+                "Scarf": "BE-0608",
+                "scarf": "BE-0608",
+                "Apron": "AP-0608",
+                "apron": "AP-0608"
+            }
+            
+            for product in self.current_data:
+                product_id = product['productId']
+                
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    sku_code = sku['extCode']
+                    # 获取下划线前的部分
+                    key = sku_code.split('_')[0] if '_' in sku_code else sku_code
+                    
+                    # 查找对应的商品码
+                    product_code = code_mapping.get(key, "未定义")
+                    
+                    excel_data.append({
+                        'SPUID': product_id,
+                        '商品识别码': product_code
+                    })
+            
+            # 创建工作簿
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "商品码模板"
+            
+            # 设置样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # 写入表头
+            headers = ['SPUID', '商品识别码']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=f"{header}")
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = border
+                # 设置列宽
+                ws.column_dimensions[get_column_letter(col)].width = 20
+            
+            # 写入数据
+            for row, data in enumerate(excel_data, 2):
+                for col, header in enumerate(headers, 1):
+                    value = data.get(header, '')
+                    cell = ws.cell(row=row, column=col, value=value)
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+                    cell.border = border
+            
+            # 保存文件
+            wb.save(file_path)
+            
+            logging.info(f"商品码模板已导出到Excel: {file_path}")
+            messagebox.showinfo("成功", "商品码模板导出成功！")
+            
+        except Exception as e:
+            error_msg = f"导出商品码模板失败: {str(e)}"
+            logging.error(error_msg)
+            messagebox.showerror("错误", error_msg)
+
+    def export_inventory_template(self):
+        """导出库存模板"""
+        if not self.current_data:
+            messagebox.showwarning("警告", "没有可导出的数据")
+            return
+            
+        try:
+            # 获取保存路径
+            default_filename = f"库存模板_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".xlsx",
+                filetypes=[("Excel文件", "*.xlsx")],
+                initialfile=default_filename
+            )
+            
+            if not file_path:  # 用户取消保存
+                return
+                
+            # 准备Excel数据
+            excel_data = []
+            
+            for product in self.current_data:
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    excel_data.append({
+                        'SKU ID': sku['productSkuId']
+                    })
+            
+            # 创建工作簿
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "库存模板"
+            
+            # 设置样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # 写入表头
+            headers = ['SKU ID', '1', '2', '修改后库存']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = border
+                # 设置列宽
+                ws.column_dimensions[get_column_letter(col)].width = 20
+            
+            # 写入说明行
+            ws.cell(row=2, column=1, value="必填指Temu的SKU ID")
+            ws.cell(row=2, column=4, value="条件必填指当前的实际总库存，导入成功后将直接覆盖线上已有库存")
+            
+            # 写入数据
+            for row, data in enumerate(excel_data, 3):
+                # SKU ID (第1列)
+                cell = ws.cell(row=row, column=1, value=data['SKU ID'])
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                cell.border = border
+                
+                # 第2、3列保持为空
+                for col in [2, 3]:
+                    cell = ws.cell(row=row, column=col, value="")
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+                    cell.border = border
+                
+                # 默认库存值 (第4列)
+                cell = ws.cell(row=row, column=4, value=1000)
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                cell.border = border
+            
+            # 保存文件
+            wb.save(file_path)
+            
+            logging.info(f"库存模板已导出到Excel: {file_path}")
+            messagebox.showinfo("成功", "库存模板导出成功！")
+            
+        except Exception as e:
+            error_msg = f"导出库存模板失败: {str(e)}"
+            logging.error(error_msg)
+            messagebox.showerror("错误", error_msg)
+
+    def export_all_templates(self):
+        """一键导出所有模板"""
+        if not self.current_data:
+            messagebox.showwarning("警告", "没有可导出的数据")
+            return
+            
+        try:
+            # 获取保存目录
+            save_dir = filedialog.askdirectory(title="选择保存目录")
+            if not save_dir:  # 用户取消选择
+                return
+                
+            # 生成时间戳
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            
+            # 导出商品列表
+            list_path = os.path.join(save_dir, f"商品列表_{timestamp}.xlsx")
+            self.export_product_list_to_path(list_path)
+            
+            # 导出商品码模板
+            code_path = os.path.join(save_dir, f"商品码模板_{timestamp}.xlsx")
+            self.export_product_code_template_to_path(code_path)
+            
+            # 导出库存模板
+            inventory_path = os.path.join(save_dir, f"库存模板_{timestamp}.xlsx")
+            self.export_inventory_template_to_path(inventory_path)
+            
+            logging.info(f"所有模板已导出到目录: {save_dir}")
+            messagebox.showinfo("成功", "所有模板导出成功！")
+            
+        except Exception as e:
+            error_msg = f"导出模板失败: {str(e)}"
+            logging.error(error_msg)
+            messagebox.showerror("错误", error_msg)
+
+    def export_product_list_to_path(self, file_path):
+        """导出商品列表到指定路径"""
+        try:
+            # 准备Excel数据
+            excel_data = []
+            
+            for product in self.current_data:
+                # 基本信息
+                base_info = {
+                    '商品ID': product['productId'],
+                    '商品名称': product['productName'],
+                    '商品类型': product['productType'],
+                    '来源类型': product['sourceType'],
+                    '商品编码': product['goodsId'],
+                    '主图URL': product['mainImageUrl'],
+                    '创建时间': datetime.fromtimestamp(product['createdAt']/1000).strftime('%Y-%m-%d %H:%M:%S'),
+                    '类目ID': product['leafCat']['catId'],
+                    '类目名称': product['leafCat']['catName']
+                }
+                
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    sku_info = base_info.copy()
+                    sku_info.update({
+                        'SKU ID': sku['productSkuId'],
+                        'SKU编码': sku['extCode'],
+                        '供应商价格': sku['supplierPrice'] / 100,  # 转换为元
+                        'SKU图片': sku['thumbUrl']
+                    })
+                    
+                    # 处理规格信息
+                    for spec in sku['productSkuSpecList']:
+                        sku_info[f'{spec["parentSpecName"]}'] = spec['specName']
+                    
+                    excel_data.append(sku_info)
+            
+            # 创建工作簿
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "商品列表"
+            
+            # 设置样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # 设置列顺序
+            columns_order = [
+                '商品ID', '商品名称', '商品类型', '来源类型', '商品编码',
+                '类目ID', '类目名称', 'SKU ID', 'SKU编码', '供应商价格',
+                '颜色', '尺码', '主图URL', 'SKU图片', '创建时间'
+            ]
+            
+            # 写入表头
+            for col, header in enumerate(columns_order, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = border
+                # 设置列宽
+                ws.column_dimensions[get_column_letter(col)].width = 20
+            
+            # 写入数据
+            for row, data in enumerate(excel_data, 2):
+                for col, header in enumerate(columns_order, 1):
+                    value = data.get(header, '')
+                    cell = ws.cell(row=row, column=col, value=value)
+                    cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+                    cell.border = border
+            
+            # 保存文件
+            wb.save(file_path)
+            
+        except Exception as e:
+            raise Exception(f"导出商品列表失败: {str(e)}")
+
+    def export_product_code_template_to_path(self, file_path):
+        """导出商品码模板到指定路径"""
+        try:
+            # 准备Excel数据
+            excel_data = []
+            
+            # 定义映射字典
+            code_mapping = {
+                "CUSHION": "CU-0608",
+                "Cushion": "CU-0608",
+                "SLEEVE": "BE-0608",
+                "Sleeve": "BE-0608",
+                "SH": "SH-0608",
+                "sh": "SH-0608",
+                "CB": "CB-0608",
+                "cb": "CB-0608",
+                "Sock": "SO-0608",
+                "sock": "SO-0608",
+                "drawing": "CB-0608",
+                "Drawing": "CB-0608",
+                "Scarf": "BE-0608",
+                "scarf": "BE-0608",
+                "Apron": "AP-0608",
+                "apron": "AP-0608"
+            }
+            
+            for product in self.current_data:
+                product_id = product['productId']
+                
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    sku_code = sku['extCode']
+                    # 获取下划线前的部分
+                    key = sku_code.split('_')[0] if '_' in sku_code else sku_code
+                    
+                    # 查找对应的商品码
+                    product_code = code_mapping.get(key, "未定义")
+                    
+                    excel_data.append({
+                        'SPUID': product_id,
+                        '商品识别码': product_code
+                    })
+            
+            # 创建工作簿
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "商品码模板"
+            
+            # 设置样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # 写入表头
+            headers = ['SPUID', '商品识别码']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=f"{header}")
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = border
+                # 设置列宽
+                ws.column_dimensions[get_column_letter(col)].width = 20
+            
+            # 写入数据
+            for row, data in enumerate(excel_data, 2):
+                for col, header in enumerate(headers, 1):
+                    value = data.get(header, '')
+                    cell = ws.cell(row=row, column=col, value=value)
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+                    cell.border = border
+            
+            # 保存文件
+            wb.save(file_path)
+            
+        except Exception as e:
+            raise Exception(f"导出商品码模板失败: {str(e)}")
+
+    def export_inventory_template_to_path(self, file_path):
+        """导出库存模板到指定路径"""
+        try:
+            # 准备Excel数据
+            excel_data = []
+            
+            for product in self.current_data:
+                # 处理SKU信息
+                for sku in product['productSkuSummaries']:
+                    excel_data.append({
+                        'SKU ID': sku['productSkuId']
+                    })
+            
+            # 创建工作簿
+            wb = Workbook()
+            ws = wb.active
+            ws.title = "库存模板"
+            
+            # 设置样式
+            header_font = Font(bold=True, color="FFFFFF")
+            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+            header_alignment = Alignment(horizontal="center", vertical="center")
+            border = Border(
+                left=Side(style='thin'),
+                right=Side(style='thin'),
+                top=Side(style='thin'),
+                bottom=Side(style='thin')
+            )
+            
+            # 写入表头
+            headers = ['SKU ID', '', '', '修改后库存']
+            for col, header in enumerate(headers, 1):
+                cell = ws.cell(row=1, column=col, value=header)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.alignment = header_alignment
+                cell.border = border
+                # 设置列宽
+                ws.column_dimensions[get_column_letter(col)].width = 20
+            
+            # 写入说明行
+            ws.cell(row=2, column=1, value="必填指Temu的SKU ID")
+            ws.cell(row=2, column=4, value="条件必填指当前的实际总库存，导入成功后将直接覆盖线上已有库存")
+            
+            # 写入数据
+            for row, data in enumerate(excel_data, 3):
+                # SKU ID (第1列)
+                cell = ws.cell(row=row, column=1, value=data['SKU ID'])
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                cell.border = border
+                
+                # 第2、3列保持为空
+                for col in [2, 3]:
+                    cell = ws.cell(row=row, column=col, value="")
+                    cell.alignment = Alignment(horizontal="left", vertical="center")
+                    cell.border = border
+                
+                # 默认库存值 (第4列)
+                cell = ws.cell(row=row, column=4, value=1000)
+                cell.alignment = Alignment(horizontal="left", vertical="center")
+                cell.border = border
+            
+            # 保存文件
+            wb.save(file_path)
+            
+        except Exception as e:
+            raise Exception(f"导出库存模板失败: {str(e)}") 
