@@ -10,15 +10,15 @@ import argparse
 import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
-import os
-import sys
+# import os
+# import sys
 
-if getattr(sys, 'frozen', False):
-    # 打包后
-    BASE_DIR = os.path.dirname(sys.executable)
-else:
-    # 源码运行
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# if getattr(sys, 'frozen', False):
+#     # 打包后
+#     BASE_DIR = os.path.dirname(sys.executable)
+# else:
+#     # 源码运行
+#     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # 配置日志
 logging.basicConfig(
