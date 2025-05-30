@@ -1,9 +1,10 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import threading
 import json
 import os
 import logging
+import csv
 from datetime import datetime
 from .crawler import ProductListCrawler
 
@@ -16,6 +17,7 @@ class ProductListTab(ttk.Frame):
         self.last_mallid = '634418223796259'
         self.last_pages = '2'
         self.last_page_size = '20'
+        self.current_data = []  # 存储当前获取的数据
         
         # 加载保存的参数
         self.load_last_params()
@@ -199,6 +201,15 @@ class ProductListTab(ttk.Frame):
         )
         self.save_button.pack(side=tk.LEFT, padx=5)
         
+        # 导出数据按钮
+        self.export_button = ttk.Button(
+            button_frame,
+            text="导出数据",
+            command=self.export_data,
+            state=tk.DISABLED
+        )
+        self.export_button.pack(side=tk.LEFT, padx=5)
+        
     def setup_logging(self):
         """设置日志处理器"""
         # 创建自定义日志处理器
@@ -292,12 +303,21 @@ class ProductListTab(ttk.Frame):
             all_data = crawler.get_all_data(max_pages=pages)
             
             if all_data:
+                self.current_data = all_data  # 保存当前数据
                 logging.info(f"共获取到 {len(all_data)} 条数据")
+                # 启用导出按钮
+                self.export_button.configure(state='normal')
             else:
+                self.current_data = []  # 清空当前数据
                 logging.warning("未获取到任何数据")
+                # 禁用导出按钮
+                self.export_button.configure(state='disabled')
                 
         except Exception as e:
+            self.current_data = []  # 清空当前数据
             logging.error(f"程序执行出错: {str(e)}")
+            # 禁用导出按钮
+            self.export_button.configure(state='disabled')
         finally:
             # 恢复界面状态
             self.after(0, self.reset_ui)
@@ -315,4 +335,38 @@ class ProductListTab(ttk.Frame):
         self.anti_content_entry.configure(state='normal')
         self.mallid_entry.configure(state='normal')
         self.start_button.configure(state='normal')
-        self.stop_button.configure(state='disabled') 
+        self.stop_button.configure(state='disabled')
+        # 根据是否有数据来设置导出按钮状态
+        self.export_button.configure(state='normal' if self.current_data else 'disabled')
+
+    def export_data(self):
+        """导出数据到CSV文件"""
+        if not self.current_data:
+            messagebox.showwarning("警告", "没有可导出的数据")
+            return
+            
+        try:
+            # 获取保存路径
+            default_filename = f"商品列表_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            file_path = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV文件", "*.csv")],
+                initialfile=default_filename
+            )
+            
+            if not file_path:  # 用户取消保存
+                return
+                
+            # 写入CSV文件
+            with open(file_path, 'w', newline='', encoding='utf-8-sig') as f:
+                writer = csv.DictWriter(f, fieldnames=self.current_data[0].keys())
+                writer.writeheader()
+                writer.writerows(self.current_data)
+                
+            logging.info(f"数据已导出到: {file_path}")
+            messagebox.showinfo("成功", "数据导出成功！")
+            
+        except Exception as e:
+            error_msg = f"导出数据失败: {str(e)}"
+            logging.error(error_msg)
+            messagebox.showerror("错误", error_msg) 
