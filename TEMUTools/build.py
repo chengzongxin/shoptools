@@ -30,12 +30,24 @@ def build_app(dev_mode=False):
     """
     print("开始构建应用程序...")
     
+    # 检查图标文件是否存在
+    icon_path = os.path.join('assets', 'app.ico')
+    if not os.path.exists(icon_path):
+        print(f"警告：图标文件 {icon_path} 不存在，将使用默认图标")
+        icon_option = []
+    else:
+        icon_option = ['--icon', icon_path]
+    
     # 基础命令
     cmd = [
         'pyinstaller',
-        '--name="TEMU工具集"',
+        '--name=TEMU工具集',  # 移除多余的引号
         'src/main.py'
     ]
+    
+    # 添加图标选项
+    if icon_option:
+        cmd[1:1] = icon_option
     
     # 根据模式添加参数
     if dev_mode:
@@ -47,7 +59,8 @@ def build_app(dev_mode=False):
     
     # 执行打包命令
     try:
-        subprocess.run(' '.join(cmd), shell=True, check=True)
+        print("执行命令:", ' '.join(cmd))
+        subprocess.run(cmd, check=True)  # 移除shell=True，直接传递命令列表
         print("打包完成！")
         print(f"可执行文件位置: {os.path.abspath('dist/TEMU工具集')}")
     except subprocess.CalledProcessError as e:

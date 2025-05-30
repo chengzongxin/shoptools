@@ -264,6 +264,11 @@ class TEMUToolsApp:
         self.root = root
         self.root.title("TEMU工具集")
         
+        # 设置应用程序图标
+        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'app.ico')
+        if os.path.exists(icon_path):
+            self.root.iconbitmap(icon_path)
+        
         # 创建notebook（选项卡控件）
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
