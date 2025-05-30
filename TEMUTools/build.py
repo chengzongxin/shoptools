@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 
 def clean_build_dirs():
     """清理构建目录"""
@@ -9,8 +10,17 @@ def clean_build_dirs():
     dirs_to_clean = ['build', 'dist']
     for dir_name in dirs_to_clean:
         if os.path.exists(dir_name):
-            shutil.rmtree(dir_name)
-            print(f"已删除 {dir_name} 目录")
+            try:
+                shutil.rmtree(dir_name)
+                print(f"已删除 {dir_name} 目录")
+            except PermissionError as e:
+                print(f"警告：无法删除 {dir_name} 目录中的某些文件，可能是文件正在使用中")
+                print(f"错误信息：{str(e)}")
+                print("请关闭所有相关程序后重试")
+                sys.exit(1)
+            except Exception as e:
+                print(f"删除 {dir_name} 目录时出错：{str(e)}")
+                sys.exit(1)
 
 def build_app(dev_mode=False):
     """构建应用程序

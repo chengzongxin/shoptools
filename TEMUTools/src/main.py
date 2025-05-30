@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import os
+from modules.product_list.gui import ProductListTab
 
 class TEMUToolsApp:
     def __init__(self, root):
@@ -19,12 +20,8 @@ class TEMUToolsApp:
         
     def create_product_list_tab(self):
         """商品列表管理选项卡"""
-        frame = ttk.Frame(self.notebook)
-        self.notebook.add(frame, text="商品列表管理")
-        
-        # 添加说明标签
-        label = ttk.Label(frame, text="商品列表管理功能开发中...")
-        label.pack(pady=20)
+        product_list_tab = ProductListTab(self.notebook)
+        self.notebook.add(product_list_tab, text="商品列表管理")
         
     def create_template_tab(self):
         """商品码模板选项卡"""
