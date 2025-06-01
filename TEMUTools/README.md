@@ -5,7 +5,7 @@
 ## 功能特点
 
 - 商品列表管理
-- 商品码模板生成
+   - 商品码模板生成
 - 库存模板管理
 - 自动保存配置
 - 数据导出功能
@@ -32,9 +32,9 @@
    ```
 
 3. 安装依赖：
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
 ## 使用方法
 

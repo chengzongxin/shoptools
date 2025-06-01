@@ -21,85 +21,87 @@ class ViolationListTab(ttk.Frame):
         
     def setup_ui(self):
         """设置用户界面"""
-        # 创建主框架
-        self.main_frame = ttk.Frame(self, padding="10")
-        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # 创建输入字段
+        self.create_input_fields()
         
-        # 创建配置区域
-        self.create_config_frame()
+        # 创建Cookie输入区域
+        self.create_cookie_input()
         
-        # 创建分页设置区域
-        self.create_pagination_frame()
+        # 创建日志显示区域
+        self.create_log_area()
         
-        # 创建按钮区域
-        self.create_button_frame()
+        # 创建按钮
+        self.create_buttons()
         
-        # 创建结果显示区域
-        self.create_result_frame()
+        # 配置日志处理器
+        self.setup_logging()
         
-        # 配置网格权重
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        self.main_frame.columnconfigure(0, weight=1)
+    def create_input_fields(self):
+        """创建输入字段"""
+        # 页数输入
+        ttk.Label(self, text="获取页数:").grid(row=0, column=0, sticky=tk.W)
+        self.start_page_var = tk.StringVar(value="1")
+        self.start_page_entry = ttk.Entry(self, textvariable=self.start_page_var, width=10)
+        self.start_page_entry.grid(row=0, column=1, sticky=tk.W)
         
-    def create_config_frame(self):
-        """创建配置区域"""
-        config_frame = ttk.LabelFrame(self.main_frame, text="配置", padding="5")
-        config_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=5)
+        # 每页数据量输入
+        ttk.Label(self, text="每页数据量:").grid(row=1, column=0, sticky=tk.W)
+        self.page_size_var = tk.StringVar(value="100")
+        self.page_size_entry = ttk.Entry(self, textvariable=self.page_size_var, width=10)
+        self.page_size_entry.grid(row=1, column=1, sticky=tk.W)
+        
+    def create_cookie_input(self):
+        """创建Cookie输入区域"""
+        # Cookie输入框架
+        cookie_frame = ttk.LabelFrame(self, text="请求头设置", padding="5")
+        cookie_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         
         # Cookie输入
-        ttk.Label(config_frame, text="Cookie:").grid(row=0, column=0, sticky=tk.W)
-        self.cookie_entry = ttk.Entry(config_frame, width=50)
+        ttk.Label(cookie_frame, text="Cookie:").grid(row=0, column=0, sticky=tk.W)
+        self.cookie_entry = ttk.Entry(cookie_frame, width=80)
         self.cookie_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
         
-        # Anti-Content输入
-        ttk.Label(config_frame, text="Anti-Content:").grid(row=1, column=0, sticky=tk.W)
-        self.anti_content_entry = ttk.Entry(config_frame, width=50)
+        # Anti-content输入
+        ttk.Label(cookie_frame, text="Anti-content:").grid(row=1, column=0, sticky=tk.W)
+        self.anti_content_entry = ttk.Entry(cookie_frame, width=80)
         self.anti_content_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5)
         
         # MallID输入
-        ttk.Label(config_frame, text="MallID:").grid(row=2, column=0, sticky=tk.W)
-        self.mallid_entry = ttk.Entry(config_frame, width=50)
+        ttk.Label(cookie_frame, text="MallID:").grid(row=2, column=0, sticky=tk.W)
+        self.mallid_entry = ttk.Entry(cookie_frame, width=80)
         self.mallid_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=5)
         
-        # 配置网格权重
-        config_frame.columnconfigure(1, weight=1)
+        # 添加说明标签
+        ttk.Label(
+            cookie_frame, 
+            text="请从浏览器开发者工具中复制Cookie、Anti-content和MallID值",
+            font=("Arial", 8)
+        ).grid(row=3, column=0, columnspan=2, sticky=tk.W, padx=5)
         
-    def create_pagination_frame(self):
-        """创建分页设置区域"""
-        pagination_frame = ttk.LabelFrame(self.main_frame, text="分页设置", padding="5")
-        pagination_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=5)
+    def create_log_area(self):
+        """创建日志显示区域"""
+        # 创建日志文本框
+        self.log_text = tk.Text(self, height=15, width=80)
+        self.log_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # 起始页码
-        ttk.Label(pagination_frame, text="起始页码:").grid(row=0, column=0, sticky=tk.W)
-        self.start_page_var = tk.StringVar(value="1")
-        self.start_page_entry = ttk.Entry(pagination_frame, textvariable=self.start_page_var, width=10)
-        self.start_page_entry.grid(row=0, column=1, sticky=tk.W, padx=5)
+        # 添加滚动条
+        scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.log_text.yview)
+        scrollbar.grid(row=3, column=2, sticky=(tk.N, tk.S))
+        self.log_text['yscrollcommand'] = scrollbar.set
         
-        # 获取页数
-        ttk.Label(pagination_frame, text="获取页数:").grid(row=0, column=2, sticky=tk.W, padx=(20, 0))
-        self.page_count_var = tk.StringVar(value="2")
-        self.page_count_entry = ttk.Entry(pagination_frame, textvariable=self.page_count_var, width=10)
-        self.page_count_entry.grid(row=0, column=3, sticky=tk.W, padx=5)
-        
-        # 每页数量
-        ttk.Label(pagination_frame, text="每页数量:").grid(row=0, column=4, sticky=tk.W, padx=(20, 0))
-        self.page_size_var = tk.StringVar(value="100")
-        self.page_size_entry = ttk.Entry(pagination_frame, textvariable=self.page_size_var, width=10)
-        self.page_size_entry.grid(row=0, column=5, sticky=tk.W, padx=5)
-        
-    def create_button_frame(self):
-        """创建按钮区域"""
-        button_frame = ttk.Frame(self.main_frame)
-        button_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=5)
+    def create_buttons(self):
+        """创建按钮"""
+        # 创建按钮框架
+        button_frame = ttk.Frame(self)
+        button_frame.grid(row=4, column=0, columnspan=2, pady=10)
         
         # 开始按钮
         self.start_button = ttk.Button(
-            button_frame,
+            button_frame, 
             text="开始获取",
             command=self.start_crawling
         )
-        self.start_button.grid(row=0, column=0, padx=5)
+        self.start_button.pack(side=tk.LEFT, padx=5)
         
         # 导出Excel按钮
         self.export_button = ttk.Button(
@@ -108,7 +110,7 @@ class ViolationListTab(ttk.Frame):
             command=self.export_to_excel,
             state='disabled'  # 初始状态为禁用
         )
-        self.export_button.grid(row=0, column=1, padx=5)
+        self.export_button.pack(side=tk.LEFT, padx=5)
         
         # 保存配置按钮
         self.save_config_button = ttk.Button(
@@ -116,7 +118,7 @@ class ViolationListTab(ttk.Frame):
             text="保存配置",
             command=self.save_config
         )
-        self.save_config_button.grid(row=0, column=2, padx=5)
+        self.save_config_button.pack(side=tk.LEFT, padx=5)
         
         # 清空按钮
         self.clear_button = ttk.Button(
@@ -124,32 +126,11 @@ class ViolationListTab(ttk.Frame):
             text="清空",
             command=self.clear_all
         )
-        self.clear_button.grid(row=0, column=3, padx=5)
+        self.clear_button.pack(side=tk.LEFT, padx=5)
         
         # 存储当前数据
         self.violation_data = []
-        
-    def create_result_frame(self):
-        """创建结果显示区域"""
-        result_frame = ttk.LabelFrame(self.main_frame, text="结果", padding="5")
-        result_frame.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        
-        # 创建日志文本框
-        self.log_text = tk.Text(result_frame, height=15, width=80)
-        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
-        # 添加滚动条
-        scrollbar = ttk.Scrollbar(result_frame, orient="vertical", command=self.log_text.yview)
-        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        self.log_text['yscrollcommand'] = scrollbar.set
-        
-        # 配置网格权重
-        result_frame.columnconfigure(0, weight=1)
-        result_frame.rowconfigure(0, weight=1)
-        
-        # 设置文本框为只读
-        self.log_text.config(state='disabled')
-        
+    
     def load_config(self):
         """加载配置"""
         try:
@@ -229,10 +210,9 @@ class ViolationListTab(ttk.Frame):
         # 获取分页设置
         try:
             start_page = int(self.start_page_var.get())
-            page_count = int(self.page_count_var.get())
             page_size = int(self.page_size_var.get())
             
-            if start_page < 1 or page_count < 1 or page_size < 1:
+            if start_page < 1 or page_size < 1:
                 messagebox.showerror("错误", "页码和页数必须大于0！")
                 return
         except ValueError:
@@ -257,7 +237,7 @@ class ViolationListTab(ttk.Frame):
             self.log_text.config(state='disabled')
             
             # 获取数据
-            self.violation_data = self.crawler.get_all_data(max_pages=page_count)
+            self.violation_data = self.crawler.get_all_data(max_pages=start_page)
             
             if not self.violation_data:
                 logger.info("未获取到数据！请检查配置信息是否正确。")
@@ -281,7 +261,6 @@ class ViolationListTab(ttk.Frame):
         self.anti_content_entry.delete(0, tk.END)
         self.mallid_entry.delete(0, tk.END)
         self.start_page_var.set("1")
-        self.page_count_var.set("2")
         self.page_size_var.set("100")
         
         # 清空日志
@@ -303,7 +282,7 @@ class ViolationListTab(ttk.Frame):
             anti_content = self.anti_content_entry.get().strip()
             mallid = self.mallid_entry.get().strip()
             start_page = int(self.start_page_var.get())
-            max_pages = int(self.page_count_var.get())
+            max_pages = int(self.page_size_var.get())
             
             # 验证输入
             if not cookie:
