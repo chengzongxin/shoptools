@@ -179,21 +179,21 @@ class ViolationListTab(ttk.Frame):
                     self.text_widget.configure(state='disabled')
                 self.text_widget.after(0, append)
         
-        # 移除所有现有的处理器
-        logger = logging.getLogger()
-        for handler in logger.handlers[:]:
-            logger.removeHandler(handler)
+        # 创建独立的logger
+        self.logger = logging.getLogger('violation_list')
+        self.logger.setLevel(logging.INFO)
         
-        # 设置日志级别
-        logger.setLevel(logging.INFO)
+        # 移除所有现有的处理器
+        for handler in self.logger.handlers[:]:
+            self.logger.removeHandler(handler)
         
         # 添加文本处理器
         text_handler = TextHandler(self.log_text)
         text_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        logger.addHandler(text_handler)
+        self.logger.addHandler(text_handler)
         
         # 添加一个初始日志
-        logger.info("违规商品列表工具已初始化")
+        self.logger.info("违规商品列表工具已初始化")
 
     def start_crawling(self):
         """开始爬取数据"""
@@ -240,17 +240,17 @@ class ViolationListTab(ttk.Frame):
             self.violation_data = self.crawler.get_all_data(max_pages=start_page)
             
             if not self.violation_data:
-                logger.info("未获取到数据！请检查配置信息是否正确。")
+                self.logger.info("未获取到数据！请检查配置信息是否正确。")
                 return
             
             # 启用导出按钮
             self.export_button.config(state='normal')
             
             # 在日志中显示成功信息
-            logger.info(f"成功获取 {len(self.violation_data)} 条数据！")
+            self.logger.info(f"成功获取 {len(self.violation_data)} 条数据！")
             
         except Exception as e:
-            logger.error(f"获取数据时发生错误：{str(e)}")
+            self.logger.error(f"获取数据时发生错误：{str(e)}")
         finally:
             # 恢复开始按钮状态
             self.start_button.config(state='normal')
@@ -395,10 +395,10 @@ class ViolationListTab(ttk.Frame):
             
             # 导出数据
             if self.excel_exporter.export_to_excel(self.violation_data, file_path):
-                messagebox.showinfo("成功", f"数据已成功导出到: {file_path}")
+                self.logger.info(f"数据已成功导出到: {file_path}")
             else:
-                messagebox.showerror("错误", "导出数据失败")
+                self.logger.error("导出数据失败")
                 
         except Exception as e:
-            logger.error(f"导出Excel时出错: {str(e)}")
+            self.logger.error(f"导出Excel时出错: {str(e)}")
             messagebox.showerror("错误", f"导出Excel时出错: {str(e)}") 

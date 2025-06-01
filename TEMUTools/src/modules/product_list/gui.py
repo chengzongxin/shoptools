@@ -22,11 +22,14 @@ class ProductListTab(ttk.Frame):
         self.last_page_size = '20'
         self.current_data = []  # 存储当前获取的数据
         
-        # 加载保存的参数
-        self.load_last_params()
-        
         # 设置UI
         self.setup_ui()
+        
+        # 配置日志处理器
+        self.setup_logging()
+        
+        # 加载保存的参数
+        self.load_last_params()
         
         # 绑定变量变化事件
         self.bind_variable_changes()
@@ -63,8 +66,38 @@ class ProductListTab(ttk.Frame):
         # 创建按钮
         self.create_buttons()
         
-        # 配置日志处理器
-        self.setup_logging()
+    def setup_logging(self):
+        """设置日志处理器"""
+        # 创建自定义日志处理器
+        class TextHandler(logging.Handler):
+            def __init__(self, text_widget):
+                logging.Handler.__init__(self)
+                self.text_widget = text_widget
+                
+            def emit(self, record):
+                msg = self.format(record)
+                def append():
+                    self.text_widget.configure(state='normal')
+                    self.text_widget.insert(tk.END, msg + '\n')
+                    self.text_widget.see(tk.END)
+                    self.text_widget.configure(state='disabled')
+                self.text_widget.after(0, append)
+        
+        # 创建独立的logger
+        self.logger = logging.getLogger('product_list')
+        self.logger.setLevel(logging.INFO)
+        
+        # 移除所有现有的处理器
+        for handler in self.logger.handlers[:]:
+            self.logger.removeHandler(handler)
+        
+        # 添加文本处理器
+        text_handler = TextHandler(self.log_text)
+        text_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(text_handler)
+        
+        # 添加一个初始日志
+        self.logger.info("商品列表管理工具已初始化")
         
     def load_last_params(self):
         """加载上次保存的参数"""
@@ -78,16 +111,16 @@ class ProductListTab(ttk.Frame):
                     self.last_mallid = config.get('mallid', '634418223796259')
                     self.last_pages = config.get('pages', '2')
                     self.last_page_size = config.get('page_size', '20')
-                logging.info("已加载上次保存的配置")
+                self.logger.info("已加载上次保存的配置")
         except Exception as e:
-            logging.error(f"加载配置文件失败: {str(e)}")
+            self.logger.error(f"加载配置文件失败: {str(e)}")
             # 使用默认值
             self.last_cookie = ''
             self.last_anti_content = ''
             self.last_mallid = '634418223796259'
             self.last_pages = '2'
             self.last_page_size = '20'
-            logging.info("使用默认配置")
+            self.logger.info("使用默认配置")
 
     def save_params(self):
         """保存当前参数"""
@@ -102,9 +135,9 @@ class ProductListTab(ttk.Frame):
             config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
             with open(config_path, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-            logging.info("配置已保存")
+            self.logger.info("配置已保存")
         except Exception as e:
-            logging.error(f"保存配置文件失败: {str(e)}")
+            self.logger.error(f"保存配置文件失败: {str(e)}")
             messagebox.showerror("错误", f"保存配置失败: {str(e)}")
 
     def create_input_fields(self):
@@ -247,32 +280,6 @@ class ProductListTab(ttk.Frame):
         )
         self.export_inventory_button.pack(side=tk.LEFT, padx=2)
         
-    def setup_logging(self):
-        """设置日志处理器"""
-        # 创建自定义日志处理器
-        class TextHandler(logging.Handler):
-            def __init__(self, text_widget):
-                logging.Handler.__init__(self)
-                self.text_widget = text_widget
-                
-            def emit(self, record):
-                msg = self.format(record)
-                def append():
-                    self.text_widget.configure(state='normal')
-                    self.text_widget.insert(tk.END, msg + '\n')
-                    self.text_widget.see(tk.END)
-                    self.text_widget.configure(state='disabled')
-                self.text_widget.after(0, append)
-        
-        # 配置日志
-        logger = logging.getLogger()
-        logger.setLevel(logging.INFO)
-        
-        # 添加文本处理器
-        text_handler = TextHandler(self.log_text)
-        text_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
-        logger.addHandler(text_handler)
-        
     def start_crawling(self):
         """开始爬取数据"""
         try:
@@ -336,19 +343,19 @@ class ProductListTab(ttk.Frame):
             crawler.headers['mallid'] = mallid
             
             # 获取数据
-            logging.info(f"开始获取商品列表数据，计划获取 {pages} 页...")
+            self.logger.info(f"开始获取商品列表数据，计划获取 {pages} 页...")
             all_data = crawler.get_all_data(max_pages=pages)
             
             if all_data:
                 self.current_data = all_data  # 保存当前数据
-                logging.info(f"共获取到 {len(all_data)} 条数据")
+                self.logger.info(f"共获取到 {len(all_data)} 条数据")
                 # 启用导出按钮
                 self.export_list_button.configure(state='normal')
                 self.export_code_button.configure(state='normal')
                 self.export_inventory_button.configure(state='normal')
             else:
                 self.current_data = []  # 清空当前数据
-                logging.warning("未获取到任何数据")
+                self.logger.warning("未获取到任何数据")
                 # 禁用导出按钮
                 self.export_list_button.configure(state='disabled')
                 self.export_code_button.configure(state='disabled')
@@ -356,7 +363,7 @@ class ProductListTab(ttk.Frame):
                 
         except Exception as e:
             self.current_data = []  # 清空当前数据
-            logging.error(f"程序执行出错: {str(e)}")
+            self.logger.error(f"程序执行出错: {str(e)}")
             # 禁用导出按钮
             self.export_list_button.configure(state='disabled')
             self.export_code_button.configure(state='disabled')
@@ -638,7 +645,7 @@ class ProductListTab(ttk.Frame):
             )
             
             # 写入表头
-            headers = ['SKU ID', '1', '2', '修改后库存']
+            headers = ['SKU ID', '', '', '修改后库存']
             for col, header in enumerate(headers, 1):
                 cell = ws.cell(row=1, column=col, value=header)
                 cell.font = header_font
