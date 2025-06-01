@@ -52,92 +52,66 @@ class ViolationListExcelExporter:
             ws = wb.active
             ws.title = "违规商品列表"
             
-            # 设置样式
-            header_font = Font(bold=True, color="FFFFFF")
-            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            header_alignment = Alignment(horizontal="center", vertical="center")
-            border = Border(
-                left=Side(style='thin'),
-                right=Side(style='thin'),
-                top=Side(style='thin'),
-                bottom=Side(style='thin')
-            )
-            
             # 写入表头
-            for col, header in enumerate(self.columns, 1):
-                cell = ws.cell(row=1, column=col, value=header)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.alignment = header_alignment
-                cell.border = border
-                # 设置列宽
-                ws.column_dimensions[get_column_letter(col)].width = 20
+            headers = [
+                "SPUID", "商品名称", "违规原因", "违规描述",
+                "处罚类型", "处罚影响", "违规详情", "整改建议",
+                "开始时间", "结束时间", "申诉状态", "申诉次数", "最大申诉次数"
+            ]
+            for col, header in enumerate(headers, 1):
+                ws.cell(row=1, column=col, value=header)
             
-            # 准备数据
-            row_num = 2
+            # 写入数据
+            row = 2
             for product in data:
-                # 获取处罚详情
-                punish_details = product.get('punish_detail_list', [])
-                if not punish_details:
-                    # 如果没有处罚详情，添加基本信息
-                    values = [
-                        product.get('spu_id', ''),
-                        product.get('goods_id', ''),
-                        product.get('goods_name', ''),
-                        product.get('leaf_reason_name', ''),
-                        product.get('violation_desc', ''),
-                        '', '', '', '', '', '',
-                        self.format_appeal_status(product.get('appeal_status', 0)),
-                        '', ''
-                    ]
-                    
-                    # 写入数据
-                    for col, value in enumerate(values, 1):
-                        cell = ws.cell(row=row_num, column=col, value=value)
-                        cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
-                        cell.border = border
-                    row_num += 1
-                    continue
+                # 获取第一个处罚详情（如果有的话）
+                punish_detail = product.get('punish_detail_list', [{}])[0] if product.get('punish_detail_list') else {}
                 
-                # 处理每个处罚详情
-                for detail in punish_details:
-                    # 获取违规详情
-                    illegal_details = detail.get('illegal_detail', [])
-                    illegal_desc = '; '.join([
-                        f"{illegal.get('title', '')}: {illegal.get('value', '')}"
-                        for illegal in illegal_details
-                    ])
-                    
-                    values = [
-                        product.get('spu_id', ''),
-                        product.get('goods_id', ''),
-                        product.get('goods_name', ''),
-                        product.get('leaf_reason_name', ''),
-                        product.get('violation_desc', ''),
-                        detail.get('punish_appeal_type', ''),
-                        detail.get('punish_infect_desc', ''),
-                        illegal_desc,
-                        detail.get('rectification_suggestion', ''),
-                        self.format_timestamp(detail.get('start_time')),
-                        self.format_timestamp(detail.get('plan_end_time')),
-                        self.format_appeal_status(detail.get('appeal_status', 0)),
-                        detail.get('now_appeal_time', 0),
-                        detail.get('max_appeal_time', 0)
-                    ]
-                    
-                    # 写入数据
-                    for col, value in enumerate(values, 1):
-                        cell = ws.cell(row=row_num, column=col, value=value)
-                        cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
-                        cell.border = border
-                    row_num += 1
+                # 获取违规详情
+                illegal_details = punish_detail.get('illegal_detail', [])
+                illegal_desc = '; '.join([
+                    f"{illegal.get('title', '')}: {illegal.get('value', '')}"
+                    for illegal in illegal_details
+                ])
+                
+                # 格式化时间戳
+                start_time = self.format_timestamp(punish_detail.get('start_time'))
+                end_time = self.format_timestamp(punish_detail.get('plan_end_time'))
+                
+                # 写入一行数据
+                ws.cell(row=row, column=1, value=product.get('spu_id', ''))
+                ws.cell(row=row, column=2, value=product.get('goods_name', ''))
+                ws.cell(row=row, column=3, value=product.get('leaf_reason_name', ''))
+                ws.cell(row=row, column=4, value=product.get('violation_desc', ''))
+                ws.cell(row=row, column=5, value=punish_detail.get('punish_appeal_type', ''))
+                ws.cell(row=row, column=6, value=punish_detail.get('punish_infect_desc', ''))
+                ws.cell(row=row, column=7, value=illegal_desc)
+                ws.cell(row=row, column=8, value=punish_detail.get('rectification_suggestion', ''))
+                ws.cell(row=row, column=9, value=start_time)
+                ws.cell(row=row, column=10, value=end_time)
+                ws.cell(row=row, column=11, value=self.format_appeal_status(punish_detail.get('appeal_status', 0)))
+                ws.cell(row=row, column=12, value=punish_detail.get('now_appeal_time', 0))
+                ws.cell(row=row, column=13, value=punish_detail.get('max_appeal_time', 0))
+                
+                row += 1
+            
+            # 调整列宽
+            for col in ws.columns:
+                max_length = 0
+                column = col[0].column_letter
+                for cell in col:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = (max_length + 2)
+                ws.column_dimensions[column].width = adjusted_width
             
             # 保存文件
             wb.save(file_path)
-            
-            logger.info(f"成功导出Excel文件: {file_path}")
             return True
             
         except Exception as e:
-            logger.error(f"导出Excel文件时出错: {str(e)}")
+            logger.error(f"导出Excel时出错: {str(e)}")
             return False 

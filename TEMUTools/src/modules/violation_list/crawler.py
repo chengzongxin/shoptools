@@ -56,33 +56,52 @@ class PunishDetail:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> 'PunishDetail':
         """从字典创建对象"""
-        return cls(
-            punish_id=data.get('punish_id', 0),
-            target_id=data.get('target_id'),
-            target_type=data.get('target_type'),
-            violation_type=data.get('violation_type', 0),
-            punish_infect_desc=data.get('punish_infect_desc', ''),
-            site_id=data.get('site_id', 0),
-            remarks=data.get('remarks'),
-            status=data.get('status', 0),
-            now_appeal_time=data.get('now_appeal_time', 0),
-            max_appeal_time=data.get('max_appeal_time', 0),
-            start_time=data.get('start_time', 0),
-            plan_end_time=data.get('plan_end_time', 0),
-            real_end_time=data.get('real_end_time'),
-            appeal_id=data.get('appeal_id'),
-            appeal_status=data.get('appeal_status', 0),
-            appeal_create_time=data.get('appeal_create_time'),
-            appeal_end_time=data.get('appeal_end_time'),
-            appeal_over_due=data.get('appeal_over_due', False),
-            punish_appeal_type=data.get('punish_appeal_type'),
-            illegal_detail=[
-                IllegalDetail.from_dict(illegal)
-                for illegal in data.get('illegal_detail', [])
-            ],
-            rectification_suggestion=data.get('rectification_suggestion', ''),
-            create_from_upgrade=data.get('create_from_upgrade', False)
-        )
+        try:
+            if not data or not isinstance(data, dict):
+                logger.error("无效的处罚详情数据")
+                return None
+                
+            # 处理可能为空的字段
+            illegal_details = []
+            if 'illegal_detail' in data and isinstance(data['illegal_detail'], list):
+                for illegal in data['illegal_detail']:
+                    try:
+                        if isinstance(illegal, dict):
+                            illegal_detail = IllegalDetail.from_dict(illegal)
+                            if illegal_detail:
+                                illegal_details.append(illegal_detail)
+                    except Exception as e:
+                        logger.error(f"处理违规详情时出错: {str(e)}")
+                        continue
+            
+            return cls(
+                punish_id=data.get('punish_id', 0),
+                target_id=data.get('target_id'),
+                target_type=data.get('target_type'),
+                violation_type=data.get('violation_type', 0),
+                punish_infect_desc=data.get('punish_infect_desc', ''),
+                site_id=data.get('site_id', 0),
+                remarks=data.get('remarks'),
+                status=data.get('status', 0),
+                now_appeal_time=data.get('now_appeal_time', 0),
+                max_appeal_time=data.get('max_appeal_time', 0),
+                start_time=data.get('start_time', 0),
+                plan_end_time=data.get('plan_end_time', 0),
+                real_end_time=data.get('real_end_time'),
+                appeal_id=data.get('appeal_id'),
+                appeal_status=data.get('appeal_status', 0),
+                appeal_create_time=data.get('appeal_create_time'),
+                appeal_end_time=data.get('appeal_end_time'),
+                appeal_over_due=data.get('appeal_over_due', False),
+                punish_appeal_type=data.get('punish_appeal_type'),
+                illegal_detail=illegal_details,
+                rectification_suggestion=data.get('rectification_suggestion', ''),
+                create_from_upgrade=data.get('create_from_upgrade', False)
+            )
+        except Exception as e:
+            logger.error(f"创建PunishDetail对象时出错: {str(e)}")
+            logger.error(f"数据: {json.dumps(data, ensure_ascii=False)}")
+            return None
 
 @dataclass
 class ViolationProduct:
@@ -116,6 +135,40 @@ class ViolationProduct:
     def from_dict(cls, data: Dict[str, Any]) -> 'ViolationProduct':
         """从字典创建对象"""
         try:
+            if not data or not isinstance(data, dict):
+                logger.error("无效的商品数据")
+                return None
+                
+            # 检查必要字段
+            required_fields = ['goods_id', 'goods_name', 'spu_id']
+            for field in required_fields:
+                if field not in data:
+                    logger.error(f"商品数据缺少必要字段: {field}")
+                    return None
+            
+            # 处理可能为空的字段
+            punish_detail_list = []
+            if 'punish_detail_list' in data and isinstance(data['punish_detail_list'], list):
+                for detail in data['punish_detail_list']:
+                    try:
+                        punish_detail = PunishDetail.from_dict(detail)
+                        if punish_detail:
+                            punish_detail_list.append(punish_detail)
+                    except Exception as e:
+                        logger.error(f"处理处罚详情时出错: {str(e)}")
+                        continue
+            
+            can_appeal_list = []
+            if 'can_appeal_punish_detail_list' in data and isinstance(data['can_appeal_punish_detail_list'], list):
+                for detail in data['can_appeal_punish_detail_list']:
+                    try:
+                        appeal_detail = PunishDetail.from_dict(detail)
+                        if appeal_detail:
+                            can_appeal_list.append(appeal_detail)
+                    except Exception as e:
+                        logger.error(f"处理可申诉详情时出错: {str(e)}")
+                        continue
+            
             return cls(
                 target_type=data.get('target_type', ''),
                 target_id=data.get('target_id', 0),
@@ -134,14 +187,8 @@ class ViolationProduct:
                 violation_type=data.get('violation_type', 0),
                 site_num=data.get('site_num', 0),
                 punish_num=data.get('punish_num', 0),
-                punish_detail_list=[
-                    PunishDetail.from_dict(detail)
-                    for detail in data.get('punish_detail_list', [])
-                ],
-                can_appeal_punish_detail_list=[
-                    PunishDetail.from_dict(detail)
-                    for detail in data.get('can_appeal_punish_detail_list', [])
-                ],
+                punish_detail_list=punish_detail_list,
+                can_appeal_punish_detail_list=can_appeal_list,
                 can_not_appeal=data.get('can_not_appeal'),
                 reject_desc=data.get('reject_desc'),
                 appeal_status=data.get('appeal_status', 0),
@@ -151,7 +198,7 @@ class ViolationProduct:
         except Exception as e:
             logger.error(f"创建ViolationProduct对象时出错: {str(e)}")
             logger.error(f"数据: {json.dumps(data, ensure_ascii=False)}")
-            raise
+            return None
 
     def to_dict(self) -> Dict[str, Any]:
         """将对象转换为字典"""
