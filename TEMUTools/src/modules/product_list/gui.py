@@ -22,6 +22,13 @@ class ProductListTab(ttk.Frame):
         self.last_page_size = '20'
         self.current_data = []  # 存储当前获取的数据
         
+        # 设置配置文件路径
+        self.config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config')
+        self.config_file = os.path.join(self.config_dir, 'product_config.json')
+        
+        # 确保配置目录存在
+        os.makedirs(self.config_dir, exist_ok=True)
+        
         # 设置UI
         self.setup_ui()
         
@@ -102,15 +109,25 @@ class ProductListTab(ttk.Frame):
     def load_last_params(self):
         """加载上次保存的参数"""
         try:
-            config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
-            if os.path.exists(config_path):
-                with open(config_path, 'r', encoding='utf-8') as f:
+            # 确保配置目录存在
+            os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+            
+            if os.path.exists(self.config_file):
+                with open(self.config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     self.last_cookie = config.get('cookie', '')
                     self.last_anti_content = config.get('anti_content', '')
                     self.last_mallid = config.get('mallid', '634418223796259')
                     self.last_pages = config.get('pages', '2')
                     self.last_page_size = config.get('page_size', '20')
+                    
+                    # 更新输入框的值
+                    self.cookie_var.set(self.last_cookie)
+                    self.anti_content_var.set(self.last_anti_content)
+                    self.mallid_var.set(self.last_mallid)
+                    self.pages_var.set(self.last_pages)
+                    self.page_size_var.set(self.last_page_size)
+                    
                 self.logger.info("已加载上次保存的配置")
         except Exception as e:
             self.logger.error(f"加载配置文件失败: {str(e)}")
@@ -125,6 +142,9 @@ class ProductListTab(ttk.Frame):
     def save_params(self):
         """保存当前参数"""
         try:
+            # 确保配置目录存在
+            os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
+            
             config = {
                 'cookie': self.cookie_var.get().strip(),
                 'anti_content': self.anti_content_var.get().strip(),
@@ -132,9 +152,10 @@ class ProductListTab(ttk.Frame):
                 'pages': self.pages_var.get().strip(),
                 'page_size': self.page_size_var.get().strip()
             }
-            config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config.json')
-            with open(config_path, 'w', encoding='utf-8') as f:
+            
+            with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
+                
             self.logger.info("配置已保存")
         except Exception as e:
             self.logger.error(f"保存配置文件失败: {str(e)}")

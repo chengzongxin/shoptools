@@ -14,7 +14,18 @@ class ViolationListTab(ttk.Frame):
         super().__init__(parent)
         self.crawler = ViolationListCrawler()
         self.excel_exporter = ViolationListExcelExporter()
-        self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config', 'violation_config.json')
+        
+        # 设置配置文件路径
+        self.config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config')
+        self.config_file = os.path.join(self.config_dir, 'violation_config.json')
+        
+        # 确保配置目录存在
+        os.makedirs(self.config_dir, exist_ok=True)
+        
+        # 初始化默认值
+        self.last_pages = '1'
+        self.last_page_size = '100'
+        
         self.setup_ui()
         self.load_config()
         self.setup_logging()
@@ -112,6 +123,14 @@ class ViolationListTab(ttk.Frame):
         )
         self.export_button.pack(side=tk.LEFT, padx=5)
         
+        # 合并Excel按钮
+        self.merge_button = ttk.Button(
+            button_frame,
+            text="合并Excel",
+            command=self.merge_excel_files
+        )
+        self.merge_button.pack(side=tk.LEFT, padx=5)
+        
         # 保存配置按钮
         self.save_config_button = ttk.Button(
             button_frame,
@@ -140,8 +159,13 @@ class ViolationListTab(ttk.Frame):
                     self.cookie_entry.insert(0, config.get('cookie', ''))
                     self.anti_content_entry.insert(0, config.get('anti_content', ''))
                     self.mallid_entry.insert(0, config.get('mallid', ''))
+                    self.start_page_var.set(config.get('pages', '1'))
+                    self.page_size_var.set(config.get('page_size', '100'))
         except Exception as e:
-            print(f"加载配置失败: {str(e)}")
+            self.logger.error(f"加载配置失败: {str(e)}")
+            # 使用默认值
+            self.start_page_var.set('1')
+            self.page_size_var.set('100')
     
     def save_config(self):
         """保存配置"""
@@ -152,14 +176,18 @@ class ViolationListTab(ttk.Frame):
             config = {
                 'cookie': self.cookie_entry.get().strip(),
                 'anti_content': self.anti_content_entry.get().strip(),
-                'mallid': self.mallid_entry.get().strip()
+                'mallid': self.mallid_entry.get().strip(),
+                'pages': self.start_page_var.get().strip(),
+                'page_size': self.page_size_var.get().strip()
             }
             
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
             
+            self.logger.info("配置已保存")
             messagebox.showinfo("成功", "配置已保存！")
         except Exception as e:
+            self.logger.error(f"保存配置失败: {str(e)}")
             messagebox.showerror("错误", f"保存配置失败：{str(e)}")
         
     def setup_logging(self):
@@ -401,4 +429,102 @@ class ViolationListTab(ttk.Frame):
                 
         except Exception as e:
             self.logger.error(f"导出Excel时出错: {str(e)}")
-            messagebox.showerror("错误", f"导出Excel时出错: {str(e)}") 
+            messagebox.showerror("错误", f"导出Excel时出错: {str(e)}")
+
+    def merge_excel_files(self):
+        """合并违规列表和商品列表Excel文件"""
+        try:
+            # 选择违规列表Excel文件
+            violation_file = filedialog.askopenfilename(
+                title="选择违规列表Excel文件",
+                filetypes=[("Excel文件", "*.xlsx")]
+            )
+            if not violation_file:
+                return
+                
+            # 选择商品列表Excel文件
+            product_file = filedialog.askopenfilename(
+                title="选择商品列表Excel文件",
+                filetypes=[("Excel文件", "*.xlsx")]
+            )
+            if not product_file:
+                return
+                
+            # 选择保存目录
+            save_dir = filedialog.askdirectory(title="选择保存目录")
+            if not save_dir:
+                return
+                
+            # 生成输出文件名
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            output_file = os.path.join(save_dir, f"合并数据_{timestamp}.xlsx")
+            
+            # 读取Excel文件
+            from openpyxl import load_workbook
+            
+            # 读取违规列表
+            violation_wb = load_workbook(violation_file)
+            violation_ws = violation_wb.active
+            
+            # 读取商品列表
+            product_wb = load_workbook(product_file)
+            product_ws = product_wb.active
+            
+            # 获取表头
+            violation_headers = [cell.value for cell in violation_ws[1]]
+            product_headers = [cell.value for cell in product_ws[1]]
+            
+            # 检查必要的列是否存在
+            if 'SPUID' not in violation_headers or '商品ID' not in product_headers:
+                raise ValueError("Excel文件格式不正确，请确保包含SPUID和商品ID列")
+            
+            # 获取SPUID和商品ID的列索引
+            spuid_col = violation_headers.index('SPUID') + 1
+            product_id_col = product_headers.index('商品ID') + 1
+            
+            # 创建商品ID到行的映射
+            product_data = {}
+            for row in product_ws.iter_rows(min_row=2):
+                product_id = row[product_id_col - 1].value
+                if product_id:
+                    product_data[product_id] = row
+            
+            # 创建新的工作簿
+            from openpyxl import Workbook
+            merged_wb = Workbook()
+            merged_ws = merged_wb.active
+            
+            # 写入合并后的表头
+            merged_headers = violation_headers + [h for h in product_headers if h != '商品ID']
+            for col, header in enumerate(merged_headers, 1):
+                merged_ws.cell(row=1, column=col, value=header)
+            
+            # 合并数据
+            row_num = 2
+            for row in violation_ws.iter_rows(min_row=2):
+                spuid = row[spuid_col - 1].value
+                
+                # 写入违规列表数据
+                for col, cell in enumerate(row, 1):
+                    merged_ws.cell(row=row_num, column=col, value=cell.value)
+                
+                # 如果找到匹配的商品数据，写入商品列表数据
+                if spuid in product_data:
+                    product_row = product_data[spuid]
+                    col_offset = len(violation_headers)
+                    for col, cell in enumerate(product_row, 1):
+                        if col != product_id_col:  # 跳过商品ID列
+                            merged_ws.cell(row=row_num, column=col_offset + col - 1, value=cell.value)
+                
+                row_num += 1
+            
+            # 保存合并后的文件
+            merged_wb.save(output_file)
+            
+            self.logger.info(f"数据已成功合并并保存到: {output_file}")
+            messagebox.showinfo("成功", "数据合并完成！")
+            
+        except Exception as e:
+            error_msg = f"合并Excel文件时出错: {str(e)}"
+            self.logger.error(error_msg)
+            messagebox.showerror("错误", error_msg) 
