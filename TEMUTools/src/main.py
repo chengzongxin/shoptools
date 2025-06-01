@@ -5,6 +5,7 @@ import re
 from collections import defaultdict
 from modules.product_list.gui import ProductListTab
 from modules.link_checker.gui import LinkCheckerTab
+from modules.violation_list.gui import ViolationListTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -280,6 +281,10 @@ class TEMUToolsApp:
         # 创建链接重复检测选项卡
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text='链接重复检测')
+        
+        # 创建违规商品列表选项卡
+        self.violation_list_tab = ViolationListTab(self.notebook)
+        self.notebook.add(self.violation_list_tab, text='违规商品列表')
 
 def main():
     root = tk.Tk()
