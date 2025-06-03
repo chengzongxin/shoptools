@@ -1,11 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Cookie获取器",
+  "name": "请求头获取器",
   "version": "1.0",
-  "description": "一个简单的Chrome扩展，用于获取当前网页的cookie",
+  "description": "获取网页请求头和Cookie信息",
   "permissions": [
     "cookies",
-    "activeTab"
+    "tabs",
+    "webRequest",
+    "storage"
   ],
   "host_permissions": [
     "<all_urls>"
