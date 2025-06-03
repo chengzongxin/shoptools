@@ -1,0 +1,14 @@
+{
+  "name": "cookie-getter",
+  "version": "1.0.0",
+  "description": "Chrome扩展程序用于获取网页cookie",
+  "scripts": {
+    "build": "tsc && npm run copy-files",
+    "watch": "tsc -w",
+    "copy-files": "cp manifest.json dist/ && cp popup.html dist/ && cp types.d.ts dist/"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.260",
+    "typescript": "^5.0.0"
+  }
+} 

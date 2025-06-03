@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Cookie获取器",
+  "version": "1.0",
+  "description": "一个简单的Chrome扩展，用于获取当前网页的cookie",
+  "permissions": [
+    "cookies",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+} 
