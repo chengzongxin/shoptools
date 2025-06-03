@@ -11,6 +11,8 @@ interface Cookie {
 const Popup: React.FC = () => {
   const [cookies, setCookies] = useState<Cookie[]>([]);
   const [error, setError] = useState<string>('');
+  const [count, setCount] = useState<number>(0);
+  const [copyStatus, setCopyStatus] = useState<string>('');
 
   const getCurrentTabUrl = async (): Promise<string> => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -27,28 +29,77 @@ const Popup: React.FC = () => {
       const cookieList = await getAllCookies(url);
       setCookies(cookieList);
       setError('');
+      setCount(prev => prev + 1);
     } catch (err) {
       setError('获取cookie时出错');
       console.error('获取cookie时出错:', err);
     }
   };
 
+  const formatCookies = (cookies: Cookie[]): string => {
+    return cookies.map(cookie => `${cookie.name}=${cookie.value}`).join('; ');
+  };
+
+  const handleCopyCookies = async () => {
+    try {
+      const cookieString = formatCookies(cookies);
+      await navigator.clipboard.writeText(cookieString);
+      setCopyStatus('复制成功！');
+      setTimeout(() => setCopyStatus(''), 2000);
+    } catch (err) {
+      setCopyStatus('复制失败！');
+      console.error('复制失败:', err);
+    }
+  };
+
   return (
     <div style={{ width: '400px', padding: '10px', fontFamily: 'Arial, sans-serif' }}>
-      <h2>Cookie获取器-1123</h2>
-      <button 
-        onClick={handleGetCookies}
-        style={{
-          padding: '8px 16px',
-          backgroundColor: '#4CAF50',
-          color: 'white',
-          border: 'none',
+      <h2>Cookie获取器</h2>
+      <div style={{ marginBottom: '10px' }}>
+        已获取次数: {count}
+      </div>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <button 
+          onClick={handleGetCookies}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            flex: 1
+          }}
+        >
+          获取当前页面Cookie
+        </button>
+        <button 
+          onClick={handleCopyCookies}
+          disabled={cookies.length === 0}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: cookies.length === 0 ? '#cccccc' : '#2196F3',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: cookies.length === 0 ? 'not-allowed' : 'pointer',
+            flex: 1
+          }}
+        >
+          一键复制Cookie
+        </button>
+      </div>
+      {copyStatus && (
+        <div style={{ 
+          padding: '8px', 
+          backgroundColor: copyStatus.includes('成功') ? '#e8f5e9' : '#ffebee',
+          color: copyStatus.includes('成功') ? '#2e7d32' : '#c62828',
           borderRadius: '4px',
-          cursor: 'pointer'
-        }}
-      >
-        获取当前页面Cookie
-      </button>
+          marginBottom: '10px'
+        }}>
+          {copyStatus}
+        </div>
+      )}
       
       <div style={{
         maxHeight: '300px',
