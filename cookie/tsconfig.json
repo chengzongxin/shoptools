@@ -9,12 +9,12 @@
     "outDir": "./dist",
     "rootDir": "./",
     "moduleResolution": "node",
-    "jsx": "react"
+    "jsx": "react",
+    "types": ["node", "chrome", "react", "react-dom"]
   },
   "include": [
-    "*.ts",
-    "*.tsx",
-    "*.html"
+    "src/**/*",
+    "vite.config.ts"
   ],
   "exclude": [
     "node_modules"

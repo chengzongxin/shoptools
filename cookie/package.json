@@ -3,12 +3,23 @@
   "version": "1.0.0",
   "description": "Chrome扩展程序用于获取网页cookie",
   "scripts": {
-    "build": "tsc && npm run copy-files",
-    "watch": "tsc -w",
-    "copy-files": "cp manifest.json dist/ && cp popup.html dist/ && cp types.d.ts dist/"
+    "dev": "vite",
+    "build": "tsc && vite build && npm run copy-files",
+    "preview": "vite preview",
+    "watch": "vite build --watch",
+    "copy-files": "cp -r public/* dist/"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.260",
-    "typescript": "^5.0.0"
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.0.0",
+    "typescript": "^5.0.0",
+    "vite": "^4.0.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 } 
