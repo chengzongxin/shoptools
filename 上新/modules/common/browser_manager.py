@@ -8,29 +8,60 @@ import time
 import socket
 import subprocess
 import platform
-from .chrome_driver_manager import ChromeDriverManager
 import os
+import sys
+from .chrome_driver_manager import ChromeDriverManager
 
 class BrowserManager:
     """
     浏览器管理类
     负责浏览器的初始化、配置和管理
     """
-    def __init__(self, debug=True, chromedriver_path=None):
+    def __init__(self, debug=True):
         """
         初始化浏览器管理器
         :param debug: 是否开启调试模式
-        :param chromedriver_path: ChromeDriver的路径，如果为None则自动下载
         """
         self.driver = None
         self.wait = None
         self.debug = debug
-        self.chromedriver_path = chromedriver_path
+        self.chromedriver_path = self._get_chromedriver_path()
         self.system = platform.system()
         # print("开始检查浏览器状态...")
         # self.check_and_start_browser()
         # print("开始配置Chrome选项...")
         self.setup_driver()
+
+    def _get_resource_path(self, relative_path):
+        """
+        获取资源的绝对路径，支持开发环境和打包后的环境
+        :param relative_path: 相对路径
+        :return: 绝对路径
+        """
+        try:
+            # PyInstaller创建临时文件夹，将路径存储在_MEIPASS中
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+        
+        return os.path.join(base_path, relative_path)
+
+    def _get_chromedriver_path(self):
+        """
+        获取ChromeDriver的路径
+        :return: ChromeDriver的路径
+        """
+        if self.debug:
+            print("正在获取ChromeDriver路径...")
+        
+        # 获取chromedriver路径
+        chromedriver_path = self._get_resource_path(os.path.join("drivers", "chromedriver.exe"))
+        
+        if self.debug:
+            print(f"ChromeDriver路径: {chromedriver_path}")
+            print(f"ChromeDriver是否存在: {os.path.exists(chromedriver_path)}")
+        
+        return chromedriver_path
 
     def check_port(self, port):
         """

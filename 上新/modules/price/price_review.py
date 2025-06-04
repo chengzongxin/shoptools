@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import os
 from .price_mapper import PriceMapper
+from ..common.logger import Logger
 
 class PriceReview:
     def __init__(self, driver, wait, debug=True):
@@ -19,6 +20,7 @@ class PriceReview:
         self.wait = wait
         self.debug = debug
         self.price_mapper = PriceMapper(debug)
+        self.logger = Logger("price", debug)
         
         # 创建日志目录
         self.log_dir = "logs"

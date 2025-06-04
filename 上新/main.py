@@ -1,21 +1,58 @@
 import sys
 import os
 import traceback
-from modules.browser_manager import BrowserManager
-from modules.price_review import PriceReview
+from modules.common.browser_manager import BrowserManager
+from modules.price.price_review import PriceReview
+from modules.compliance.compliance_review import ComplianceReview
 from config import DEBUG
 
-def get_resource_path(relative_path):
+def show_menu():
     """
-    获取资源的绝对路径，支持开发环境和打包后的环境
+    显示功能选择菜单
+    """
+    print("\n" + "="*50)
+    print("跨境电商自动化工具")
+    print("="*50)
+    print("请选择要执行的功能：")
+    print("1. 价格审核")
+    print("2. 合规审核")
+    print("0. 退出程序")
+    print("="*50)
+    
+    while True:
+        try:
+            choice = input("请输入选项编号（0-2）: ").strip()
+            if choice in ['0', '1', '2']:
+                return int(choice)
+            print("无效的选项，请重新输入！")
+        except ValueError:
+            print("请输入有效的数字！")
+
+def run_price_review(browser_manager):
+    """
+    运行价格审核功能
     """
     try:
-        # PyInstaller创建临时文件夹，将路径存储在_MEIPASS中
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    
-    return os.path.join(base_path, relative_path)
+        print("\n开始执行价格审核...")
+        price_review = PriceReview(browser_manager.driver, browser_manager.wait, DEBUG)
+        price_review.start_review()
+        print("价格审核完成！")
+    except Exception as e:
+        print(f"价格审核执行失败: {str(e)}")
+        raise
+
+def run_compliance_review(browser_manager):
+    """
+    运行合规审核功能
+    """
+    try:
+        print("\n开始执行合规审核...")
+        compliance_review = ComplianceReview(browser_manager, debug=True)
+        compliance_review.start_review()
+        print("合规审核完成！")
+    except Exception as e:
+        print(f"合规审核执行失败: {str(e)}")
+        raise
 
 def main():
     """
@@ -30,26 +67,26 @@ def main():
         print(f"Python版本: {sys.version}")
         print("="*50)
         
-        # 获取chromedriver路径
-        chromedriver_path = get_resource_path(os.path.join("drivers", "chromedriver.exe"))
-        print(f"ChromeDriver路径: {chromedriver_path}")
-        print(f"ChromeDriver是否存在: {os.path.exists(chromedriver_path)}")
-        
         # 创建浏览器管理器实例
         print("正在初始化浏览器管理器...")
-        browser_manager = BrowserManager(DEBUG, chromedriver_path)
+        browser_manager = BrowserManager(debug=True)
         
-        # 创建价格审核实例
-        print("正在初始化价格审核模块...")
-        price_review = PriceReview(browser_manager.driver, browser_manager.wait, DEBUG)
-        
-        # 开始价格审核流程
-        print("开始执行价格审核流程...")
-        price_review.start_review()
-        
-        print("="*50)
-        print("自动化操作完成！")
-        print("="*50)
+        while True:
+            # 显示菜单并获取用户选择
+            choice = show_menu()
+            
+            if choice == 0:
+                print("\n感谢使用，再见！")
+                break
+            elif choice == 1:
+                run_price_review(browser_manager)
+            elif choice == 2:
+                run_compliance_review(browser_manager)
+            
+            # 询问是否继续
+            if input("\n是否继续执行其他功能？(y/n): ").lower() != 'y':
+                print("\n感谢使用，再见！")
+                break
             
     except Exception as e:
         print("="*50)
