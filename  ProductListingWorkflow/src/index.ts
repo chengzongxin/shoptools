@@ -1,6 +1,8 @@
+import { chromium } from '@playwright/test';
 import { logger } from './utils/logger';
 import { BrowserManager } from './core/browser';
 import { ComplianceReview } from './services/compliance';
+import { PriceReview } from './services/price-review';
 
 async function main() {
     const browserManager = new BrowserManager();
@@ -14,22 +16,19 @@ async function main() {
         // 获取浏览器上下文
         const context = browserManager.getContext();
         
-        // 创建合规审核实例
-        const complianceReview = new ComplianceReview(context, true);
+        // 初始化价格审核
+        const priceReview = new PriceReview(context);
+        await priceReview.startReview();
         
-        // 开始按顺序处理所有合规信息类型
+        // 初始化合规审核
+        const complianceReview = new ComplianceReview(context);
         await complianceReview.processAllComplianceTypes();
         
-        logger.info('所有合规信息类型处理完成，等待用户操作...');
-        
-        // 保持程序运行
+        // 等待用户手动关闭浏览器
         await new Promise(() => {});
         
     } catch (error) {
-        logger.error('程序运行出错:', error);
-    } finally {
-        // 确保浏览器正确关闭
-        await browserManager.close();
+        logger.error(`执行过程中发生错误: ${error}`);
     }
 }
 
