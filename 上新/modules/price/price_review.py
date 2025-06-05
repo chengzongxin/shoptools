@@ -416,7 +416,7 @@ class PriceReview:
                 )
 
 
-                time.sleep(1000)
+                time.sleep(3)
 
                 confirm_button.click()
                 
@@ -444,7 +444,7 @@ class PriceReview:
                     EC.element_to_be_clickable((By.CSS_SELECTOR, ".MDL_okBtn_5-111-0"))
                 )
 
-                time.sleep(1000)
+                time.sleep(3)
 
                 confirm_button.click()
                 
