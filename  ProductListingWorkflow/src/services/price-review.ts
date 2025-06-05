@@ -105,8 +105,14 @@ export class PriceReview {
             );
             await pageSizeInput?.click();
             
+            // const option10 = await this.page.waitForSelector(
+            //     '/html/body/div[6]/div/div/div/div/ul/li[1]',
+            //     { state: 'visible' }
+            // );
+            // await option10?.click();
+
             const option10 = await this.page.waitForSelector(
-                '/html/body/div[6]/div/div/div/div/ul/li[1]',
+                "li[role='option'] span:text('10')",
                 { state: 'visible' }
             );
             await option10?.click();
@@ -281,7 +287,7 @@ SPU: ${spuInfo}
                     { state: 'visible' }
                 );
 
-                await this.page.waitForTimeout(3000);
+                await this.page.waitForTimeout(500);
                 await confirmButton?.click();
                 
                 this.logRecord(sku, spu, minPrice, newPrice, "确认提交");
@@ -305,7 +311,7 @@ SPU: ${spuInfo}
                     { state: 'visible' }
                 );
 
-                await this.page.waitForTimeout(3000);
+                await this.page.waitForTimeout(500);
                 await confirmButton?.click();
                 
                 this.logRecord(sku, spu, minPrice, newPrice, "放弃调整报价");
@@ -351,10 +357,7 @@ SPU: ${spuInfo}
         try {
             let currentPage = 1;
             while (true) {
-                const [currentPage, totalPages, itemsPerPage] = await this.getPageInfo();
                 
-                logger.info(`\n开始处理第 ${currentPage}/${totalPages} 页`);
-
                 const productList = await this.page.waitForSelector(
                     '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody',
                     { state: 'visible' }
@@ -396,6 +399,8 @@ SPU: ${spuInfo}
                     }
                 }
 
+                const [currentPage, totalPages, itemsPerPage] = await this.getPageInfo();
+
                 if (currentPage < totalPages) {
                     if (!await this.goToNextPage()) {
                         logger.info("无法跳转到下一页，处理结束");
@@ -412,8 +417,6 @@ SPU: ${spuInfo}
                     await firstPageButton?.click();
                     
                     await this.page.waitForTimeout(2000);
-                    
-                    const [currentPage, totalPages, itemsPerPage] = await this.getPageInfo();
                     
                     logger.info("已返回第一页，开始第二轮检查");
                     continue;
@@ -433,6 +436,7 @@ SPU: ${spuInfo}
             await this.openPriceReviewPage();
             // await this.clickPricePendingButton();
             // await this.page.waitForTimeout(3000);
+            await this.setPageSize();
             await this.processProductList();
             logger.info("价格审核流程初始化完成");
         } catch (error) {

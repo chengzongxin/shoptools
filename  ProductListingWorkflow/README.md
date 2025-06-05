@@ -85,7 +85,7 @@ ISC
 ## 运行
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
 
-
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenum\ChromeProfile"
 
 为什么你通过"div.rocket-select-item-option-content >> text='100 条/页'",这种写法就能找到对应的选项，而且选对了，我都没告诉你对应的选择器
 
