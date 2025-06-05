@@ -1,6 +1,14 @@
 import { Page, BrowserContext } from '@playwright/test';
 import { logger } from '../utils/logger';
 
+// 定义合规信息类型枚举
+export enum ComplianceType {
+    CALIFORNIA_PROP_65 = '加利福尼亚州65号法案',
+    EU_REPRESENTATIVE = '欧盟负责人',
+    MANUFACTURER_INFO = '制造商信息',
+    TURKEY_REPRESENTATIVE = '土耳其负责人'
+}
+
 export class ComplianceReview {
     private page: Page;
     private debug: boolean;
@@ -157,11 +165,96 @@ export class ComplianceReview {
     }
 
     /**
-     * 开始合规审核流程
+     * 处理特定类型的合规信息
+     * @param complianceType 合规信息类型
      */
-    async startReview(): Promise<void> {
+    private async handleComplianceType(complianceType: ComplianceType): Promise<void> {
         try {
-            logger.info("开始合规审核流程");
+            logger.info(`正在处理${complianceType}合规信息...`);
+            
+            // 定位到合规信息类型的选择器
+            const selectElement = await this.page.waitForSelector(
+                ".rocket-drawer-content-wrapper .rocket-select-selector",
+                { state: 'visible' }
+            );
+            
+            if (!selectElement) {
+                throw new Error("未找到合规信息类型选择器");
+            }
+
+            // 点击选择器
+            await selectElement.click();
+            logger.info("已点击合规信息类型选择器");
+            
+            // 等待下拉框出现
+            await this.page.waitForTimeout(2000);
+
+            // 检查下拉框是否出现
+            const dropdown = await this.page.waitForSelector(
+                ".rocket-select-dropdown",
+                { timeout: 5000 }
+            );
+            
+            if (!dropdown) {
+                throw new Error("点击后未出现下拉选项");
+            }
+            logger.info("下拉选项已出现");
+
+            // 如果不是加利福尼亚州65号法案，需要滚动下拉框到底部
+            if (complianceType !== ComplianceType.CALIFORNIA_PROP_65) {
+                logger.info("正在滚动下拉框到底部...");
+                
+                // 等待下拉列表容器出现
+                const listContainer = await this.page.waitForSelector(
+                    ".rocket-virtual-list-holder",
+                    { state: 'visible', timeout: 5000 }
+                );
+
+                if (!listContainer) {
+                    throw new Error("未找到下拉列表容器");
+                }
+
+                // 使用鼠标滚轮事件滚动
+                await this.page.evaluate(() => {
+                    const container = document.querySelector('.rocket-virtual-list-holder');
+                    if (container) {
+                        // 创建一个大的滚动事件
+                        const wheelEvent = new WheelEvent('wheel', {
+                            deltaY: 1000,
+                            bubbles: true,
+                            cancelable: true
+                        });
+                        container.dispatchEvent(wheelEvent);
+                    }
+                });
+
+                // 等待滚动完成
+                await this.page.waitForTimeout(1000);
+                logger.info("已滚动下拉框到底部");
+            }
+
+            // 选择对应的合规信息类型
+            const option = await this.page.waitForSelector(
+                `//div[contains(@class, 'rocket-select-item-option-content') and contains(text(), '${complianceType}')]`,
+                { state: 'visible', timeout: 5000 }
+            );
+            await option?.click();
+            logger.info(`已选择${complianceType}`);
+
+            // 等待页面刷新和筛选条件加载
+            await this.page.waitForTimeout(3000);
+        } catch (error) {
+            logger.error(`处理${complianceType}合规信息失败: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * 初始化合规审核环境
+     */
+    private async initializeComplianceReview(): Promise<void> {
+        try {
+            logger.info("开始初始化合规审核环境...");
             
             // 1. 打开首页
             logger.info("正在打开首页...");
@@ -221,10 +314,6 @@ export class ComplianceReview {
             
             // 等待并获取侧边栏表单
             logger.info("等待侧边栏表单加载...");
-            // const form = await this.page.waitForSelector(
-            //     ".rocket-drawer-content-wrapper form.rocket-form-field",
-            //     { state: 'visible', timeout: 10000 }
-            // );
             const form = this.page.locator(".rocket-drawer-content-wrapper form.rocket-form-field");
             await form.waitFor({ state: 'visible', timeout: 3000 });
             
@@ -232,88 +321,62 @@ export class ComplianceReview {
                 throw new Error("未找到侧边栏表单");
             }
 
-            // 8. 选择合规信息类型
-            logger.info("正在查找合规信息类型输入框...");
-            try {
-                // 定位到合规信息类型的选择器
-                const selectElement = await this.page.waitForSelector(
-                    ".rocket-drawer-content-wrapper .rocket-select-selector",
-                    { state: 'visible' }
-                );
-                
-                if (!selectElement) {
-                    throw new Error("未找到合规信息类型选择器");
-                }
+            logger.info("合规审核环境初始化完成");
+        } catch (error) {
+            logger.error(`初始化合规审核环境失败: ${error}`);
+            throw error;
+        }
+    }
 
-                // 点击选择器
-                await selectElement.click();
-                logger.info("已点击合规信息类型选择器");
-                
-                // 等待下拉框出现
-                await this.page.waitForTimeout(2000);
+    /**
+     * 处理单个合规信息类型
+     * @param complianceType 合规信息类型
+     */
+    private async processSingleComplianceType(complianceType: ComplianceType): Promise<void> {
+        try {
+            logger.info(`开始处理${complianceType}合规信息...`);
 
-                // 检查下拉框是否出现
-                const dropdown = await this.page.waitForSelector(
-                    ".rocket-select-dropdown",
-                    { timeout: 5000 }
-                );
-                
-                if (!dropdown) {
-                    throw new Error("点击后未出现下拉选项");
-                }
-                logger.info("下拉选项已出现");
+            const form = this.page.locator(".rocket-drawer-content-wrapper form.rocket-form-field");
+            
+            // 8. 处理特定类型的合规信息
+            await this.handleComplianceType(complianceType);
 
-            } catch (error) {
-                logger.error(`点击合规信息类型输入框失败: ${error}`);
-                throw error;
-            }
-
-            // 9. 选择"加利福尼亚州65号法案"选项
-            logger.info("正在选择合规信息类型...");
-            const option = await this.page.waitForSelector(
-                "//div[contains(@class, 'rocket-select-item-option-content') and contains(text(), '加利福尼亚州65号法案')]",
-                { state: 'visible' }
-            );
-            await option?.click();
-            logger.info("已选择加利福尼亚州65号法案");
-
-            // 等待页面刷新和筛选条件加载
-            await this.page.waitForTimeout(3000);
-
-            // 10. 选择状态筛选条件
+            // 9. 选择状态筛选条件
             logger.info("正在选择状态筛选条件...");
             try {
                 // 定位状态选择框 - 使用locator方法支持XPath
                 const statusSelectLocator = form.locator(
                     'xpath=.//div[4]/div[3]/div/div[2]/div/div/div'
-                  );
+                );
                 
                 // 等待元素可见
                 await statusSelectLocator.waitFor({ state: 'visible', timeout: 5000 });
+
+                if (complianceType === ComplianceType.CALIFORNIA_PROP_65) {
+                    // 点击状态选择框
+                    await statusSelectLocator.click();
+                    logger.info("已点击状态选择框");
+                    await this.page.waitForTimeout(1000);
+
+                    // 选择"待上传"选项
+                    const pendingOption = await this.page.waitForSelector(
+                        "//div[contains(@class, 'rocket-select-item-option-content') and contains(text(), '待上传')]",
+                        { state: 'visible', timeout: 5000 }
+                    );
+                    await pendingOption?.click();
+                    logger.info("已选择'待上传'选项");
+
+                    // 等待下拉菜单关闭
+                    await this.page.waitForTimeout(1000);
+
+                    // 使用ESC键关闭下拉菜单
+                    await this.page.keyboard.press('Escape');
+                    logger.info("已按ESC键关闭下拉菜单");
+
+                    // 等待下拉菜单完全关闭
+                    await this.page.waitForTimeout(1000);
+                }
                 
-                // 点击状态选择框
-                await statusSelectLocator.click();
-                logger.info("已点击状态选择框");
-                await this.page.waitForTimeout(1000);
-
-                // 选择"待上传"选项
-                const pendingOption = await this.page.waitForSelector(
-                    "//div[contains(@class, 'rocket-select-item-option-content') and contains(text(), '待上传')]",
-                    { state: 'visible', timeout: 5000 }
-                );
-                await pendingOption?.click();
-                logger.info("已选择'待上传'选项");
-
-                // 等待下拉菜单关闭
-                await this.page.waitForTimeout(1000);
-
-                // 使用ESC键关闭下拉菜单
-                await this.page.keyboard.press('Escape');
-                logger.info("已按ESC键关闭下拉菜单");
-
-                // 等待下拉菜单完全关闭
-                await this.page.waitForTimeout(1000);
-
                 // 点击查询按钮
                 logger.info("正在点击查询按钮...");
                 await this.page.locator('.rocket-row').getByRole('button', { name: '查 询' }).first().click();
@@ -321,6 +384,12 @@ export class ComplianceReview {
 
                 // 等待页面刷新
                 await this.page.waitForTimeout(3000);
+
+                // 检查是否存在"暂无数据"提示
+                if (await this.isListEmpty()) {
+                    logger.info("检测到'暂无数据'提示，列表处理完成");
+                    return;
+                }
 
                 // 滚动表单到底部
                 logger.info("正在滚动表单到底部...");
@@ -335,7 +404,7 @@ export class ComplianceReview {
                 });
                 logger.info("已滚动表单到底部");
 
-                // 11. 选择商品
+                // 10. 选择商品
                 logger.info("正在选择商品...");
                 
                 // 先选择每页显示100条
@@ -358,12 +427,12 @@ export class ComplianceReview {
                 
                 // 使用更精确的选择器
                 const pageSizeOption = await this.page.waitForSelector(
-                    "div.rocket-select-item-option-content >> text='10 条/页'",
+                    "div.rocket-select-item-option-content >> text='100 条/页'",
                     { state: 'visible', timeout: 5000 }
                 );
                 
                 if (!pageSizeOption) {
-                    throw new Error("未找到'10 条/页'选项");
+                    throw new Error("未找到'100 条/页'选项");
                 }
                 
                 await pageSizeOption.click();
@@ -383,14 +452,18 @@ export class ComplianceReview {
                 await firstProductCheckbox?.click();
                 logger.info("已选择第一个商品");
 
-                // 12. 选择警示类型
+                // 11. 选择警示类型
                 logger.info("正在选择警示类型...");
                 try {
                     // 定位警示类型选择框 - 使用更精确的选择器
-                    const warningTypeLocator = form.locator(
-                        "xpath=.//div[8]/div/div/div/div/div[2]/div[1]/div/div"
-                    );
 
+                    const xpath = complianceType === ComplianceType.CALIFORNIA_PROP_65 ?
+                        "xpath=.//div[8]/div/div/div/div/div[2]/div[1]/div/div" :
+                        "xpath=.//div[8]/div/div[2]/div/div[2]/div[1]/div/div";
+                    const warningTypeLocator = form.locator(
+                        xpath
+                    );
+                    
                     // 等待元素可见
                     await warningTypeLocator.waitFor({ state: 'visible', timeout: 5000 });
                     
@@ -400,67 +473,115 @@ export class ComplianceReview {
                     await this.page.waitForTimeout(1000);
 
                     // 等待下拉列表出现
-                    // const dropdownList = await this.page.waitForSelector(
-                    //     "div.rocket-virtual-list-holder-inner",
-                    //     { state: 'visible', timeout: 5000 }
-                    // );
-
-                    // dropdownList  = /html/body/div[17]/div/div
                     const dropdownList = await this.page.locator(
                         "xpath=.//div[17]/div/div"
                     );
-                    logger.info(dropdownList)
+                    logger.info(dropdownList);
 
-                    // 选择"No Warning Applicable/无需警示"选项
-                    const warningOption = await this.page.waitForSelector(
-                        "div.rocket-select-item-option-content:has-text('No Warning Applicable/无需警示')",
-                        { state: 'visible', timeout: 5000 }
-                    );
-                    await warningOption?.click();
-                    logger.info("已选择'No Warning Applicable/无需警示'选项");
-
-                    // 13. 确认协议
-                    logger.info("正在确认协议...");
-                    const policyCheckbox = await this.page.waitForSelector(
-                        '#_policyApprove',
-                        { state: 'visible', timeout: 5000 }
-                    );
+                    // 根据不同的合规信息类型选择不同的选项
+                    let warningOption;
+                    if (complianceType === ComplianceType.CALIFORNIA_PROP_65) {
+                        // 加利福尼亚州65号法案选择"No Warning Applicable/无需警示"
+                        warningOption = await this.page.waitForSelector(
+                            "div.rocket-select-item-option-content:has-text('No Warning Applicable/无需警示')",
+                            { state: 'visible', timeout: 5000 }
+                        );
+                    } else {
+                        // 其他类型直接选择第一个选项
+                        warningOption = await this.page.waitForSelector(
+                            "div.rocket-select-item-option-content:has-text('申报成功')",
+                            { state: 'visible', timeout: 5000 }
+                        );
+                    }
                     
-                    if (!policyCheckbox) {
-                        throw new Error("未找到协议确认复选框");
+                    await warningOption?.click();
+                    logger.info(`已选择警示类型选项`);
+
+                } catch (error) {
+                    logger.error(`选择警示类型失败: ${error}`);
+                    throw error;
+                }
+
+                // 12. 确认协议
+                logger.info("正在确认协议...");
+                const policyCheckbox = await this.page.waitForSelector(
+                    '#_policyApprove',
+                    { state: 'visible', timeout: 5000 }
+                );
+                
+                if (!policyCheckbox) {
+                    throw new Error("未找到协议确认复选框");
+                }
+
+                // 确保复选框被选中
+                const isChecked = await policyCheckbox.isChecked();
+                if (!isChecked) {
+                    await policyCheckbox.click();
+                }
+                logger.info("已确认协议");
+
+                // 滚动表单到顶部
+                logger.info("正在滚动表单到顶部...");
+                await this.page.evaluate(() => {
+                    const body = document.querySelector('.rocket-drawer-body');
+                    if (body) {
+                        body.scrollTo({
+                            top: 0,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+                logger.info("已滚动表单到顶部");
+
+                // 13. 点击确认上传按钮
+                logger.info("正在点击确认上传按钮...");
+                const confirmButton = await this.page.getByRole('button', { name: '确认上传' });
+                await confirmButton.click();
+                logger.info("已点击确认上传按钮");
+
+                // 等待上传完成
+                await this.page.waitForTimeout(3000);
+
+                // 14. 处理上传成功弹窗
+                logger.info("等待上传成功弹窗...");
+                const successButton = await this.page.waitForSelector(
+                    "button.rocket-btn.rocket-btn-primary:has-text('我知道了')",
+                    { state: 'visible', timeout: 5000 }
+                );
+                await successButton?.click();
+                logger.info("已关闭上传成功弹窗");
+
+                // 15. 检查是否有下一页并循环处理
+                while (true) {
+                    await this.page.waitForTimeout(3000);
+
+                    // 检查是否存在"暂无数据"提示
+                    if (await this.isListEmpty()) {
+                        logger.info("检测到'暂无数据'提示，列表处理完成");
+                        break;
                     }
 
-                    // 确保复选框被选中
-                    const isChecked = await policyCheckbox.isChecked();
-                    if (!isChecked) {
-                        await policyCheckbox.click();
-                    }
-                    logger.info("已确认协议");
+                    // 获取当前页面的所有商品
+                    await this.page.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
 
-                    // 滚动表单到顶部
-                    logger.info("正在滚动表单到顶部...");
-                    await this.page.evaluate(() => {
-                        const body = document.querySelector('.rocket-drawer-body');
-                        if (body) {
-                            body.scrollTo({
-                                top: 0,
-                                behavior: 'smooth'
-                            });
-                        }
-                    });
-                    logger.info("已滚动表单到顶部");
+                    // 选择第一个商品
+                    const firstProductCheckbox = await this.page.waitForSelector(
+                        '.rocket-table-selection-column .rocket-checkbox-input',
+                        { state: 'visible', timeout: 5000 }
+                    );
+                    await firstProductCheckbox?.click();
+                    logger.info("已选择第一个商品");
 
-                    // 14. 点击确认上传按钮
+                    // 点击确认上传按钮
                     logger.info("正在点击确认上传按钮...");
-                    const confirmButton = await this.page.getByRole('button', { name: '确认上传' })
-                    logger.info(confirmButton)
-                    await confirmButton.click();
+                    const confirmButton = await this.page.getByRole('button', { name: '确认上传' });
+                    await confirmButton?.click();
                     logger.info("已点击确认上传按钮");
 
                     // 等待上传完成
                     await this.page.waitForTimeout(3000);
 
-                    // 15. 处理上传成功弹窗
+                    // 处理上传成功弹窗
                     logger.info("等待上传成功弹窗...");
                     const successButton = await this.page.waitForSelector(
                         "button.rocket-btn.rocket-btn-primary:has-text('我知道了')",
@@ -468,50 +589,6 @@ export class ComplianceReview {
                     );
                     await successButton?.click();
                     logger.info("已关闭上传成功弹窗");
-
-                    // 16. 检查是否有下一页并循环处理
-                    while (true) {
-                        // 检查是否存在"暂无数据"提示
-                        const emptyDataElement = await this.page.locator('p.rocket-empty-description').first();
-                        const isEmpty = await emptyDataElement.isVisible();
-                        if (isEmpty) {
-                            logger.info("检测到'暂无数据'提示，列表处理完成");
-                            break;
-                        }
-
-                        // 获取当前页面的所有商品
-                        await this.page.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
-
-                        // 选择第一个商品
-                        const firstProductCheckbox = await this.page.waitForSelector(
-                            '.rocket-table-selection-column .rocket-checkbox-input',
-                            { state: 'visible', timeout: 5000 }
-                        );
-                        await firstProductCheckbox?.click();
-                        logger.info("已选择第一个商品");
-
-                        // 点击确认上传按钮
-                        logger.info("正在点击确认上传按钮...");
-                        const confirmButton = await this.page.getByRole('button', { name: '确认上传' })
-                        await confirmButton?.click();
-                        logger.info("已点击确认上传按钮");
-
-                        // 等待上传完成
-                        await this.page.waitForTimeout(3000);
-
-                        // 处理上传成功弹窗
-                        logger.info("等待上传成功弹窗...");
-                        const successButton = await this.page.waitForSelector(
-                            "button.rocket-btn.rocket-btn-primary:has-text('我知道了')",
-                            { state: 'visible', timeout: 5000 }
-                        );
-                        await successButton?.click();
-                        logger.info("已关闭上传成功弹窗");
-                    }
-
-                } catch (error) {
-                    logger.error(`选择警示类型或确认协议失败: ${error}`);
-                    throw error;
                 }
 
             } catch (error) {
@@ -520,7 +597,51 @@ export class ComplianceReview {
             }
 
         } catch (error) {
-            logger.error(`合规审核流程出错: ${error}`);
+            logger.error(`处理${complianceType}合规信息失败: ${error}`);
+            throw error;
+        }
+    }
+
+    /**
+     * 判断列表是否为空
+     */
+    async isListEmpty(): Promise<boolean> {
+        const emptyDataElement = await this.page.locator('p.rocket-empty-description').first();
+        const isEmpty = await emptyDataElement.isVisible();
+        return isEmpty;
+    }
+
+    /**
+     * 按顺序执行所有合规信息类型的处理
+     */
+    async processAllComplianceTypes(): Promise<void> {
+        try {
+            logger.info("开始按顺序处理所有合规信息类型...");
+
+            // 首先初始化环境
+            await this.initializeComplianceReview();
+
+            // 定义需要处理的合规信息类型顺序
+            const complianceTypes = [
+                ComplianceType.CALIFORNIA_PROP_65,
+                ComplianceType.EU_REPRESENTATIVE,
+                ComplianceType.MANUFACTURER_INFO,
+                ComplianceType.TURKEY_REPRESENTATIVE
+            ];
+
+            // 依次处理每种类型
+            for (const type of complianceTypes) {
+                logger.info(`开始处理${type}合规信息...`);
+                await this.processSingleComplianceType(type);
+                logger.info(`完成${type}合规信息处理`);
+                
+                // 等待一段时间，确保页面完全加载
+                await this.page.waitForTimeout(3000);
+            }
+
+            logger.info("所有合规信息类型处理完成");
+        } catch (error) {
+            logger.error(`处理所有合规信息类型时出错: ${error}`);
             throw error;
         }
     }

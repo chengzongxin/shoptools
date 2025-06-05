@@ -17,10 +17,10 @@ async function main() {
         // 创建合规审核实例
         const complianceReview = new ComplianceReview(context, true);
         
-        // 开始合规审核流程
-        await complianceReview.startReview();
+        // 开始按顺序处理所有合规信息类型
+        await complianceReview.processAllComplianceTypes();
         
-        logger.info('合规审核流程完成，等待用户操作...');
+        logger.info('所有合规信息类型处理完成，等待用户操作...');
         
         // 保持程序运行
         await new Promise(() => {});
