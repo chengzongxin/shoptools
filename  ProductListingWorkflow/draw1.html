@@ -1,0 +1,780 @@
+<div class="rocket-drawer-content-wrapper" style="width: 75%">
+  <div class="rocket-drawer-content">
+    <div class="rocket-drawer-wrapper-body">
+      <div class="rocket-drawer-header">
+        <div class="rocket-drawer-title">批量上传合规信息</div>
+        <button type="button" aria-label="Close" class="rocket-drawer-close">
+          <i aria-label="图标: close" class="rocketicon rocketicon-close"
+            ><svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="64 64 896 896"
+              focusable="false"
+              class=""
+              data-icon="close"
+              width="1em"
+              height="1em"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="m563.8 512 262.5-312.9c4.4-5.2.7-13.1-6.1-13.1h-79.8c-4.7 0-9.2 2.1-12.3 5.7L511.6 449.8 295.1 191.7c-3-3.6-7.5-5.7-12.3-5.7H203c-6.8 0-10.5 7.9-6.1 13.1L459.4 512 196.9 824.9A7.95 7.95 0 0 0 203 838h79.8c4.7 0 9.2-2.1 12.3-5.7l216.5-258.1 216.5 258.1c3 3.6 7.5 5.7 12.3 5.7h79.8c6.8 0 10.5-7.9 6.1-13.1z"
+              ></path></svg
+          ></i>
+        </button>
+      </div>
+      <div class="rocket-drawer-body">
+        <form
+          class="rocket-form-field rocket-form-field-horizontal rocket-form-field-small"
+        >
+          <div
+            style="
+              border-left: 2px solid rgb(251, 119, 1);
+              padding-left: 5px;
+              margin-bottom: 20px;
+              margin-top: 0px;
+              font-size: 16px;
+              color: rgba(0, 0, 0, 0.8);
+              line-height: 1;
+            "
+          >
+            选择合规信息类型
+          </div>
+          <div
+            class="rocket-row-flex rocket-form-field-item rocket-form-field-item-has-success"
+            style="
+              padding: 10px;
+              background: rgb(250, 250, 250);
+              border-radius: 6px;
+            "
+          >
+            <div
+              class="rocket-col rocket-form-field-item-label rocket-form-field-item-label-wrap"
+            >
+              <label for="taskType" class="" title=""
+                ><div style="font-size: 12px; width: 100px">
+                  合规信息类型
+                </div></label
+              >
+            </div>
+            <div class="rocket-col rocket-form-field-item-control">
+              <div class="rocket-form-field-item-control-input">
+                <div class="rocket-form-field-item-control-input-content">
+                  <div
+                    class="rocket-select rocket-select-sm rocket-select-single rocket-select-show-arrow rocket-select-show-search"
+                    style="font-size: 12px; width: 50%"
+                  >
+                    <div class="rocket-select-selector">
+                      <span class="rocket-select-selection-search"
+                        ><input
+                          type="search"
+                          id="taskType"
+                          autocomplete="off"
+                          class="rocket-select-selection-search-input"
+                          role="combobox"
+                          aria-haspopup="listbox"
+                          aria-owns="taskType_list"
+                          aria-autocomplete="list"
+                          aria-controls="taskType_list"
+                          aria-activedescendant="taskType_list_0"
+                          value=""
+                          aria-expanded="false"
+                          style="opacity: 0"
+                          readonly=""
+                          unselectable="on" /></span
+                      ><span
+                        class="rocket-select-selection-item"
+                        title="加利福尼亚州65号法案"
+                        >加利福尼亚州65号法案</span
+                      >
+                    </div>
+                    <span
+                      class="rocket-select-arrow"
+                      unselectable="on"
+                      aria-hidden="true"
+                      style="user-select: none"
+                      ><i
+                        aria-label="图标: down"
+                        class="rocketicon rocketicon-down rocket-select-suffix"
+                        ><svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="64 64 896 896"
+                          focusable="false"
+                          class=""
+                          data-icon="down"
+                          width="1em"
+                          height="1em"
+                          fill="currentColor"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7"
+                          ></path></svg></i
+                    ></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              border-left: 2px solid rgb(251, 119, 1);
+              padding-left: 5px;
+              margin-bottom: 24px;
+              font-size: 16px;
+              color: rgba(0, 0, 0, 0.8);
+              line-height: 1;
+            "
+          >
+            选择商品
+          </div>
+          <div
+            class="rocket-row"
+            style="
+              padding: 16px;
+              margin-bottom: 16px;
+              background: rgb(250, 250, 250);
+              border-radius: 6px;
+            "
+          >
+            <div class="rocket-col rocket-col-8">
+              <div class="rocket-row-flex rocket-form-field-item">
+                <div
+                  class="rocket-col rocket-form-field-item-label rocket-form-field-item-label-wrap"
+                >
+                  <label for="onSale" class="" title=""
+                    ><div style="width: 100px; text-align: right">
+                      商品是否在售
+                    </div></label
+                  >
+                </div>
+                <div class="rocket-col rocket-form-field-item-control">
+                  <div class="rocket-form-field-item-control-input">
+                    <div class="rocket-form-field-item-control-input-content">
+                      <div
+                        class="rocket-select rocket-select-sm rocket-select-single rocket-select-allow-clear rocket-select-show-arrow"
+                      >
+                        <div class="rocket-select-selector">
+                          <span class="rocket-select-selection-search"
+                            ><input
+                              type="search"
+                              id="onSale"
+                              autocomplete="off"
+                              class="rocket-select-selection-search-input"
+                              role="combobox"
+                              aria-haspopup="listbox"
+                              aria-owns="onSale_list"
+                              aria-autocomplete="list"
+                              aria-controls="onSale_list"
+                              aria-activedescendant="onSale_list_0"
+                              readonly=""
+                              unselectable="on"
+                              value=""
+                              style="opacity: 0" /></span
+                          ><span class="rocket-select-selection-placeholder"
+                            >请选择</span
+                          >
+                        </div>
+                        <span
+                          class="rocket-select-arrow"
+                          unselectable="on"
+                          aria-hidden="true"
+                          style="user-select: none"
+                          ><i
+                            aria-label="图标: down"
+                            class="rocketicon rocketicon-down rocket-select-suffix"
+                            ><svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="64 64 896 896"
+                              focusable="false"
+                              class=""
+                              data-icon="down"
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7"
+                              ></path></svg></i
+                        ></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="rocket-col rocket-col-8">
+              <div class="rocket-row-flex rocket-form-field-item">
+                <div
+                  class="rocket-col rocket-form-field-item-label rocket-form-field-item-label-wrap"
+                >
+                  <label for="catIds" class="" title=""
+                    ><div style="width: 100px; text-align: right">
+                      商品分类
+                    </div></label
+                  >
+                </div>
+                <div class="rocket-col rocket-form-field-item-control">
+                  <div class="rocket-form-field-item-control-input">
+                    <div class="rocket-form-field-item-control-input-content">
+                      <div
+                        class="rocket-select rocket-cascader rocket-select-sm rocket-select-multiple rocket-select-allow-clear rocket-select-show-arrow rocket-select-show-search"
+                        style="width: 100%"
+                      >
+                        <div class="rocket-select-selector">
+                          <div class="rocket-select-selection-overflow">
+                            <div
+                              class="rocket-select-selection-overflow-item rocket-select-selection-overflow-item-suffix"
+                              style="opacity: 1"
+                            >
+                              <div
+                                class="rocket-select-selection-search"
+                                style="width: 3px"
+                              >
+                                <input
+                                  type="search"
+                                  id="catIds"
+                                  autocomplete="off"
+                                  class="rocket-select-selection-search-input"
+                                  role="combobox"
+                                  aria-haspopup="listbox"
+                                  aria-owns="catIds_list"
+                                  aria-autocomplete="list"
+                                  aria-controls="catIds_list"
+                                  readonly=""
+                                  unselectable="on"
+                                  value=""
+                                  style="opacity: 0"
+                                /><span
+                                  class="rocket-select-selection-search-mirror"
+                                  aria-hidden="true"
+                                  >&nbsp;</span
+                                >
+                              </div>
+                            </div>
+                          </div>
+                          <span class="rocket-select-selection-placeholder"
+                            >请输入</span
+                          >
+                        </div>
+                        <span
+                          class="rocket-select-arrow"
+                          unselectable="on"
+                          aria-hidden="true"
+                          style="user-select: none"
+                          ><i
+                            aria-label="图标: down"
+                            class="rocketicon rocketicon-down rocket-select-suffix"
+                            ><svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="64 64 896 896"
+                              focusable="false"
+                              class=""
+                              data-icon="down"
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7"
+                              ></path></svg></i
+                        ></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="rocket-col rocket-col-8">
+              <div class="rocket-row-flex rocket-form-field-item">
+                <div
+                  class="rocket-col rocket-form-field-item-label rocket-form-field-item-label-wrap"
+                >
+                  <label for="taskStatusList" class="" title=""
+                    ><div style="width: 100px; text-align: right">
+                      状态
+                    </div></label
+                  >
+                </div>
+                <div class="rocket-col rocket-form-field-item-control">
+                  <div class="rocket-form-field-item-control-input">
+                    <div class="rocket-form-field-item-control-input-content">
+                      <div
+                        class="rocket-select rocket-select-sm rocket-select-multiple rocket-select-allow-clear rocket-select-show-search"
+                        style="font-size: 12px"
+                      >
+                        <div class="rocket-select-selector">
+                          <div class="rocket-select-selection-overflow">
+                            <div
+                              class="rocket-select-selection-overflow-item rocket-select-selection-overflow-item-suffix"
+                              style="opacity: 1"
+                            >
+                              <div
+                                class="rocket-select-selection-search"
+                                style="width: 3px"
+                              >
+                                <input
+                                  type="search"
+                                  id="taskStatusList"
+                                  autocomplete="off"
+                                  class="rocket-select-selection-search-input"
+                                  role="combobox"
+                                  aria-haspopup="listbox"
+                                  aria-owns="taskStatusList_list"
+                                  aria-autocomplete="list"
+                                  aria-controls="taskStatusList_list"
+                                  aria-activedescendant="taskStatusList_list_0"
+                                  readonly=""
+                                  unselectable="on"
+                                  value=""
+                                  style="opacity: 0"
+                                /><span
+                                  class="rocket-select-selection-search-mirror"
+                                  aria-hidden="true"
+                                  >&nbsp;</span
+                                >
+                              </div>
+                            </div>
+                          </div>
+                          <span class="rocket-select-selection-placeholder"
+                            >请选择</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="rocket-col rocket-col-24"
+              style="padding-left: 20px; text-align: right"
+            >
+              <button
+                type="button"
+                class="rocket-btn rocket-btn-primary rocket-btn-sm"
+                style="margin-right: 20px"
+              >
+                <span>查 询</span></button
+              ><button type="button" class="rocket-btn rocket-btn-sm">
+                <span>重 置</span>
+              </button>
+            </div>
+          </div>
+          <div class="rocket-row">
+            <div style="margin-bottom: 20px; color: red">
+              已选：0，请选择商品
+            </div>
+            <div class="rocket-table-wrapper">
+              <div class="rocket-spin-nested-loading">
+                <div class="rocket-spin-container">
+                  <div
+                    class="rocket-table rocket-table-small rocket-table-bordered rocket-table-has-fix-left"
+                  >
+                    <div class="rocket-table-container">
+                      <div class="rocket-table-content">
+                        <table style="table-layout: auto">
+                          <colgroup>
+                            <col class="rocket-table-selection-col" />
+                            <col style="width: 200px" />
+                            <col style="width: 220px" />
+                            <col style="width: 220px" />
+                          </colgroup>
+                          <thead class="rocket-table-thead">
+                            <tr>
+                              <th
+                                class="rocket-table-cell rocket-table-selection-column rocket-table-cell-fix-left"
+                                scope="col"
+                                style="position: sticky; left: 0px"
+                              >
+                                <div class="rocket-table-selection">
+                                  <label
+                                    class="rocket-checkbox-wrapper rocket-checkbox-small"
+                                    ><span class="rocket-checkbox"
+                                      ><input
+                                        type="checkbox"
+                                        class="rocket-checkbox-input"
+                                        aria-label="Select all"
+                                        value="" /><span
+                                        class="rocket-checkbox-inner"
+                                      ></span></span
+                                  ></label>
+                                </div>
+                              </th>
+                              <th
+                                class="rocket-table-cell rocket-table-cell-fix-left rocket-table-cell-fix-left-last"
+                                scope="col"
+                                style="position: sticky; left: 0px"
+                              >
+                                商品信息
+                              </th>
+                              <th class="rocket-table-cell" scope="col">
+                                状态
+                              </th>
+                              <th class="rocket-table-cell" scope="col">
+                                是否在售
+                              </th>
+                            </tr>
+                          </thead>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                  <ul
+                    class="rocket-pagination mini rocket-table-pagination rocket-table-pagination-right rocket-pagination-small"
+                  >
+                    <li class="rocket-pagination-total-text">
+                      总共60326条数据
+                    </li>
+                    <li
+                      title="上一页"
+                      class="rocket-pagination-prev rocket-pagination-disabled"
+                      aria-disabled="true"
+                    >
+                      <a class="rocket-pagination-item-link"
+                        ><i
+                          aria-label="图标: left"
+                          class="rocketicon rocketicon-left"
+                          ><svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="64 64 896 896"
+                            focusable="false"
+                            class=""
+                            data-icon="left"
+                            width="1em"
+                            height="1em"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M724 218.3V141c0-6.7-7.7-10.4-12.9-6.3L260.3 486.8a31.86 31.86 0 0 0 0 50.3l450.8 352.1c5.3 4.1 12.9.4 12.9-6.3v-77.3c0-4.9-2.3-9.6-6.1-12.6l-360-281 360-281.1c3.8-3 6.1-7.7 6.1-12.6"
+                            ></path></svg></i
+                      ></a>
+                    </li>
+                    <li
+                      title="1"
+                      class="rocket-pagination-item rocket-pagination-item-1 rocket-pagination-item-active"
+                      tabindex="0"
+                    >
+                      <a>1</a>
+                    </li>
+                    <li
+                      title="2"
+                      class="rocket-pagination-item rocket-pagination-item-2"
+                      tabindex="0"
+                    >
+                      <a>2</a>
+                    </li>
+                    <li
+                      title="3"
+                      class="rocket-pagination-item rocket-pagination-item-3"
+                      tabindex="0"
+                    >
+                      <a>3</a>
+                    </li>
+                    <li
+                      title="4"
+                      class="rocket-pagination-item rocket-pagination-item-4"
+                      tabindex="0"
+                    >
+                      <a>4</a>
+                    </li>
+                    <li
+                      title="5"
+                      class="rocket-pagination-item rocket-pagination-item-5 rocket-pagination-item-before-jump-next"
+                      tabindex="0"
+                    >
+                      <a>5</a>
+                    </li>
+                    <li
+                      title="向后 5 页"
+                      tabindex="0"
+                      class="rocket-pagination-jump-next rocket-pagination-jump-next-custom-icon"
+                    >
+                      <a class="rocket-pagination-item-link"
+                        ><div class="rocket-pagination-item-container">
+                          <i
+                            aria-label="图标: double-right"
+                            class="rocketicon rocketicon-double-right rocket-pagination-item-link-icon"
+                            ><svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="64 64 896 896"
+                              focusable="false"
+                              class=""
+                              data-icon="double-right"
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M533.2 492.3 277.9 166.1c-3-3.9-7.7-6.1-12.6-6.1H188c-6.7 0-10.4 7.7-6.3 12.9L447.1 512 181.7 851.1A7.98 7.98 0 0 0 188 864h77.3c4.9 0 9.6-2.3 12.6-6.1l255.3-326.1c9.1-11.7 9.1-27.9 0-39.5m304 0L581.9 166.1c-3-3.9-7.7-6.1-12.6-6.1H492c-6.7 0-10.4 7.7-6.3 12.9L751.1 512 485.7 851.1A7.98 7.98 0 0 0 492 864h77.3c4.9 0 9.6-2.3 12.6-6.1l255.3-326.1c9.1-11.7 9.1-27.9 0-39.5"
+                              ></path></svg></i
+                          ><span class="rocket-pagination-item-ellipsis"
+                            >•••</span
+                          >
+                        </div></a
+                      >
+                    </li>
+                    <li
+                      title="6033"
+                      class="rocket-pagination-item rocket-pagination-item-6033"
+                      tabindex="0"
+                    >
+                      <a>6033</a>
+                    </li>
+                    <li
+                      title="下一页"
+                      tabindex="0"
+                      class="rocket-pagination-next"
+                      aria-disabled="false"
+                    >
+                      <a class="rocket-pagination-item-link"
+                        ><i
+                          aria-label="图标: right"
+                          class="rocketicon rocketicon-right"
+                          ><svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="64 64 896 896"
+                            focusable="false"
+                            class=""
+                            data-icon="right"
+                            width="1em"
+                            height="1em"
+                            fill="currentColor"
+                            aria-hidden="true"
+                          >
+                            <path
+                              d="M765.7 486.8 314.9 134.7A7.97 7.97 0 0 0 302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 0 0 0-50.4"
+                            ></path></svg></i
+                      ></a>
+                    </li>
+                    <li class="rocket-pagination-options">
+                      <div
+                        class="rocket-select rocket-select-sm rocket-pagination-options-size-changer rocket-select-single rocket-select-show-arrow"
+                      >
+                        <div class="rocket-select-selector">
+                          <span class="rocket-select-selection-search"
+                            ><input
+                              type="search"
+                              autocomplete="off"
+                              class="rocket-select-selection-search-input"
+                              role="combobox"
+                              aria-haspopup="listbox"
+                              aria-owns="rocket_select_10_list"
+                              aria-autocomplete="list"
+                              aria-controls="rocket_select_10_list"
+                              aria-activedescendant="rocket_select_10_list_0"
+                              readonly=""
+                              unselectable="on"
+                              value=""
+                              id="rocket_select_10"
+                              style="opacity: 0" /></span
+                          ><span
+                            class="rocket-select-selection-item"
+                            title="10 条/页"
+                            >10 条/页</span
+                          >
+                        </div>
+                        <span
+                          class="rocket-select-arrow"
+                          unselectable="on"
+                          aria-hidden="true"
+                          style="user-select: none"
+                          ><i
+                            aria-label="图标: down"
+                            class="rocketicon rocketicon-down rocket-select-suffix"
+                            ><svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="64 64 896 896"
+                              focusable="false"
+                              class=""
+                              data-icon="down"
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M884 256h-75c-5.1 0-9.9 2.5-12.9 6.6L512 654.2 227.9 262.6c-3-4.1-7.8-6.6-12.9-6.6h-75c-6.5 0-10.3 7.4-6.5 12.7l352.6 486.1c12.8 17.6 39 17.6 51.7 0l352.6-486.1c3.9-5.3.1-12.7-6.4-12.7"
+                              ></path></svg></i
+                        ></span>
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            style="
+              border-left: 2px solid rgb(251, 119, 1);
+              padding-left: 5px;
+              margin-bottom: 24px;
+              font-size: 16px;
+              color: rgba(0, 0, 0, 0.8);
+              line-height: 1;
+            "
+          >
+            加利福尼亚州65号法案
+          </div>
+          <div style="font-size: 12px; color: gray">
+            <span
+              >卖家销售的产品，产品本身（在适用的情况下）和产品展示页必须清晰显示任何所需的加州第65号提案警告通知。如果您的商品属于加州65号提案管控范围（即含有特定化学物质或属于加州65号提案规定的特殊类型），请务必如实填写并展示必要的警示信息。如果相关情况发生变化，例如法规新增化学物质或暴露类型，或您的商品成分发生变化，您必须在60天内更新此处的合规信息。<br />若因未能提供警告提示语而违反65号提案，你可能会受到加州相关行政管控部门的处理或面临有关加州诉讼。您还可能被视为违反了Temu商家协议和Temu商家行为准则，并面临包括帐户和帐户中的所有资金冻结，或暂停账户使用等后果。欲了解更多和填写指南，请参见<a
+                href="https://seller.kuajingmaihuo.com/main/course/detail?courseId=2310200000019"
+                target="_self"
+                >《美国加州65号提案介绍》 </a
+              ><br
+            /></span>
+          </div>
+          <div
+            style="
+              background-color: rgb(247, 247, 247);
+              padding: 20px;
+              margin-top: 12px;
+              margin-bottom: 16px;
+              border-radius: 6px;
+            "
+          >
+            <div>
+              <div>
+                <div style="padding-bottom: 0px">
+                  <div class="rocket-row rocket-form-field-item">
+                    <div
+                      class="rocket-col rocket-col-6 rocket-form-field-item-label rocket-form-field-item-label-wrap"
+                    >
+                      <label
+                        for="4_1000000001"
+                        class="rocket-form-field-item-required"
+                        title=""
+                        ><div style="font-size: 12px">
+                          警示类型<i
+                            aria-label="图标: question-circle"
+                            class="rocketicon rocketicon-question-circle"
+                            ><svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="64 64 896 896"
+                              focusable="false"
+                              class=""
+                              data-icon="question-circle"
+                              width="1em"
+                              height="1em"
+                              fill="currentColor"
+                              aria-hidden="true"
+                            >
+                              <path
+                                d="M512 64C264.6 64 64 264.6 64 512s200.6 448 448 448 448-200.6 448-448S759.4 64 512 64m0 820c-205.4 0-372-166.6-372-372s166.6-372 372-372 372 166.6 372 372-166.6 372-372 372"
+                              ></path>
+                              <path
+                                d="M623.6 316.7C593.6 290.4 554 276 512 276s-81.6 14.5-111.6 40.7C369.2 344 352 380.7 352 420v7.6c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8V420c0-44.1 43.1-80 96-80s96 35.9 96 80c0 31.1-22 59.6-56.1 72.7-21.2 8.1-39.2 22.3-52.1 40.9-13.1 19-19.9 41.8-19.9 64.9V620c0 4.4 3.6 8 8 8h48c4.4 0 8-3.6 8-8v-22.7a48.3 48.3 0 0 1 30.9-44.8c59-22.7 97.1-74.7 97.1-132.5.1-39.3-17.1-76-48.3-103.3M472 732a40 40 0 1 0 80 0 40 40 0 1 0-80 0"
+                              ></path></svg
+                          ></i></div
+                      ></label>
+                    </div>
+                    <div
+                      class="rocket-col rocket-col-16 rocket-form-field-item-control"
+                    >
+                      <div class="rocket-form-field-item-control-input">
+                        <div
+                          class="rocket-form-field-item-control-input-content"
+                        >
+                          <div
+                            class="rocket-select rocket-select-sm rocket-select-multiple rocket-select-show-search"
+                            style="font-size: 12px"
+                          >
+                            <div class="rocket-select-selector">
+                              <div class="rocket-select-selection-overflow">
+                                <div
+                                  class="rocket-select-selection-overflow-item rocket-select-selection-overflow-item-suffix"
+                                  style="opacity: 1"
+                                >
+                                  <div
+                                    class="rocket-select-selection-search"
+                                    style="width: 3px"
+                                  >
+                                    <input
+                                      type="search"
+                                      id="4_1000000001"
+                                      autocomplete="off"
+                                      class="rocket-select-selection-search-input"
+                                      role="combobox"
+                                      aria-haspopup="listbox"
+                                      aria-owns="4_1000000001_list"
+                                      aria-autocomplete="list"
+                                      aria-controls="4_1000000001_list"
+                                      aria-activedescendant="4_1000000001_list_0"
+                                      readonly=""
+                                      unselectable="on"
+                                      value=""
+                                      style="opacity: 0"
+                                    /><span
+                                      class="rocket-select-selection-search-mirror"
+                                      aria-hidden="true"
+                                      >&nbsp;</span
+                                    >
+                                  </div>
+                                </div>
+                              </div>
+                              <span class="rocket-select-selection-placeholder"
+                                >请选择</span
+                              >
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="rocket-form-field-item-extra">
+                        <span></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div
+            class="rocket-row rocket-form-field-item"
+            style="margin-top: 32px"
+          >
+            <div
+              class="rocket-col rocket-col-24 rocket-form-field-item-control"
+            >
+              <div class="rocket-form-field-item-control-input">
+                <div class="rocket-form-field-item-control-input-content">
+                  <label
+                    class="rocket-checkbox-wrapper rocket-checkbox-wrapper-checked rocket-checkbox-small"
+                    ><span class="rocket-checkbox rocket-checkbox-checked"
+                      ><input
+                        id="_policyApprove"
+                        type="checkbox"
+                        class="rocket-checkbox-input"
+                        value="1"
+                        checked="" /><span
+                        class="rocket-checkbox-inner"
+                      ></span></span
+                    ><span
+                      >我确认所提供的所有材料、信息和内容均真实、准确、完整、有效，与实际售卖商品一致，符合适用法规要求，并确认依据适用法规要求在商品详情页面向消费者展示。我确认对所提供的所有材料、信息和内容承担全部责任，并同意Temu有权通过材料、信息或内容载明的联系方式及/或其他方式联系相关方，并将该等材料、信息和内容提供给相关方进行审核验证。</span
+                    ></label
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="rocket-drawer-footer">
+        <div style="font-size: 16px; font-weight: 700">
+          <button
+            type="button"
+            class="rocket-btn rocket-btn-primary rocket-btn-sm"
+            style="margin-right: 10px"
+          >
+            <span>确认上传</span></button
+          ><button type="button" class="rocket-btn rocket-btn-sm">
+            <span>取 消</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
