@@ -221,10 +221,12 @@ export class ComplianceReview {
             
             // 等待并获取侧边栏表单
             logger.info("等待侧边栏表单加载...");
-            const form = await this.page.waitForSelector(
-                ".rocket-drawer-content-wrapper form.rocket-form-field",
-                { state: 'visible', timeout: 10000 }
-            );
+            // const form = await this.page.waitForSelector(
+            //     ".rocket-drawer-content-wrapper form.rocket-form-field",
+            //     { state: 'visible', timeout: 10000 }
+            // );
+            const form = this.page.locator(".rocket-drawer-content-wrapper form.rocket-form-field");
+            await form.waitFor({ state: 'visible', timeout: 3000 });
             
             if (!form) {
                 throw new Error("未找到侧边栏表单");
@@ -282,9 +284,9 @@ export class ComplianceReview {
             logger.info("正在选择状态筛选条件...");
             try {
                 // 定位状态选择框 - 使用locator方法支持XPath
-                const statusSelectLocator = this.page.locator(
-                    "xpath=/html/body/div[13]/div/div[2]/div/div/div[2]/form/div[4]/div[3]/div/div[2]/div/div/div"
-                );
+                const statusSelectLocator = form.locator(
+                    'xpath=.//div[4]/div[3]/div/div[2]/div/div/div'
+                  );
                 
                 // 等待元素可见
                 await statusSelectLocator.waitFor({ state: 'visible', timeout: 5000 });
@@ -302,11 +304,74 @@ export class ComplianceReview {
                 await pendingOption?.click();
                 logger.info("已选择'待上传'选项");
 
+                // 等待下拉菜单关闭
+                await this.page.waitForTimeout(1000);
+
+                // 使用ESC键关闭下拉菜单
+                await this.page.keyboard.press('Escape');
+                logger.info("已按ESC键关闭下拉菜单");
+
+                // 等待下拉菜单完全关闭
+                await this.page.waitForTimeout(1000);
+
+                // 点击查询按钮
+                logger.info("正在点击查询按钮...");
+                await this.page.locator('.rocket-row').getByRole('button', { name: '查 询' }).first().click();
+                logger.info("已点击查询按钮");
+
                 // 等待页面刷新
                 await this.page.waitForTimeout(3000);
 
+                // 滚动表单到底部
+                logger.info("正在滚动表单到底部...");
+                await this.page.evaluate(() => {
+                    const body = document.querySelector('.rocket-drawer-body');
+                    if (body) {
+                        body.scrollTo({
+                            top: body.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+                logger.info("已滚动表单到底部");
+
                 // 11. 选择商品
                 logger.info("正在选择商品...");
+                
+                // 先选择每页显示100条
+                logger.info("正在设置每页显示100条记录...");
+                const pageSizeSelector = form.locator('.rocket-pagination-options .rocket-select-selector');
+                
+                // 等待并点击页码选择器
+                await pageSizeSelector.waitFor({ state: 'visible', timeout: 5000 });
+                await pageSizeSelector.click();
+                logger.info("已点击页码选择器");
+                
+                // 等待下拉菜单出现并选择100条
+                logger.info("正在查找100条/页选项...");
+                
+                // 等待下拉菜单出现
+                await this.page.waitForSelector(
+                    "div.rocket-select-dropdown",
+                    { state: 'visible', timeout: 5000 }
+                );
+                
+                // 使用更精确的选择器
+                const pageSizeOption = await this.page.waitForSelector(
+                    "div.rocket-select-item-option-content >> text='10 条/页'",
+                    { state: 'visible', timeout: 5000 }
+                );
+                
+                if (!pageSizeOption) {
+                    throw new Error("未找到'10 条/页'选项");
+                }
+                
+                await pageSizeOption.click();
+                logger.info("已选择每页显示100条记录");
+                
+                // 等待页面刷新
+                await this.page.waitForTimeout(2000);
+
                 // 等待商品列表加载完成
                 await this.page.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
                 
@@ -321,11 +386,11 @@ export class ComplianceReview {
                 // 12. 选择警示类型
                 logger.info("正在选择警示类型...");
                 try {
-                    // 定位警示类型选择框 - 使用class选择器
-                    const warningTypeLocator = this.page.locator(
-                        "xpath=//div[contains(@class, 'rocket-select') and contains(@class, 'rocket-select-sm') and contains(@class, 'rocket-select-multiple') and contains(@class, 'rocket-select-show-search')]"
+                    // 定位警示类型选择框 - 使用更精确的选择器
+                    const warningTypeLocator = form.locator(
+                        "xpath=.//div[8]/div/div/div/div/div[2]/div[1]/div/div"
                     );
-                    
+
                     // 等待元素可见
                     await warningTypeLocator.waitFor({ state: 'visible', timeout: 5000 });
                     
@@ -334,9 +399,21 @@ export class ComplianceReview {
                     logger.info("已点击警示类型选择框");
                     await this.page.waitForTimeout(1000);
 
+                    // 等待下拉列表出现
+                    // const dropdownList = await this.page.waitForSelector(
+                    //     "div.rocket-virtual-list-holder-inner",
+                    //     { state: 'visible', timeout: 5000 }
+                    // );
+
+                    // dropdownList  = /html/body/div[17]/div/div
+                    const dropdownList = await this.page.locator(
+                        "xpath=.//div[17]/div/div"
+                    );
+                    logger.info(dropdownList)
+
                     // 选择"No Warning Applicable/无需警示"选项
                     const warningOption = await this.page.waitForSelector(
-                        "//div[contains(@class, 'rocket-select-item-option-content') and contains(text(), 'No Warning Applicable/无需警示')]",
+                        "div.rocket-select-item-option-content:has-text('No Warning Applicable/无需警示')",
                         { state: 'visible', timeout: 5000 }
                     );
                     await warningOption?.click();
@@ -360,17 +437,77 @@ export class ComplianceReview {
                     }
                     logger.info("已确认协议");
 
+                    // 滚动表单到顶部
+                    logger.info("正在滚动表单到顶部...");
+                    await this.page.evaluate(() => {
+                        const body = document.querySelector('.rocket-drawer-body');
+                        if (body) {
+                            body.scrollTo({
+                                top: 0,
+                                behavior: 'smooth'
+                            });
+                        }
+                    });
+                    logger.info("已滚动表单到顶部");
+
                     // 14. 点击确认上传按钮
                     logger.info("正在点击确认上传按钮...");
-                    const confirmButton = await this.page.waitForSelector(
-                        '.rocket-drawer-footer .rocket-btn-primary',
-                        { state: 'visible', timeout: 5000 }
-                    );
-                    await confirmButton?.click();
+                    const confirmButton = await this.page.getByRole('button', { name: '确认上传' })
+                    logger.info(confirmButton)
+                    await confirmButton.click();
                     logger.info("已点击确认上传按钮");
 
                     // 等待上传完成
                     await this.page.waitForTimeout(3000);
+
+                    // 15. 处理上传成功弹窗
+                    logger.info("等待上传成功弹窗...");
+                    const successButton = await this.page.waitForSelector(
+                        "button.rocket-btn.rocket-btn-primary:has-text('我知道了')",
+                        { state: 'visible', timeout: 5000 }
+                    );
+                    await successButton?.click();
+                    logger.info("已关闭上传成功弹窗");
+
+                    // 16. 检查是否有下一页并循环处理
+                    while (true) {
+                        // 检查是否存在"暂无数据"提示
+                        const emptyDataElement = await this.page.locator('p.rocket-empty-description').first();
+                        const isEmpty = await emptyDataElement.isVisible();
+                        if (isEmpty) {
+                            logger.info("检测到'暂无数据'提示，列表处理完成");
+                            break;
+                        }
+
+                        // 获取当前页面的所有商品
+                        await this.page.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
+
+                        // 选择第一个商品
+                        const firstProductCheckbox = await this.page.waitForSelector(
+                            '.rocket-table-selection-column .rocket-checkbox-input',
+                            { state: 'visible', timeout: 5000 }
+                        );
+                        await firstProductCheckbox?.click();
+                        logger.info("已选择第一个商品");
+
+                        // 点击确认上传按钮
+                        logger.info("正在点击确认上传按钮...");
+                        const confirmButton = await this.page.getByRole('button', { name: '确认上传' })
+                        await confirmButton?.click();
+                        logger.info("已点击确认上传按钮");
+
+                        // 等待上传完成
+                        await this.page.waitForTimeout(3000);
+
+                        // 处理上传成功弹窗
+                        logger.info("等待上传成功弹窗...");
+                        const successButton = await this.page.waitForSelector(
+                            "button.rocket-btn.rocket-btn-primary:has-text('我知道了')",
+                            { state: 'visible', timeout: 5000 }
+                        );
+                        await successButton?.click();
+                        logger.info("已关闭上传成功弹窗");
+                    }
 
                 } catch (error) {
                     logger.error(`选择警示类型或确认协议失败: ${error}`);

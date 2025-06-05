@@ -84,3 +84,29 @@ ISC
 
 ## 运行
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
+
+
+
+为什么你通过"div.rocket-select-item-option-content >> text='100 条/页'",这种写法就能找到对应的选项，而且选对了，我都没告诉你对应的选择器
+
+让我解释一下这个选择器的工作原理：
+div.rocket-select-item-option-content 是基础选择器，它选择具有 rocket-select-item-option-content 类的 div 元素。这个类名是 Rocket UI 组件库（一个类似 Ant Design 的组件库）中下拉选项的标准类名。
+>> text='100 条/页' 是 Playwright 特有的文本选择器语法，它会：
+查找包含精确文本 "100 条/页" 的元素
+这个文本选择器会自动处理文本节点的匹配，不管文本是在元素内部还是作为子元素
+为什么我知道这个选择器：
+从你之前提供的 HTML 结构中，我看到了下拉选项的基本结构
+在 Rocket UI 这样的组件库中，下拉选项通常使用固定的类名和结构
+rocket-select-item-option-content 是这类组件库中常用的选项内容类名
+举个例子，下拉选项的 HTML 结构可能是这样的：
+Apply to README.md
+>
+或者这样的：
+Apply to README.md
+>
+Playwright 的 >> text= 选择器都能正确处理这两种情况，这就是为什么它能准确找到并选择正确的选项。
+这种选择器的优点是：
+更可靠：不依赖于具体的 DOM 结构
+更灵活：可以处理文本在不同层级的情况
+更易读：直接使用可见文本进行选择
+这就是为什么这个选择器能准确找到并选择正确的选项，即使你没有提供具体的选择器。
