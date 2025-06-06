@@ -3,12 +3,24 @@
   "version": "1.0.0",
   "description": "Temu卖家自动化工作流程工具",
   "main": "dist/index.js",
+  "bin": {
+    "temu-auto": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./browser": "./dist/core/browser.js",
+    "./compliance": "./dist/services/compliance.js",
+    "./price-review": "./dist/services/price-review.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
+    "price": "ts-node src/index.ts --price",
+    "compliance": "ts-node src/index.ts --compliance",
     "test": "playwright test",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "prepublishOnly": "npm run build"
   },
   "keywords": ["temu", "automation", "playwright"],
   "author": "",

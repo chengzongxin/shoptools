@@ -1,78 +1,241 @@
 # Temu卖家自动化工具
 
-这是一个基于 Playwright + TypeScript 开发的 Temu 卖家自动化工具，用于简化日常上新工作流程。
+这是一个用于 Temu 卖家自动化工作流程的工具，支持价格审核和合规审核功能。
 
-## 项目结构
+## 功能特点
 
-```
-├── src/                    # 源代码目录
-│   ├── core/              # 核心功能模块
-│   ├── services/          # 业务服务层
-│   ├── utils/             # 工具函数
-│   └── index.ts           # 入口文件
-├── tests/                 # 测试文件目录
-├── logs/                  # 日志文件目录
-├── package.json           # 项目配置文件
-├── tsconfig.json          # TypeScript 配置
-└── playwright.config.ts   # Playwright 配置
-```
+- 价格审核：自动检查商品价格
+- 合规审核：自动检查商品合规性
+- 支持自定义浏览器调试端口
+- 详细的日志记录
+- 灵活的运行模式选择
 
-## 功能特性
+## 系统要求
 
-- 自动化登录
-- 商品上新
-- 库存管理
-- 订单处理
-- 数据统计
+- Node.js 16.0 或更高版本
+- Chrome 或 Chromium 浏览器
+- npm 或 yarn 包管理器
 
-## 开发环境要求
+## 完整使用流程
 
-- Node.js >= 16
-- npm >= 7
+### 1. 开发者发布流程
+
+1. **准备发布**
+   ```bash
+   # 确保代码已提交
+   git add .
+   git commit -m "准备发布"
+   
+   # 更新版本号
+   npm version patch  # 小版本更新
+   ```
+
+2. **发布到 npm**
+   ```bash
+   # 登录 npm（如果还没有登录）
+   npm login
+   
+   # 发布包
+   npm publish
+   ```
+
+### 2. 用户安装和使用流程
+
+#### Windows 用户
+
+1. **安装**
+   ```bash
+   # 以管理员身份运行 PowerShell 或命令提示符
+   npm install -g temu-seller-automation
+   ```
+
+2. **启动浏览器**
+   ```bash
+   # 创建配置目录
+   mkdir C:\selenium\ChromeProfile
+   
+   # 启动 Chrome
+   "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+   ```
+
+3. **使用工具**
+   ```bash
+   # 运行价格审核
+   temu-auto --price
+   
+   # 运行合规审核
+   temu-auto --compliance
+   ```
+
+#### macOS 用户
+
+1. **安装**
+   ```bash
+   # 使用 sudo 安装
+   sudo npm install -g temu-seller-automation
+   ```
+
+2. **启动浏览器**
+   ```bash
+   # 创建配置目录
+   mkdir -p ~/selenium/ChromeProfile
+   
+   # 启动 Chrome
+   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
+   ```
+
+3. **使用工具**
+   ```bash
+   # 运行价格审核
+   temu-auto --price
+   
+   # 运行合规审核
+   temu-auto --compliance
+   ```
+
+### 3. 常见问题解决
+
+1. **命令不可用**
+   - 检查安装：`npm list -g temu-seller-automation`
+   - 检查环境变量：`echo %PATH%` 或 `echo $PATH`
+   - 重新安装：`npm uninstall -g temu-seller-automation && npm install -g temu-seller-automation`
+
+2. **权限问题**
+   - Windows：以管理员身份运行
+   - macOS/Linux：使用 `sudo`
+
+3. **浏览器连接问题**
+   - 确保浏览器已启动
+   - 检查端口号
+   - 检查端口占用
 
 ## 安装
 
-```bash
-# 安装依赖
-npm install
+### 全局安装（推荐）
 
-# 安装 Playwright 浏览器
-npx playwright install
+```bash
+# 安装最新版本
+npm install -g temu-seller-automation
+
+# 安装特定版本
+npm install -g temu-seller-automation@1.0.0
 ```
 
-## 使用说明
+### 本地开发安装
 
-1. 开发模式运行：
 ```bash
+# 克隆仓库
+git clone [仓库地址]
+
+# 进入项目目录
+cd temu-seller-automation
+
+# 安装依赖
+npm install
+```
+
+## 使用方法
+
+### 全局命令行使用
+
+安装后，可以直接使用 `temu-auto` 命令：
+
+```bash
+# 运行所有功能
+temu-auto
+
+# 运行价格审核
+temu-auto --price
+
+# 运行合规审核
+temu-auto --compliance
+
+# 使用指定端口
+temu-auto --port=9223
+
+# 查看帮助信息
+temu-auto --help
+```
+
+### 启动浏览器
+
+在运行程序之前，需要先启动 Chrome 浏览器：
+
+#### Windows
+```bash
+# 创建配置目录
+mkdir C:\selenium\ChromeProfile
+
+# 启动 Chrome
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+```
+
+#### macOS
+```bash
+# 创建配置目录
+mkdir -p ~/selenium/ChromeProfile
+
+# 启动 Chrome
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
+```
+
+### 开发环境使用
+
+```bash
+# 运行价格审核
+npm run price
+
+# 运行合规审核
+npm run compliance
+
+# 运行所有功能
 npm run dev
 ```
 
-2. 构建项目：
+## 命令行参数说明
+
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| `--price` | 仅运行价格审核 | `temu-auto --price` |
+| `--compliance` | 仅运行合规审核 | `temu-auto --compliance` |
+| `--port=<端口号>` | 指定浏览器调试端口 | `temu-auto --port=9223` |
+| `--help` 或 `-h` | 显示帮助信息 | `temu-auto --help` |
+| `--version` 或 `-v` | 显示版本信息 | `temu-auto --version` |
+
+## 开发指南
+
+### 项目结构
+
+```
+temu-seller-automation/
+├── src/                # 源代码目录
+│   ├── core/          # 核心功能
+│   ├── services/      # 业务服务
+│   └── utils/         # 工具函数
+├── dist/              # 编译输出目录
+├── tests/             # 测试文件
+└── package.json       # 项目配置
+```
+
+### 开发命令
+
 ```bash
+# 运行开发环境
+npm run dev
+
+# 运行测试
+npm test
+
+# 代码检查
+npm run lint
+
+# 编译项目
 npm run build
 ```
 
-3. 运行测试：
-```bash
-npm test
-```
-
-## 配置说明
-
-1. 在项目根目录创建 `.env` 文件
-2. 配置必要的环境变量：
-   - TEMU_USERNAME: Temu 卖家账号
-   - TEMU_PASSWORD: Temu 卖家密码
-
-## 注意事项
-
-- 请确保网络环境稳定
-- 建议使用代理服务器访问 Temu 卖家后台
-- 定期检查并更新依赖包版本
-
 ## 贡献指南
 
-1. Fork 本仓库
+1. Fork 项目
 2. 创建特性分支
 3. 提交更改
 4. 推送到分支
