@@ -1,6 +1,6 @@
 {
   "name": "temu-seller-automation",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Temu卖家自动化工作流程工具",
   "main": "dist/index.js",
   "bin": {
@@ -22,7 +22,11 @@
     "lint": "eslint . --ext .ts",
     "prepublishOnly": "npm run build"
   },
-  "keywords": ["temu", "automation", "playwright"],
+  "keywords": [
+    "temu",
+    "automation",
+    "playwright"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -38,4 +42,4 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
-} 
+}

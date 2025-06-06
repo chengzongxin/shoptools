@@ -16,161 +16,149 @@
 - Chrome 或 Chromium 浏览器
 - npm 或 yarn 包管理器
 
-## 完整使用流程
+## Windows 使用指南
 
-### 1. 开发者发布流程
-
-1. **准备发布**
-   ```bash
-   # 确保代码已提交
-   git add .
-   git commit -m "准备发布"
-   
-   # 更新版本号
-   npm version patch  # 小版本更新
-   ```
-
-2. **发布到 npm**
-   ```bash
-   # 登录 npm（如果还没有登录）
-   npm login
-   
-   # 发布包
-   npm publish
-   ```
-
-### 2. 用户安装和使用流程
-
-#### Windows 用户
-
-1. **安装**
-   ```bash
-   # 以管理员身份运行 PowerShell 或命令提示符
-   npm install -g temu-seller-automation
-   ```
-
-2. **启动浏览器**
-   ```bash
-   # 创建配置目录
-   mkdir C:\selenium\ChromeProfile
-   
-   # 启动 Chrome
-   "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
-   ```
-
-3. **使用工具**
-   ```bash
-   # 运行价格审核
-   temu-auto --price
-   
-   # 运行合规审核
-   temu-auto --compliance
-   ```
-
-#### macOS 用户
-
-1. **安装**
-   ```bash
-   # 使用 sudo 安装
-   sudo npm install -g temu-seller-automation
-   ```
-
-2. **启动浏览器**
-   ```bash
-   # 创建配置目录
-   mkdir -p ~/selenium/ChromeProfile
-   
-   # 启动 Chrome
-   /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
-   ```
-
-3. **使用工具**
-   ```bash
-   # 运行价格审核
-   temu-auto --price
-   
-   # 运行合规审核
-   temu-auto --compliance
-   ```
-
-### 3. 常见问题解决
-
-1. **命令不可用**
-   - 检查安装：`npm list -g temu-seller-automation`
-   - 检查环境变量：`echo %PATH%` 或 `echo $PATH`
-   - 重新安装：`npm uninstall -g temu-seller-automation && npm install -g temu-seller-automation`
-
-2. **权限问题**
-   - Windows：以管理员身份运行
-   - macOS/Linux：使用 `sudo`
-
-3. **浏览器连接问题**
-   - 确保浏览器已启动
-   - 检查端口号
-   - 检查端口占用
-
-## 安装
-
-### 全局安装（推荐）
+### 1. 安装工具
 
 ```bash
-# 安装最新版本
+# 以管理员身份运行 PowerShell 或命令提示符
+# 安装工具
 npm install -g temu-seller-automation
-
-# 安装特定版本
-npm install -g temu-seller-automation@1.0.0
 ```
 
-### 本地开发安装
+### 2. 启动 Chrome 浏览器
+
+在 Windows 上，需要先启动 Chrome 浏览器：
 
 ```bash
-# 克隆仓库
-git clone [仓库地址]
+# 创建配置目录（在 C 盘根目录下）
+mkdir C:\selenium\ChromeProfile
 
-# 进入项目目录
-cd temu-seller-automation
-
-# 安装依赖
-npm install
+# 启动 Chrome（使用完整路径）
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
 ```
 
-## 使用方法
+注意：
+- 如果 Chrome 安装在其他位置，需要修改路径
+- 确保路径中没有空格，如果有空格需要用引号括起来
+- 建议创建一个批处理文件（.bat）来简化启动过程
 
-### 全局命令行使用
+### 3. 创建启动脚本
 
-安装后，可以直接使用 `temu-auto` 命令：
+创建一个 `start-chrome.bat` 文件：
+
+```batch
+@echo off
+echo 正在启动 Chrome 浏览器...
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+```
+
+### 4. 使用工具
 
 ```bash
 # 运行所有功能
 temu-auto
 
-# 运行价格审核
+# 只运行价格审核
 temu-auto --price
 
-# 运行合规审核
+# 只运行合规审核
 temu-auto --compliance
 
-# 使用指定端口
+# 使用不同的端口（如果默认端口被占用）
 temu-auto --port=9223
 
 # 查看帮助信息
 temu-auto --help
 ```
 
-### 启动浏览器
+### 5. 常见问题解决
 
-在运行程序之前，需要先启动 Chrome 浏览器：
-
-#### Windows
+1. **如果命令不可用**
 ```bash
-# 创建配置目录
-mkdir C:\selenium\ChromeProfile
+# 检查是否安装成功
+npm list -g temu-seller-automation
 
-# 启动 Chrome
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+# 检查环境变量
+echo %PATH%
+
+# 重新安装
+npm uninstall -g temu-seller-automation
+npm install -g temu-seller-automation
 ```
 
-#### macOS
+2. **如果 Chrome 路径不对**
+- 找到 Chrome 的实际安装位置
+- 修改启动脚本中的路径
+- 常见的安装位置：
+  ```
+  C:\Program Files\Google\Chrome\Application\chrome.exe
+  C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+  ```
+
+3. **如果端口被占用**
+```bash
+# 使用不同的端口
+temu-auto --port=9223
+```
+
+### 6. 创建快捷方式
+
+1. **创建桌面快捷方式**
+   - 右键桌面 -> 新建 -> 快捷方式
+   - 输入命令：`cmd /k "temu-auto --price"`
+   - 设置名称：`Temu价格审核`
+
+2. **创建批处理文件**
+```batch
+@echo off
+echo 正在启动 Temu 自动化工具...
+temu-auto --price
+pause
+```
+
+### 7. 使用建议
+
+1. **首次使用**
+   - 先运行 `temu-auto --help` 查看帮助信息
+   - 确保 Chrome 浏览器已经正确启动
+   - 建议先运行单个功能进行测试
+
+2. **日常使用**
+   - 先运行 Chrome 浏览器
+   - 然后运行自动化工具
+   - 可以根据需要选择运行特定功能
+
+3. **注意事项**
+   - 确保网络连接稳定
+   - 确保 Chrome 浏览器版本兼容
+   - 建议定期更新工具版本
+
+### 8. 完整使用流程
+
+1. **启动 Chrome**
+   - 运行 `start-chrome.bat`
+   - 等待浏览器完全启动
+
+2. **运行工具**
+   - 打开新的命令提示符
+   - 运行 `temu-auto --price` 或 `temu-auto --compliance`
+
+3. **查看结果**
+   - 观察命令行的输出信息
+   - 检查浏览器中的操作结果
+
+## macOS 使用指南
+
+### 1. 安装工具
+
+```bash
+# 使用 sudo 安装
+sudo npm install -g temu-seller-automation
+```
+
+### 2. 启动 Chrome 浏览器
+
 ```bash
 # 创建配置目录
 mkdir -p ~/selenium/ChromeProfile
@@ -179,28 +167,15 @@ mkdir -p ~/selenium/ChromeProfile
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/selenium/ChromeProfile"
 ```
 
-### 开发环境使用
+### 3. 使用工具
 
 ```bash
 # 运行价格审核
-npm run price
+temu-auto --price
 
 # 运行合规审核
-npm run compliance
-
-# 运行所有功能
-npm run dev
+temu-auto --compliance
 ```
-
-## 命令行参数说明
-
-| 参数 | 说明 | 示例 |
-|------|------|------|
-| `--price` | 仅运行价格审核 | `temu-auto --price` |
-| `--compliance` | 仅运行合规审核 | `temu-auto --compliance` |
-| `--port=<端口号>` | 指定浏览器调试端口 | `temu-auto --port=9223` |
-| `--help` 或 `-h` | 显示帮助信息 | `temu-auto --help` |
-| `--version` 或 `-v` | 显示版本信息 | `temu-auto --version` |
 
 ## 开发指南
 
@@ -273,3 +248,29 @@ Playwright 的 >> text= 选择器都能正确处理这两种情况，这就是�
 更灵活：可以处理文本在不同层级的情况
 更易读：直接使用可见文本进行选择
 这就是为什么这个选择器能准确找到并选择正确的选项，即使你没有提供具体的选择器。
+
+
+## 全局cli
+bin:
+"temu-auto": "./dist/cli.js"
+
+scripts
+"build": "tsc && node scripts/prepare-cli.js",
+
+# 更新版本号
+npm version patch
+
+# 发布
+npm publish
+
+# 卸载旧版本
+sudo npm uninstall -g temu-seller-automation
+
+# 安装新版本
+sudo npm install -g temu-seller-automation
+
+# 检查安装
+npm list -g temu-seller-automation
+
+# 运行命令
+temu-auto --help
