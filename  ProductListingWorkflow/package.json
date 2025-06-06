@@ -4,7 +4,7 @@
   "description": "Temu卖家自动化工作流程工具",
   "main": "dist/index.js",
   "bin": {
-    "temu-auto": "./dist/index.js"
+    "temu-auto": "./dist/cli.js"
   },
   "exports": {
     ".": "./dist/index.js",
@@ -13,7 +13,7 @@
     "./price-review": "./dist/services/price-review.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/prepare-cli.js",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
     "price": "ts-node src/index.ts --price",
