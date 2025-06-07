@@ -261,6 +261,11 @@ export class PriceReview {
 
             const priceButton = await rowElement.$('button.BTN_outerWrapper_5-111-0');
             
+            // 检查价格确认按钮是否存在
+            if (!priceButton) {
+                throw new Error(`未找到价格确认按钮 - SPU: ${spuInfo}, 货号: ${skuNumber}`);
+            }
+            
             const [code, minPrice] = this.priceMapper.getPriceInfo(skuNumber);
             
             logger.info(`\n商品信息:
