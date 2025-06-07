@@ -100,7 +100,7 @@ async function main() {
         if (options.mode === 'compliance' || options.mode === 'all') {
             logger.info('开始合规审核...');
             const complianceReview = new ComplianceReview(context);
-            await complianceReview.processAllComplianceTypes();
+            await complianceReview.startReview();
         }
         
         // 等待用户手动关闭浏览器

@@ -614,7 +614,7 @@ export class ComplianceReview {
     /**
      * 按顺序执行所有合规信息类型的处理
      */
-    async processAllComplianceTypes(): Promise<void> {
+    async startReview(): Promise<void> {
         try {
             logger.info("开始按顺序处理所有合规信息类型...");
 

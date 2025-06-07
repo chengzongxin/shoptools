@@ -333,18 +333,10 @@ SPU: ${spuInfo}
      */
     private async scrollToElement(element: any): Promise<void> {
         try {
-            const box = await element.boundingBox();
-            if (box) {
-                await this.page.evaluate(({ x, y }) => {
-                    window.scrollTo({
-                        top: y - window.innerHeight / 2,
-                        behavior: 'smooth'
-                    });
-                }, box);
-                
-                await this.page.waitForTimeout(1000);
-                logger.info(`已滚动到元素位置，滚动距离: ${box.y - window.innerHeight / 2}px`);
-            }
+            await this.page.evaluate((el) => {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, element);
+            await this.page.waitForTimeout(200);
         } catch (error) {
             logger.error(`滚动到元素位置失败: ${error}`);
         }
