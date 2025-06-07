@@ -9,6 +9,8 @@ export class PriceReview {
     private priceMapper: PriceMapper;
     private logDir: string;
     private logFile: string;
+    private errorCount: number = 0;
+    private readonly MAX_ERROR_COUNT: number = 5;
 
     constructor(context: BrowserContext, debug: boolean = true) {
         this.page = context.pages()[0];
@@ -32,6 +34,45 @@ export class PriceReview {
                 "=".repeat(80) + "\n\n",
                 'utf-8'
             );
+        }
+    }
+
+    /**
+     * 重置错误计数
+     */
+    private resetErrorCount(): void {
+        this.errorCount = 0;
+        logger.info("错误计数已重置");
+    }
+
+    /**
+     * 增加错误计数并检查是否需要重启
+     */
+    private async incrementErrorCount(context: string): Promise<boolean> {
+        this.errorCount++;
+        logger.warn(`${context} 发生错误，当前错误计数: ${this.errorCount}/${this.MAX_ERROR_COUNT}`);
+
+        if (this.errorCount >= this.MAX_ERROR_COUNT) {
+            logger.error(`错误次数达到上限 ${this.MAX_ERROR_COUNT}，准备重启流程`);
+            await this.restartReview();
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 重启审核流程
+     */
+    private async restartReview(): Promise<void> {
+        try {
+            logger.info("开始重启审核流程...");
+            this.resetErrorCount();
+            await this.page.reload();
+            await this.page.waitForLoadState('networkidle');
+            await this.startReview();
+        } catch (error) {
+            logger.error(`重启审核流程失败: ${error}`);
+            throw error;
         }
     }
 
@@ -128,61 +169,42 @@ export class PriceReview {
     }
 
     /**
-     * 点击价格待确认按钮
-     */
-    private async clickPricePendingButton(): Promise<boolean> {
-        try {
-            await this.checkAndClosePopup();
-            await this.setPageSize();
-
-            logger.info("正在查找价格待确认按钮...");
-
-            const button = await this.page.waitForSelector(
-                '#root > div > div > div > div:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > div:nth-child(6)',
-                { state: 'visible' }
-            );
-            
-            const buttonText = await button?.textContent();
-            logger.info(`找到价格待确认按钮: ${buttonText}`);
-
-            await button?.click();
-            logger.info("成功点击价格待确认按钮");
-            
-            return true;
-        } catch (error) {
-            logger.error(`点击价格待确认按钮失败: ${error}`);
-            return false;
-        }
-    }
-
-    /**
      * 获取分页信息
      */
     private async getPageInfo(): Promise<[number, number, number]> {
         try {
-            const pagination = await this.page.waitForSelector(
-                '//*[@id="root"]/div/div/div/div[3]/div[2]/div[2]/ul',
-                { state: 'visible' }
-            );
-            
-            const totalItemsElement = await pagination?.$('./li[1]');
-            const totalItemsText = await totalItemsElement?.textContent() || '';
-            const totalItems = parseInt(totalItemsText.replace(/\D/g, ''));
-            
-            const currentPageElement = await this.page.waitForSelector(
-                '.PGT_pagerItem_5-117-0.PGT_pagerItemActive_5-117-0',
-                { state: 'visible' }
-            );
-            const currentPage = parseInt(await currentPageElement?.textContent() || '1');
-            
-            const totalPages = Math.ceil(totalItems / 10);
-            
-            logger.info(`分页信息: 总条数 ${totalItems}, 当前页 ${currentPage}/${totalPages}, 每页 10 条`);
-            
-            return [currentPage, totalPages, 10];
+            // 先定位到分页组件
+            const pagination = this.page.getByTestId('beast-core-pagination');
+            await pagination.waitFor({ state: 'visible', timeout: 5000 });
+
+            // 在分页组件内获取总条数
+            const totalText = await pagination
+                .locator('.PGT_totalText_5-117-0')
+                .textContent() || '';
+            const totalItems = parseInt(totalText.replace(/\D/g, '')) || 0;
+
+            // 在分页组件内获取当前页码
+            const currentPageText = await pagination
+                .locator('.PGT_pagerItemActive_5-117-0')
+                .textContent() || '1';
+            const currentPage = parseInt(currentPageText);
+
+            // 在分页组件内获取每页条数
+            const pageSizeText = await pagination
+                .locator('[data-testid="beast-core-select-htmlInput"]')
+                .getAttribute('value') || '10';
+            const pageSize = parseInt(pageSizeText);
+
+            // 计算总页数
+            const totalPages = Math.ceil(totalItems / pageSize);
+
+            logger.info(`分页信息: 总条数 ${totalItems}, 当前页 ${currentPage}/${totalPages}, 每页 ${pageSize} 条`);
+
+            return [currentPage, totalPages, pageSize];
+
         } catch (error) {
             logger.error(`获取分页信息失败: ${error}`);
-            return [1, 100, 10];
+            return [1, 100, 10]; // 返回默认值
         }
     }
 
@@ -347,9 +369,11 @@ SPU: ${spuInfo}
      */
     private async processProductList(): Promise<void> {
         try {
-            let currentPage = 1;
+            const [currentPage, totalPages, itemsPerPage] = await this.getPageInfo();
+            logger.info(`当前页: ${currentPage}, 总页数: ${totalPages}, 每页条数: ${itemsPerPage}`);
+            
+            let consecutiveErrors = 0;
             while (true) {
-                
                 const productList = await this.page.waitForSelector(
                     '#root > div > div > div > div.TB_outerWrapper_5-117-0.TB_bordered_5-117-0.TB_notTreeStriped_5-117-0 > div.TB_inner_5-117-0 > div > div.TB_body_5-117-0 > div > div > table > tbody',
                     { state: 'visible' }
@@ -375,6 +399,7 @@ SPU: ${spuInfo}
                         }
                         
                         logger.info(`已处理第 ${index + 1} 个商品`);
+                        consecutiveErrors = 0; // 重置连续错误计数
                         
                         await this.page.waitForTimeout(2000);
                         
@@ -387,6 +412,13 @@ SPU: ${spuInfo}
                             "获取失败",
                             `处理失败: ${error}`
                         );
+                        
+                        consecutiveErrors++;
+                        if (consecutiveErrors >= 5) {
+                            logger.error(`连续处理 ${consecutiveErrors} 个商品失败，准备重启流程`);
+                            await this.restartReview();
+                            return;
+                        }
                         continue;
                     }
                 }
@@ -416,6 +448,9 @@ SPU: ${spuInfo}
             }
         } catch (error) {
             logger.error(`处理商品列表失败: ${error}`);
+            if (await this.incrementErrorCount('处理商品列表')) {
+                return;
+            }
             throw error;
         }
     }
@@ -426,13 +461,15 @@ SPU: ${spuInfo}
     public async startReview(): Promise<void> {
         try {
             await this.openPriceReviewPage();
-            // await this.clickPricePendingButton();
-            // await this.page.waitForTimeout(3000);
             await this.setPageSize();
             await this.processProductList();
             logger.info("价格审核流程初始化完成");
+            this.resetErrorCount(); // 成功完成后重置错误计数
         } catch (error) {
             logger.error(`价格审核流程初始化失败: ${error}`);
+            if (await this.incrementErrorCount('价格审核流程初始化')) {
+                return;
+            }
             throw error;
         }
     }
