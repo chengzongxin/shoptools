@@ -564,7 +564,7 @@ export class ComplianceReview {
                     }
 
                     // 获取当前页面的所有商品
-                    await drawerContent.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
+                    // await drawerContent.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
 
                     // 选择第一个商品
                     const firstProductCheckbox = await drawerContent.waitForSelector(
