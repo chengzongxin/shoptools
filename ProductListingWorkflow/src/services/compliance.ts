@@ -443,13 +443,15 @@ export class ComplianceReview {
 
                 // 等待商品列表加载完成
                 const drawerContent = await this.page.waitForSelector('.rocket-drawer-content', { state: 'visible', timeout: 5000 });
-                const tableContent = await drawerContent.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
+                // const tableContent = await drawerContent.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
                 
                 // 选择第一个商品
-                const firstProductCheckbox = await tableContent.waitForSelector(
+                const firstProductCheckbox = await drawerContent.waitForSelector(
                     '.rocket-table-selection-column .rocket-checkbox-input',
-                    { state: 'visible', timeout: 5000 }
+                    { state: 'visible', timeout: 15000 }
                 );
+
+                // const firstProductCheckbox = await this.page.locator('input.rocket-checkbox-input[aria-label="Select all"]', { state: 'visible', timeout: 5000 });
                 
                 await firstProductCheckbox?.click();
                 logger.info("已选择第一个商品");
@@ -541,14 +543,11 @@ export class ComplianceReview {
                 await confirmButton.click();
                 logger.info("已点击确认上传按钮");
 
-                // 等待上传完成
-                await this.page.waitForTimeout(3000);
-
                 // 14. 处理上传成功弹窗
                 logger.info("等待上传成功弹窗...");
                 const successButton = await this.page.waitForSelector(
                     "button.rocket-btn.rocket-btn-primary:has-text('我知道了')",
-                    { state: 'visible', timeout: 5000 }
+                    { state: 'visible', timeout: 10000 }
                 );
                 await successButton?.click();
                 logger.info("已关闭上传成功弹窗");
@@ -569,7 +568,7 @@ export class ComplianceReview {
                     // 选择第一个商品
                     const firstProductCheckbox = await drawerContent.waitForSelector(
                         '.rocket-table-selection-column .rocket-checkbox-input',
-                        { state: 'visible', timeout: 5000 }
+                        { state: 'visible', timeout: 15000 }
                     );
                     await firstProductCheckbox?.click();
                     logger.info("已选择第一个商品");
