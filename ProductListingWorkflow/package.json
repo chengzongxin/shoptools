@@ -1,6 +1,6 @@
 {
   "name": "temu-seller-automation",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Temu卖家自动化工作流程工具",
   "main": "dist/index.js",
   "bin": {

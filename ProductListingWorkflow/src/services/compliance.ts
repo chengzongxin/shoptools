@@ -446,12 +446,12 @@ export class ComplianceReview {
                 // const tableContent = await drawerContent.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
                 
                 // 选择第一个商品
-                const firstProductCheckbox = await drawerContent.waitForSelector(
-                    '.rocket-table-selection-column .rocket-checkbox-input',
-                    { state: 'visible', timeout: 15000 }
-                );
+                // const firstProductCheckbox = await drawerContent.waitForSelector(
+                //     '.rocket-table-selection-column .rocket-checkbox-input',
+                //     { state: 'visible', timeout: 15000 }
+                // );
 
-                // const firstProductCheckbox = await this.page.locator('input.rocket-checkbox-input[aria-label="Select all"]', { state: 'visible', timeout: 5000 });
+                const firstProductCheckbox = await drawerContent.waitForSelector('input.rocket-checkbox-input[aria-label="Select all"]', { state: 'visible', timeout: 15000 });
                 
                 await firstProductCheckbox?.click();
                 logger.info("已选择第一个商品");
@@ -566,10 +566,12 @@ export class ComplianceReview {
                     // await drawerContent.waitForSelector('.rocket-table-content', { state: 'visible', timeout: 5000 });
 
                     // 选择第一个商品
-                    const firstProductCheckbox = await drawerContent.waitForSelector(
-                        '.rocket-table-selection-column .rocket-checkbox-input',
-                        { state: 'visible', timeout: 15000 }
-                    );
+                    // const firstProductCheckbox = await drawerContent.waitForSelector(
+                    //     '.rocket-table-selection-column .rocket-checkbox-input',
+                    //     { state: 'visible', timeout: 15000 }
+                    // );
+                    const firstProductCheckbox = await drawerContent.waitForSelector('input.rocket-checkbox-input[aria-label="Select all"]', { state: 'visible', timeout: 15000 });
+
                     await firstProductCheckbox?.click();
                     logger.info("已选择第一个商品");
 
