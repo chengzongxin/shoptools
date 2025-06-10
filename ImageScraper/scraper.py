@@ -2,10 +2,13 @@ import os
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+from PIL import Image
+import io
 
 # 1. 配置
 LINKS_DIR = "links"  # 存放链接文件的文件夹
 OUTPUT_DIR = "images"  # 图片保存总目录
+TARGET_SIZE = (750, 750)  # 目标尺寸
 
 # 2. 创建图片保存目录
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -18,6 +21,47 @@ headers = {
     "Referer": "https://www.redbubble.com/",
     "Cookie": "_dd_s=; ax_visitor=%7B%22firstVisitTs%22%3A1749519556571%2C%22lastVisitTs%22%3Anull%2C%22currentVisitStartTs%22%3A1749519556571%2C%22ts%22%3A1749519556571%2C%22visitCount%22%3A1%7D; _axwrt=ee44f2d3-8333-4cce-b86b-9959b6dfd0d0; _axidd=true"
 }
+
+def crop_image(image_data):
+    """
+    将图片裁剪为正方形（750x750）
+    居中裁剪，保留图片中间部分
+    """
+    try:
+        # 从二进制数据创建图片对象
+        img = Image.open(io.BytesIO(image_data))
+        
+        # 获取原始尺寸
+        width, height = img.size
+        
+        # 计算裁剪区域
+        if width > height:
+            # 如果图片更宽，从两边裁剪
+            left = (width - height) // 2
+            top = 0
+            right = left + height
+            bottom = height
+        else:
+            # 如果图片更高，从上下裁剪
+            left = 0
+            top = (height - width) // 2
+            right = width
+            bottom = top + width
+            
+        # 裁剪图片
+        img = img.crop((left, top, right, bottom))
+        
+        # 调整大小为750x750
+        img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+        
+        # 将图片转换回二进制数据
+        output = io.BytesIO()
+        img.save(output, format=img.format if img.format else 'JPEG', quality=95)
+        return output.getvalue()
+        
+    except Exception as e:
+        print(f"图片裁剪失败: {e}")
+        return image_data  # 如果裁剪失败，返回原始图片数据
 
 def extract_product_name(url):
     """
@@ -68,6 +112,9 @@ def download_sticker_image(product_url, session, output_folder):
         # 下载图片
         img_resp = session.get(target_img_url, headers=headers, timeout=15)
         img_resp.raise_for_status()
+        
+        # 裁剪图片
+        cropped_image_data = crop_image(img_resp.content)
 
         # 提取商品名
         product_name = extract_product_name(product_url)
@@ -77,8 +124,10 @@ def download_sticker_image(product_url, session, output_folder):
         img_ext = target_img_url.split(".")[-1].split("?")[0]
         img_filename = f"{safe_name}.{img_ext}"
         img_path = os.path.join(output_folder, img_filename)
+        
+        # 保存裁剪后的图片
         with open(img_path, "wb") as f:
-            f.write(img_resp.content)
+            f.write(cropped_image_data)
         return True
 
     except Exception as e:
