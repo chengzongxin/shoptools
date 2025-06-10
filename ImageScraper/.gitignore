@@ -2,3 +2,4 @@
 /images
 /links
 /*.html
+/__pycache__
