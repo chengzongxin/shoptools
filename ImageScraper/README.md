@@ -1,5 +1,10 @@
  # ImageScraper 打包说明
 
+```
+python3 -m venv venv
+source venv/bin/activate
+```
+
 ## Windows 系统打包命令
 ```bash
 pyinstaller --noconfirm --onefile --windowed --icon=icon.ico --name="ImageScraper" gui.py
