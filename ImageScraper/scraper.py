@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 # 1. 配置
 LINKS_DIR = "links"  # 存放链接文件的文件夹
-OUTPUT_DIR = "images"  # 图片保存目录
+OUTPUT_DIR = "images"  # 图片保存总目录
 
 # 2. 创建图片保存目录
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -19,24 +19,21 @@ headers = {
     "Cookie": "_dd_s=; ax_visitor=%7B%22firstVisitTs%22%3A1749519556571%2C%22lastVisitTs%22%3Anull%2C%22currentVisitStartTs%22%3A1749519556571%2C%22ts%22%3A1749519556571%2C%22visitCount%22%3A1%7D; _axwrt=ee44f2d3-8333-4cce-b86b-9959b6dfd0d0; _axidd=true"
 }
 
-def get_all_links():
+def extract_product_name(url):
     """
-    遍历 links 文件夹下所有 txt 文件，读取所有商品详情页链接
+    从商品详情页链接中提取商品名部分
+    例如：https://www.redbubble.com/i/tote-bag/SWIMMERS-by-Urbaun/39070653.A9G4R
+    返回：SWIMMERS-by-Urbaun
     """
-    all_links = []
-    for filename in os.listdir(LINKS_DIR):
-        if filename.endswith(".txt"):
-            filepath = os.path.join(LINKS_DIR, filename)
-            with open(filepath, "r", encoding="utf-8") as f:
-                for line in f:
-                    url = line.strip()
-                    if url:
-                        all_links.append(url)
-    return all_links
+    try:
+        parts = url.strip("/").split("/")
+        return parts[-2]
+    except Exception:
+        return "unknown"
 
-def download_sticker_image(product_url, session, idx):
+def download_sticker_image(product_url, session, output_folder):
     """
-    访问商品详情页，解析并下载目标图片（src 包含 flat,），图片命名为商品名
+    访问商品详情页，解析并下载目标图片（src 包含 flat,），图片命名为商品名，保存到指定文件夹
     """
     try:
         resp = session.get(product_url, headers=headers, timeout=15)
@@ -48,7 +45,6 @@ def download_sticker_image(product_url, session, idx):
         target_img = None
         for img in img_tags:
             src = img.get("src", "")
-            print(src)
             if "flat," in src:
                 target_img = img
                 break
@@ -65,10 +61,12 @@ def download_sticker_image(product_url, session, idx):
 
         # 提取商品名
         product_name = extract_product_name(product_url)
+        # 过滤文件名中的非法字符
+        safe_name = ''.join(c for c in product_name if c not in '\\/:*?\"<>|')
         # 获取图片后缀
         img_ext = img_url.split(".")[-1].split("?")[0]
-        img_filename = f"{product_name}.{img_ext}"
-        img_path = os.path.join(OUTPUT_DIR, img_filename)
+        img_filename = f"{safe_name}.{img_ext}"
+        img_path = os.path.join(output_folder, img_filename)
         with open(img_path, "wb") as f:
             f.write(img_resp.content)
         return True
@@ -77,34 +75,40 @@ def download_sticker_image(product_url, session, idx):
         print(f"下载失败: {product_url}，原因: {e}")
         return False
 
-def extract_product_name(url):
+def process_links_file(links_file):
     """
-    从商品详情页链接中提取商品名部分
-    例如：https://www.redbubble.com/i/tote-bag/SWIMMERS-by-Urbaun/39070653.A9G4R
-    返回：SWIMMERS-by-Urbaun
+    处理单个链接文件，下载所有图片到对应子文件夹
     """
-    try:
-        parts = url.strip("/").split("/")
-        # 倒数第二段就是商品名
-        return parts[-2]
-    except Exception:
-        return "unknown"
+    # 1. 生成输出子文件夹名（去掉.txt后缀）
+    base_name = os.path.splitext(os.path.basename(links_file))[0]
+    output_folder = os.path.join(OUTPUT_DIR, base_name)
+    os.makedirs(output_folder, exist_ok=True)
+
+    # 2. 读取所有链接
+    with open(links_file, "r", encoding="utf-8") as f:
+        links = [line.strip() for line in f if line.strip()]
+
+    print(f"\n处理文件: {links_file}，共 {len(links)} 个链接，图片将保存到: {output_folder}")
+    session = requests.Session()
+    success_count = 0
+    for url in tqdm(links, desc=f"{base_name} 下载进度"):
+        if download_sticker_image(url, session, output_folder):
+            success_count += 1
+    print(f"文件 {links_file} 下载完成，成功下载 {success_count} 张图片。\n")
 
 def main():
     """
-    主程序入口
+    主程序入口，遍历所有链接文件
     """
-    all_links = get_all_links()
-    print(f"共发现 {len(all_links)} 个商品链接，开始下载...")
-
-    session = requests.Session()
-    success_count = 0
-
-    for idx, url in enumerate(tqdm(all_links, desc="下载进度")):
-        if download_sticker_image(url, session, idx):
-            success_count += 1
-
-    print(f"下载完成，成功下载 {success_count} 张图片。")
+    if not os.path.exists(LINKS_DIR):
+        print(f"未找到 {LINKS_DIR} 文件夹！")
+        return
+    files = [os.path.join(LINKS_DIR, f) for f in os.listdir(LINKS_DIR) if f.endswith(".txt")]
+    if not files:
+        print(f"{LINKS_DIR} 文件夹下没有 .txt 链接文件！")
+        return
+    for links_file in files:
+        process_links_file(links_file)
 
 if __name__ == "__main__":
     main()
