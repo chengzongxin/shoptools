@@ -1,1 +1,0 @@
-pyinstaller --noconfirm --onefile --windowed --icon=icon.ico --name="ImageScraper" gui.py
