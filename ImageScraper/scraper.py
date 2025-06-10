@@ -94,19 +94,15 @@ def download_sticker_image(product_url, session, output_folder):
         # 获取最后一个picture标签
         target_picture = picture_tags[-1]
         
-        # 优先查找webp格式
-        source = target_picture.find("source")
-        target_img_url = None
-        if source and source.get("srcset"):
-            target_img_url = source["srcset"]
-        else:
-            # 如果没有webp，查找jpg格式
-            img = target_picture.find("img")
-            if img and img.get("src"):
-                target_img_url = img["src"]
-
-        if not target_img_url:
-            print(f"未找到图片URL: {product_url}")
+        # 只查找jpg格式的图片
+        img = target_picture.find("img")
+        if not img or not img.get("src"):
+            print(f"未找到jpg格式图片: {product_url}")
+            return False
+            
+        target_img_url = img["src"]
+        if not target_img_url.endswith('.jpg'):
+            print(f"不是jpg格式图片: {product_url}")
             return False
 
         # 下载图片
@@ -118,11 +114,10 @@ def download_sticker_image(product_url, session, output_folder):
 
         # 提取商品名
         product_name = extract_product_name(product_url)
-        # 过滤文件名中的非法字符
-        safe_name = ''.join(c for c in product_name if c not in '\\/:*?\"<>|')
-        # 获取图片后缀
-        img_ext = target_img_url.split(".")[-1].split("?")[0]
-        img_filename = f"{safe_name}.{img_ext}"
+        # 过滤文件名中的非法字符，并去掉"-"符号
+        safe_name = ''.join(c for c in product_name if c not in '\\/:*?\"<>|').replace('-', ' ')
+        # 使用jpg作为文件后缀
+        img_filename = f"{safe_name}.jpg"
         img_path = os.path.join(output_folder, img_filename)
         
         # 保存裁剪后的图片
