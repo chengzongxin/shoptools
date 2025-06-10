@@ -24,39 +24,81 @@ headers = {
 
 def crop_image(image_data):
     """
-    将图片裁剪为正方形（750x750）
-    居中裁剪，保留图片中间部分
+    将图片裁剪为实际内容区域，去掉f8f8f8背景色部分
     """
     try:
         # 从二进制数据创建图片对象
         img = Image.open(io.BytesIO(image_data))
         
-        # 获取原始尺寸
+        # 转换为RGB模式（如果不是的话）
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # 获取图片尺寸
         width, height = img.size
         
-        # 计算裁剪区域
-        if width > height:
-            # 如果图片更宽，从两边裁剪
-            left = (width - height) // 2
-            top = 0
-            right = left + height
-            bottom = height
-        else:
-            # 如果图片更高，从上下裁剪
-            left = 0
-            top = (height - width) // 2
-            right = width
-            bottom = top + width
-            
-        # 裁剪图片
-        img = img.crop((left, top, right, bottom))
+        # 定义背景色（f8f8f8）
+        bg_color = (248, 248, 248)  # f8f8f8的RGB值
         
-        # 调整大小为750x750
-        img = img.resize(TARGET_SIZE, Image.Resampling.LANCZOS)
+        # 找到实际内容的边界
+        def find_content_bounds():
+            # 从四个方向扫描，找到第一个非背景色的像素
+            left = 0
+            right = width - 1
+            top = 0
+            bottom = height - 1
+            
+            # 从左向右扫描
+            for x in range(width):
+                for y in range(height):
+                    pixel = img.getpixel((x, y))
+                    if pixel != bg_color:
+                        left = x
+                        break
+                if left > 0:
+                    break
+            
+            # 从右向左扫描
+            for x in range(width-1, -1, -1):
+                for y in range(height):
+                    pixel = img.getpixel((x, y))
+                    if pixel != bg_color:
+                        right = x
+                        break
+                if right < width-1:
+                    break
+            
+            # 从上向下扫描
+            for y in range(height):
+                for x in range(width):
+                    pixel = img.getpixel((x, y))
+                    if pixel != bg_color:
+                        top = y
+                        break
+                if top > 0:
+                    break
+            
+            # 从下向上扫描
+            for y in range(height-1, -1, -1):
+                for x in range(width):
+                    pixel = img.getpixel((x, y))
+                    if pixel != bg_color:
+                        bottom = y
+                        break
+                if bottom < height-1:
+                    break
+            
+            return (left, top, right + 1, bottom + 1)
+        
+        # 获取内容边界
+        bounds = find_content_bounds()
+        
+        # 裁剪图片
+        img = img.crop(bounds)
         
         # 将图片转换回二进制数据
         output = io.BytesIO()
-        img.save(output, format=img.format if img.format else 'JPEG', quality=95)
+        img.save(output, format='JPEG', quality=95)
         return output.getvalue()
         
     except Exception as e:
