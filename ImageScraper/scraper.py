@@ -33,30 +33,40 @@ def extract_product_name(url):
 
 def download_sticker_image(product_url, session, output_folder):
     """
-    访问商品详情页，解析并下载目标图片（src 包含 flat,），图片命名为商品名，保存到指定文件夹
+    访问商品详情页，解析并下载目标图片（在特定div结构中的图片），图片命名为商品名，保存到指定文件夹
     """
     try:
         resp = session.get(product_url, headers=headers, timeout=15)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
 
-        # 查找所有目标 class 的图片
-        img_tags = soup.find_all("img", class_="Picture_fullWidth__T0hym")
-        target_img = None
-        for img in img_tags:
-            src = img.get("src", "")
-            if "flat," in src:
-                target_img = img
-                break
+        # 查找所有具有指定类名的picture标签
+        picture_tags = soup.find_all("picture", class_="Picture_picture__Gztgz Picture_rounded__PvnLg")
+        
+        if not picture_tags:
+            print(f"未找到目标picture标签: {product_url}")
+            return False
+            
+        # 获取最后一个picture标签
+        target_picture = picture_tags[-1]
+        
+        # 优先查找webp格式
+        source = target_picture.find("source")
+        target_img_url = None
+        if source and source.get("srcset"):
+            target_img_url = source["srcset"]
+        else:
+            # 如果没有webp，查找jpg格式
+            img = target_picture.find("img")
+            if img and img.get("src"):
+                target_img_url = img["src"]
 
-        if not target_img or not target_img.get("src"):
-            print(f"未找到目标图片: {product_url}")
+        if not target_img_url:
+            print(f"未找到图片URL: {product_url}")
             return False
 
-        img_url = target_img["src"]
-
         # 下载图片
-        img_resp = session.get(img_url, headers=headers, timeout=15)
+        img_resp = session.get(target_img_url, headers=headers, timeout=15)
         img_resp.raise_for_status()
 
         # 提取商品名
@@ -64,7 +74,7 @@ def download_sticker_image(product_url, session, output_folder):
         # 过滤文件名中的非法字符
         safe_name = ''.join(c for c in product_name if c not in '\\/:*?\"<>|')
         # 获取图片后缀
-        img_ext = img_url.split(".")[-1].split("?")[0]
+        img_ext = target_img_url.split(".")[-1].split("?")[0]
         img_filename = f"{safe_name}.{img_ext}"
         img_path = os.path.join(output_folder, img_filename)
         with open(img_path, "wb") as f:
