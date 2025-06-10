@@ -3,3 +3,5 @@
 /links
 /*.html
 /__pycache__
+/build
+/dist
