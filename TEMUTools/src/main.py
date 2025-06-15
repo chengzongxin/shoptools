@@ -9,6 +9,7 @@ from modules.violation_list.gui import ViolationListTab
 from modules.system_config.gui import SystemConfigTab
 from modules.logger.gui import LogFrame
 from modules.logger.logger import Logger
+from modules.price_review.gui import PriceReviewTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -271,51 +272,55 @@ class TEMUToolsApp:
         self.root.title("TEMU工具集")
         self.logger = Logger()
         
-        # 设置窗口大小和位置
-        window_width = 800
-        window_height = 600
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        x = (screen_width - window_width) // 2
-        y = (screen_height - window_height) // 2
-        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-        
-        # 创建主框架
-        self.main_frame = ttk.Frame(self.root, padding="10")
-        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
         # 创建标签页
-        self.notebook = ttk.Notebook(self.main_frame)
-        self.notebook.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.notebook = ttk.Notebook(root)
+        self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
         
-        # 添加系统配置标签页
-        self.system_config_tab = SystemConfigTab(self.notebook)
-        self.notebook.add(self.system_config_tab, text="系统配置")
-        
-        # 添加商品列表标签页
+        # 添加各个功能标签页
         self.product_list_tab = ProductListTab(self.notebook)
         self.notebook.add(self.product_list_tab, text="商品列表")
         
-        # 添加链接检查标签页
+        self.price_review_tab = PriceReviewTab(self.notebook)
+        self.notebook.add(self.price_review_tab, text="核价管理")
+        
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text="链接检查")
         
-        # 添加违规列表标签页
         self.violation_list_tab = ViolationListTab(self.notebook)
         self.notebook.add(self.violation_list_tab, text="违规列表")
         
-        # 添加日志显示区域
-        self.log_frame = LogFrame(self.main_frame)
-        self.log_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        self.system_config_tab = SystemConfigTab(self.notebook)
+        self.notebook.add(self.system_config_tab, text="系统配置")
         
-        # 配置网格权重
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(0, weight=1)
-        self.main_frame.columnconfigure(0, weight=1)
-        self.main_frame.rowconfigure(0, weight=1)
+        # 添加日志框架
+        self.log_frame = LogFrame(root)
+        self.log_frame.pack(fill='x', padx=5, pady=5)
+        
+        # 设置窗口大小和位置
+        self.setup_window()
         
         # 记录启动日志
         self.logger.info("TEMU工具集已启动")
+
+    def setup_window(self):
+        """设置窗口大小和位置"""
+        # 获取屏幕尺寸
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # 设置窗口大小
+        window_width = 1200
+        window_height = 800
+        
+        # 计算窗口位置
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        
+        # 设置窗口大小和位置
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        
+        # 设置最小窗口大小
+        self.root.minsize(800, 600)
 
 def main():
     root = tk.Tk()
