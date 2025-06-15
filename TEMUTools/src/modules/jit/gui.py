@@ -306,16 +306,14 @@ class JitTab(ttk.Frame):
                 break  # 只显示第一个SKC的数据
             
     def start_batch_processing(self):
-        """开始批量处理开通JIT"""
+        """开始批量处理JIT开通"""
         try:
-            # 获取输入参数
             start_page = int(self.start_page_var.get())
             end_page = int(self.end_page_var.get())
             page_size = int(self.page_size_var.get())
             
-            # 验证输入
             if start_page <= 0 or end_page <= 0 or page_size <= 0:
-                messagebox.showerror("错误", "页码和每页数量必须大于0")
+                messagebox.showerror("错误", "页数和每页数量必须大于0")
                 return
                 
             if start_page > end_page:
@@ -330,7 +328,7 @@ class JitTab(ttk.Frame):
                 return
                 
             # 显示确认对话框
-            if not messagebox.askyesno("确认", f"确定要批量开通从第{start_page}页到第{end_page}页商品的JIT吗？"):
+            if not messagebox.askyesno("确认", f"确定要批量处理 {start_page} 到 {end_page} 页的JIT开通吗？"):
                 return
                 
             # 禁用按钮
@@ -348,12 +346,8 @@ class JitTab(ttk.Frame):
                 progress_callback=self.update_progress
             )
             
-            # 在新线程中运行批量处理
-            self.crawler_thread = threading.Thread(
-                target=self.run_batch_processing,
-                args=(start_page, end_page, page_size)
-            )
-            self.crawler_thread.start()
+            # 直接在当前线程中运行批量处理
+            self.run_batch_processing(start_page, end_page, page_size)
             
         except ValueError:
             messagebox.showerror("错误", "请输入有效的数字")
@@ -361,40 +355,10 @@ class JitTab(ttk.Frame):
             self.logger.error(f"启动批量处理失败: {str(e)}")
             messagebox.showerror("错误", f"启动批量处理失败: {str(e)}")
             
-    def run_batch_processing(self, start_page: int, end_page: int, page_size: int):
+    def run_batch_processing(self, start_page, end_page, page_size):
         """运行批量处理"""
         try:
-            # 获取商品列表
-            products = self.crawler.crawl(start_page, end_page, page_size)
-            
-            if not products:
-                self.logger.info("没有找到需要开通JIT的商品")
-                messagebox.showinfo("提示", "没有找到需要开通JIT的商品")
-                return
-                
-            # 转换为JitProduct对象列表
-            jit_products = []
-            for product in products:
-                for skc in product.get('skcList', []):
-                    if skc.get('applyJitStatus') == 1:  # 只处理未开通JIT的商品
-                        jit_products.append(JitProduct(
-                            productId=product['productId'],
-                            productName=product['productName'],
-                            skcId=skc['skcId'],
-                            extCode=skc.get('extCode', ''),
-                            supplierPrice=skc.get('supplierPrice', ''),
-                            buyerName=product.get('buyerName', ''),
-                            productCreatedAt=product['productCreatedAt'],
-                            applyJitStatus=skc.get('applyJitStatus', 0)
-                        ))
-            
-            if not jit_products:
-                self.logger.info("没有找到需要开通JIT的商品")
-                messagebox.showinfo("提示", "没有找到需要开通JIT的商品")
-                return
-                
-            # 批量开通JIT
-            results = self.crawler.open_jit(jit_products)
+            results = self.crawler.batch_process(start_page, end_page, page_size)
             
             # 统计处理结果
             success_count = sum(1 for r in results if r['success'])

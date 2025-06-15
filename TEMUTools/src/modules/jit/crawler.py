@@ -225,31 +225,89 @@ class JitCrawler:
             
             return results
             
-    def batch_process(self, max_pages: int = 1) -> List[Dict]:
-        """批量处理开通JIT
+    def batch_process(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
+        """批量处理JIT开通
         
         Args:
-            max_pages: 最大处理页数
+            start_page: 起始页码
+            end_page: 结束页码
+            page_size: 每页数量
             
         Returns:
             List[Dict]: 处理结果列表，每个结果包含商品ID、处理状态和说明
         """
         results = []
+        total_pages = end_page - start_page + 1
         
         try:
-            # 获取未开通JIT的商品列表
-            products = self.crawl(max_pages)
-            
-            if not products:
-                self.logger.info("没有找到需要开通JIT的商品")
-                return results
-            
-            # 批量开通JIT
-            batch_results = self.open_jit(products)
-            results.extend(batch_results)
-            
+            # 逐页处理
+            for page in range(start_page, end_page + 1):
+                if self._stop_flag:
+                    self.logger.info("批量处理已停止")
+                    break
+                    
+                self.logger.info(f"正在处理第 {page} 页数据")
+                
+                # 获取当前页数据
+                result = self.get_page_data(page, page_size)
+                if not result:
+                    self.logger.error(f"第 {page} 页数据获取失败")
+                    continue
+                    
+                # 获取商品列表数据
+                items = result.get('result', {}).get('dataList', [])
+                if not items:
+                    self.logger.info("没有更多数据")
+                    break
+                    
+                # 过滤出需要开通JIT的商品
+                jit_items = []
+                for item in items:
+                    for skc in item.get('skcList', []):
+                        if skc.get('applyJitStatus') == 1:  # 未开通JIT
+                            jit_product = JitProduct(
+                                productId=item['productId'],
+                                productName=item['productName'],
+                                skcId=skc['skcId'],
+                                extCode=skc.get('extCode', ''),
+                                supplierPrice=skc.get('supplierPrice', ''),
+                                buyerName=item.get('buyerName', ''),
+                                productCreatedAt=item['productCreatedAt'],
+                                applyJitStatus=skc.get('applyJitStatus', 0)
+                            )
+                            jit_items.append(jit_product)
+                            
+                            # 打印商品详细信息
+                            self.logger.info(f"待开通JIT商品信息:")
+                            self.logger.info(f"商品ID: {jit_product.productId}")
+                            self.logger.info(f"商品名称: {jit_product.productName}")
+                            self.logger.info(f"SKC ID: {jit_product.skcId}")
+                            self.logger.info(f"货号: {jit_product.extCode}")
+                            self.logger.info(f"价格: {jit_product.supplierPrice}")
+                            self.logger.info(f"买家: {jit_product.buyerName}")
+                            self.logger.info(f"创建时间: {datetime.fromtimestamp(jit_product.productCreatedAt/1000).strftime('%Y-%m-%d %H:%M:%S')}")
+                            self.logger.info("-" * 50)
+                            break  # 只取第一个SKC
+                            
+                if not jit_items:
+                    self.logger.info(f"第 {page} 页没有需要开通JIT的商品")
+                    continue
+                    
+                # 处理当前页的JIT开通
+                self.logger.info(f"第 {page} 页共有 {len(jit_items)} 个商品需要开通JIT")
+                page_results = self.open_jit(jit_items)
+                results.extend(page_results)
+                
+                # 更新进度
+                if self.progress_callback:
+                    progress = ((page - start_page + 1) / total_pages) * 100
+                    self.progress_callback(progress)
+                    
+                # 添加翻页请求延时
+                self.random_delay('page_request')
+                
             return results
             
         except Exception as e:
-            self.logger.error(f"批量处理开通JIT时发生错误: {str(e)}")
+            self.logger.error(f"批量处理JIT开通时发生错误: {str(e)}")
             return results 
