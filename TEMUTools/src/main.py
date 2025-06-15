@@ -10,6 +10,7 @@ from modules.system_config.gui import SystemConfigTab
 from modules.logger.gui import LogFrame
 from modules.logger.logger import Logger
 from modules.price_review.gui import PriceReviewTab
+from modules.jit.gui import JitTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -277,14 +278,17 @@ class TEMUToolsApp:
         self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
         
         # 添加各个功能标签页
-        self.product_list_tab = ProductListTab(self.notebook)
-        self.notebook.add(self.product_list_tab, text="商品列表")
-        
+        self.jit_tab = JitTab(self.notebook)
+        self.notebook.add(self.jit_tab, text="JIT管理")
+
         self.price_review_tab = PriceReviewTab(self.notebook)
         self.notebook.add(self.price_review_tab, text="核价管理")
         
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text="链接检查")
+        
+        self.product_list_tab = ProductListTab(self.notebook)
+        self.notebook.add(self.product_list_tab, text="商品列表")
         
         self.violation_list_tab = ViolationListTab(self.notebook)
         self.notebook.add(self.violation_list_tab, text="违规列表")

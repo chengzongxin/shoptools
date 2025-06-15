@@ -189,10 +189,10 @@ class PriceReviewCrawler:
         
         # 延时配置（单位：秒）
         self.delay_config = {
-            'page_request': (3, 5),      # 翻页请求延时范围
-            'review_info': (2, 4),       # 获取核价信息延时范围
-            'action': (1, 3),            # 同意/拒绝操作延时范围
-            'between_items': (2, 4)      # 处理商品之间的延时范围
+            'page_request': (1, 2),      # 翻页请求延时范围
+            'review_info': (1, 2),       # 获取核价信息延时范围
+            'action': (1, 2),            # 同意/拒绝操作延时范围
+            'between_items': (1, 2)      # 处理商品之间的延时范围
         }
         
     def random_delay(self, delay_type: str):
@@ -211,16 +211,16 @@ class PriceReviewCrawler:
         """停止爬取"""
         self._stop_flag = True
         
-    def get_page_data(self, page: int) -> Dict:
+    def get_page_data(self, page: int, page_size: int) -> Dict:
         """获取指定页码的数据"""
         payload = {
-            "pageSize": self.page_size,
+            "pageSize": page_size,
             "pageNum": page,
             "supplierTodoTypeList": [1]
         }
         
         try:
-            self.logger.info(f"正在获取第 {page} 页数据")
+            self.logger.info(f"正在获取第 {page} 页数据，每页 {page_size} 条")
             self.logger.debug(f"请求URL: {self.api_url}")
             self.logger.debug(f"请求体: {json.dumps(payload, ensure_ascii=False)}")
             
@@ -239,16 +239,26 @@ class PriceReviewCrawler:
             self.logger.error(f"获取第 {page} 页数据时发生错误: {str(e)}")
             return None
             
-    def crawl(self, max_pages: int = 1) -> List[Dict]:
-        """爬取待核价商品列表数据"""
-        all_data = []
+    def crawl(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
+        """爬取待核价商品列表数据
         
-        for page in range(1, max_pages + 1):
+        Args:
+            start_page: 起始页码
+            end_page: 结束页码
+            page_size: 每页数量
+            
+        Returns:
+            List[Dict]: 商品数据列表
+        """
+        all_data = []
+        total_pages = end_page - start_page + 1
+        
+        for page in range(start_page, end_page + 1):
             if self._stop_flag:
                 self.logger.info("爬取已停止")
                 break
                 
-            result = self.get_page_data(page)
+            result = self.get_page_data(page, page_size)
             
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
@@ -265,12 +275,13 @@ class PriceReviewCrawler:
             
             # 更新进度
             if self.progress_callback:
-                progress = (page / max_pages) * 100
+                progress = ((page - start_page + 1) / total_pages) * 100
                 self.progress_callback(progress)
             
-            time.sleep(1)  # 添加延迟，避免请求过快
+            # 添加翻页请求延时
+            self.random_delay('page_request')
             
-        return all_data 
+        return all_data
 
     def get_price_review_suggestion(self, order_id: int) -> Optional[PriceReviewSuggestion]:
         """获取核价建议
@@ -457,11 +468,13 @@ class PriceReviewCrawler:
             self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {error_message}")
             return False, error_message
             
-    def batch_process_price_reviews(self, max_pages: int = 1) -> List[Dict]:
+    def batch_process_price_reviews(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
         """批量处理核价
         
         Args:
-            max_pages: 最大处理页数
+            start_page: 起始页码
+            end_page: 结束页码
+            page_size: 每页数量
             
         Returns:
             List[Dict]: 处理结果列表，每个结果包含商品ID、处理状态和说明
@@ -470,7 +483,7 @@ class PriceReviewCrawler:
         
         try:
             # 获取待核价商品列表
-            products = self.crawl(max_pages)
+            products = self.crawl(start_page, end_page, page_size)
             
             # 处理每个商品
             for product in products:

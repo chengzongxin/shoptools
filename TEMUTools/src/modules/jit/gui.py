@@ -5,135 +5,10 @@ import json
 import logging
 import os
 from datetime import datetime
-from .crawler import PriceReviewCrawler, PriceReviewSuggestion
+from .crawler import JitCrawler, JitProduct
 from ..system_config.config import SystemConfig
 
-class PriceReviewSuggestionDialog(tk.Toplevel):
-    def __init__(self, parent, suggestion: PriceReviewSuggestion, crawler: PriceReviewCrawler, price_order_id: int, product_sku_id: int):
-        super().__init__(parent)
-        self.title("核价建议")
-        self.geometry("600x400")
-        
-        # 保存参数
-        self.suggestion = suggestion
-        self.crawler = crawler
-        self.price_order_id = price_order_id
-        self.product_sku_id = product_sku_id
-        
-        # 创建主框架
-        main_frame = ttk.Frame(self, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
-        # 显示核价建议信息
-        self.create_suggestion_info(main_frame, suggestion)
-        
-        # 创建按钮
-        self.create_buttons(main_frame)
-        
-        # 配置网格权重
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
-        
-    def create_suggestion_info(self, parent, suggestion: PriceReviewSuggestion):
-        """创建核价建议信息显示区域"""
-        # 创建信息框架
-        info_frame = ttk.LabelFrame(parent, text="核价建议详情", padding="5")
-        info_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        
-        # 当前价格
-        ttk.Label(info_frame, text="当前价格:").grid(row=0, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text=f"{suggestion.supplyPrice} {suggestion.priceCurrency}").grid(row=0, column=1, sticky=tk.W, pady=2)
-        
-        # 建议价格
-        ttk.Label(info_frame, text="建议价格:").grid(row=1, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text=f"{suggestion.suggestSupplyPrice} {suggestion.suggestPriceCurrency}").grid(row=1, column=1, sticky=tk.W, pady=2)
-        
-        # 拒绝原因
-        ttk.Label(info_frame, text="拒绝原因:").grid(row=2, column=0, sticky=tk.W, pady=2)
-        reason_text = tk.Text(info_frame, height=4, width=50, wrap=tk.WORD)
-        reason_text.insert('1.0', suggestion.rejectRemark)
-        reason_text.configure(state='disabled')
-        reason_text.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=2)
-        
-        # 其他信息
-        ttk.Label(info_frame, text="需要编辑BOM:").grid(row=3, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text="是" if suggestion.needEditBomInfo else "否").grid(row=3, column=1, sticky=tk.W, pady=2)
-        
-        ttk.Label(info_frame, text="可以申诉:").grid(row=4, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text="是" if suggestion.canAppeal else "否").grid(row=4, column=1, sticky=tk.W, pady=2)
-        
-        if suggestion.canAppealTime:
-            ttk.Label(info_frame, text="申诉截止时间:").grid(row=5, column=0, sticky=tk.W, pady=2)
-            appeal_time = datetime.fromtimestamp(suggestion.canAppealTime/1000).strftime('%Y-%m-%d %H:%M:%S')
-            ttk.Label(info_frame, text=appeal_time).grid(row=5, column=1, sticky=tk.W, pady=2)
-        
-        # 配置网格权重
-        info_frame.columnconfigure(1, weight=1)
-        
-    def create_buttons(self, parent):
-        """创建按钮"""
-        button_frame = ttk.Frame(parent)
-        button_frame.grid(row=1, column=0, columnspan=2, pady=10)
-        
-        # 同意按钮
-        self.accept_button = ttk.Button(
-            button_frame,
-            text="同意",
-            command=self.accept_suggestion
-        )
-        self.accept_button.grid(row=0, column=0, padx=5)
-        
-        # 拒绝按钮
-        self.reject_button = ttk.Button(
-            button_frame,
-            text="拒绝",
-            command=self.reject_suggestion
-        )
-        self.reject_button.grid(row=0, column=1, padx=5)
-        
-        # 关闭按钮
-        self.close_button = ttk.Button(
-            button_frame,
-            text="关闭",
-            command=self.destroy
-        )
-        self.close_button.grid(row=0, column=2, padx=5)
-        
-    def accept_suggestion(self):
-        """处理同意核价建议"""
-        try:
-            # 使用建议价格
-            price = self.suggestion.suggestSupplyPrice
-            
-            # 调用同意核价接口
-            if self.crawler.accept_price_review(self.price_order_id, self.product_sku_id, price):
-                messagebox.showinfo("成功", "已成功同意核价建议")
-                self.destroy()  # 关闭对话框
-            else:
-                messagebox.showerror("错误", "同意核价建议失败")
-                
-        except Exception as e:
-            messagebox.showerror("错误", f"处理同意核价建议时发生错误: {str(e)}")
-        
-    def reject_suggestion(self):
-        """处理拒绝核价建议"""
-        try:
-            # 显示确认对话框
-            if not messagebox.askyesno("确认", "确定要拒绝核价建议吗？拒绝后链接将作废。"):
-                return
-                
-            # 调用拒绝核价接口
-            if self.crawler.reject_price_review(self.price_order_id):
-                messagebox.showinfo("成功", "已成功拒绝核价建议")
-                self.destroy()  # 关闭对话框
-            else:
-                messagebox.showerror("错误", "拒绝核价建议失败")
-                
-        except Exception as e:
-            messagebox.showerror("错误", f"处理拒绝核价建议时发生错误: {str(e)}")
-
-class PriceReviewTab(ttk.Frame):
+class JitTab(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         # 初始化默认值
@@ -192,7 +67,7 @@ class PriceReviewTab(ttk.Frame):
         
         # 每页数量输入
         ttk.Label(parent, text="每页数量:").grid(row=0, column=4, sticky=tk.W, pady=5)
-        self.page_size_var = tk.StringVar(value="50")
+        self.page_size_var = tk.StringVar(value="10")
         self.page_size_entry = ttk.Entry(parent, textvariable=self.page_size_var, width=10)
         self.page_size_entry.grid(row=0, column=5, sticky=tk.W, pady=5)
         
@@ -234,7 +109,7 @@ class PriceReviewTab(ttk.Frame):
         # 开始爬取按钮
         self.start_button = ttk.Button(
             button_frame,
-            text="获取待核价商品",
+            text="获取商品列表",
             command=self.start_crawling
         )
         self.start_button.grid(row=0, column=0, padx=5)
@@ -242,7 +117,7 @@ class PriceReviewTab(ttk.Frame):
         # 批量处理按钮
         self.batch_button = ttk.Button(
             button_frame,
-            text="批量核价",
+            text="批量开通JIT",
             command=self.start_batch_processing
         )
         self.batch_button.grid(row=0, column=1, padx=5)
@@ -259,7 +134,7 @@ class PriceReviewTab(ttk.Frame):
     def create_product_list(self, parent):
         """创建商品列表"""
         # 创建表格
-        columns = ("商品ID", "商品名称", "当前价格", "买家", "创建时间", "状态")
+        columns = ("商品ID", "商品名称", "SKC ID", "货号", "价格", "买家", "创建时间", "JIT状态")
         self.tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
         
         # 设置列标题
@@ -274,9 +149,6 @@ class PriceReviewTab(ttk.Frame):
         # 放置表格和滚动条
         self.tree.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         scrollbar.grid(row=4, column=2, sticky=(tk.N, tk.S))
-        
-        # 绑定双击事件
-        self.tree.bind("<Double-1>", self.on_item_double_click)
         
     def setup_logging(self):
         """设置日志处理器"""
@@ -296,7 +168,7 @@ class PriceReviewTab(ttk.Frame):
                 self.text_widget.after(0, append)
         
         # 创建独立的logger
-        self.logger = logging.getLogger('price_review')
+        self.logger = logging.getLogger('jit')
         self.logger.setLevel(logging.INFO)
         
         # 移除所有现有的处理器
@@ -309,49 +181,30 @@ class PriceReviewTab(ttk.Frame):
         self.logger.addHandler(text_handler)
         
         # 添加文件处理器
-        log_file = os.path.join(self.log_dir, f'price_review_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+        log_file = os.path.join(self.log_dir, f'jit_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
         file_handler = logging.FileHandler(log_file, encoding='utf-8')
         file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(file_handler)
         
         # 添加一个初始日志
-        self.logger.info("核价管理工具已初始化")
+        self.logger.info("JIT管理工具已初始化")
         self.logger.info(f"日志文件保存在: {log_file}")
-        
-    def log_price_review(self, product_id: int, ext_code: str, suggestion: PriceReviewSuggestion, action: str, success: bool, message: str):
-        """记录核价操作
-        
-        Args:
-            product_id: 商品ID
-            ext_code: 商品货号
-            suggestion: 核价建议
-            action: 操作类型（同意/拒绝）
-            success: 是否成功
-            message: 处理结果说明
-        """
-        log_entry = {
-            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-            'product_id': product_id,
-            'ext_code': ext_code,
-            'current_price': suggestion.supplyPrice / 100,
-            'suggest_price': suggestion.suggestSupplyPrice / 100,
-            'action': action,
-            'success': success,
-            'message': message
-        }
-        
-        # 记录到日志文件
-        self.logger.info(f"核价操作: {json.dumps(log_entry, ensure_ascii=False)}")
         
     def start_crawling(self):
         """开始爬取数据"""
         try:
+            # 获取输入参数
             start_page = int(self.start_page_var.get())
             end_page = int(self.end_page_var.get())
             page_size = int(self.page_size_var.get())
             
+            # 验证输入
             if start_page <= 0 or end_page <= 0 or page_size <= 0:
-                messagebox.showerror("错误", "页数和每页数量必须大于0")
+                messagebox.showerror("错误", "页码和每页数量必须大于0")
+                return
+                
+            if start_page > end_page:
+                messagebox.showerror("错误", "起始页不能大于结束页")
                 return
                 
             # 获取系统配置
@@ -369,7 +222,7 @@ class PriceReviewTab(ttk.Frame):
             self.progress_var.set(0)
             
             # 创建爬虫实例
-            self.crawler = PriceReviewCrawler(
+            self.crawler = JitCrawler(
                 cookie=cookie,
                 logger=self.logger,
                 progress_callback=self.update_progress
@@ -378,7 +231,7 @@ class PriceReviewTab(ttk.Frame):
             # 在新线程中运行爬虫
             self.crawler_thread = threading.Thread(
                 target=self.run_crawler,
-                args=(start_page, end_page, page_size, cookie)
+                args=(start_page, end_page, page_size)
             )
             self.crawler_thread.start()
             
@@ -388,7 +241,7 @@ class PriceReviewTab(ttk.Frame):
             self.logger.error(f"启动爬虫失败: {str(e)}")
             messagebox.showerror("错误", f"启动爬虫失败: {str(e)}")
             
-    def run_crawler(self, start_page, end_page, page_size, cookie):
+    def run_crawler(self, start_page: int, end_page: int, page_size: int):
         """运行爬虫"""
         try:
             self.current_data = self.crawler.crawl(start_page, end_page, page_size)
@@ -423,80 +276,50 @@ class PriceReviewTab(ttk.Frame):
         for item in self.tree.get_children():
             self.tree.delete(item)
             
+        self.logger.info(f"开始更新商品列表，当前数据条数: {len(self.current_data)}")
+            
         # 添加新数据
-        for item in self.current_data:
-            created_at = datetime.fromtimestamp(item['productCreatedAt']/1000).strftime('%Y-%m-%d %H:%M:%S')
-            self.tree.insert('', 'end', values=(
-                item['productId'],
-                item['productName'],
-                item['supplierPrice'],
-                item['buyerName'],
-                created_at,
-                "待核价"
-            ))
+        for product in self.current_data:
+            # 获取第一个SKC的数据
+            skc_list = product.get('skcList', [])
+            self.logger.debug(f"商品 {product.get('productId')} 的SKC数量: {len(skc_list)}")
             
-    def on_item_double_click(self, event):
-        """处理双击事件"""
-        try:
-            item = self.tree.selection()[0]
-            values = self.tree.item(item)['values']
-            product_id = values[0]
+            for skc in skc_list:
+                jit_status = skc.get('applyJitStatus')
+                self.logger.debug(f"商品 {product.get('productId')} 的SKC {skc.get('skcId')} JIT状态: {jit_status}")
+                
+                created_at = datetime.fromtimestamp(product['productCreatedAt']/1000).strftime('%Y-%m-%d %H:%M:%S')
+                jit_status_text = "未开通" if jit_status == 1 else "已开通"
+                
+                self.logger.debug(f"添加商品到列表: ID={product['productId']}, 名称={product['productName']}")
+                
+                self.tree.insert('', 'end', values=(
+                    product['productId'],
+                    product['productName'],
+                    skc['skcId'],
+                    skc.get('extCode', ''),
+                    skc.get('supplierPrice', ''),
+                    product.get('buyerName', ''),
+                    created_at,
+                    jit_status_text
+                ))
+                break  # 只显示第一个SKC的数据
             
-            # 获取商品数据
-            product_data = next((item for item in self.current_data if item['productId'] == product_id), None)
-            if not product_data:
-                self.logger.error(f"未找到商品 {product_id} 的数据")
-                return
-                
-            # 获取核价订单ID和SKU ID
-            price_order_id = None
-            product_sku_id = None
-            for skc in product_data.get('skcList', []):
-                for review_info in skc.get('supplierPriceReviewInfoList', []):
-                    if review_info.get('status') == 1:  # 假设状态1表示待核价
-                        price_order_id = review_info.get('priceOrderId')
-                        # 获取第一个SKU的ID
-                        if skc.get('skuList'):
-                            product_sku_id = skc['skuList'][0].get('skuId')
-                        break
-                if price_order_id and product_sku_id:
-                    break
-                    
-            if not price_order_id or not product_sku_id:
-                self.logger.error(f"商品 {product_id} 没有待核价的订单或SKU")
-                messagebox.showerror("错误", "该商品没有待核价的订单或SKU")
-                return
-                
-            # 获取核价建议
-            suggestion = self.crawler.get_price_review_suggestion(price_order_id)
-            if not suggestion:
-                self.logger.error(f"获取商品 {product_id} 的核价建议失败")
-                messagebox.showerror("错误", "获取核价建议失败")
-                return
-                
-            # 显示核价建议对话框
-            dialog = PriceReviewSuggestionDialog(
-                self, 
-                suggestion,
-                self.crawler,
-                price_order_id,
-                product_sku_id
-            )
-            dialog.grab_set()  # 使对话框模态
-            
-        except Exception as e:
-            self.logger.error(f"处理双击事件时发生错误: {str(e)}")
-            messagebox.showerror("错误", f"处理双击事件时发生错误: {str(e)}")
-
     def start_batch_processing(self):
-        """开始批量处理核价"""
+        """开始批量处理开通JIT"""
         try:
+            # 获取输入参数
             start_page = int(self.start_page_var.get())
             end_page = int(self.end_page_var.get())
             page_size = int(self.page_size_var.get())
             
+            # 验证输入
             if start_page <= 0 or end_page <= 0 or page_size <= 0:
-                messagebox.showerror("错误", "页数和每页数量必须大于0")
+                messagebox.showerror("错误", "页码和每页数量必须大于0")
+                return
+                
+            if start_page > end_page:
+                messagebox.showerror("错误", "起始页不能大于结束页")
                 return
                 
             # 获取系统配置
@@ -507,7 +330,7 @@ class PriceReviewTab(ttk.Frame):
                 return
                 
             # 显示确认对话框
-            if not messagebox.askyesno("确认", f"确定要批量处理 {start_page} 到 {end_page} 页的待核价商品吗？"):
+            if not messagebox.askyesno("确认", f"确定要批量开通从第{start_page}页到第{end_page}页商品的JIT吗？"):
                 return
                 
             # 禁用按钮
@@ -519,7 +342,7 @@ class PriceReviewTab(ttk.Frame):
             self.progress_var.set(0)
             
             # 创建爬虫实例
-            self.crawler = PriceReviewCrawler(
+            self.crawler = JitCrawler(
                 cookie=cookie,
                 logger=self.logger,
                 progress_callback=self.update_progress
@@ -538,10 +361,40 @@ class PriceReviewTab(ttk.Frame):
             self.logger.error(f"启动批量处理失败: {str(e)}")
             messagebox.showerror("错误", f"启动批量处理失败: {str(e)}")
             
-    def run_batch_processing(self, start_page, end_page, page_size):
+    def run_batch_processing(self, start_page: int, end_page: int, page_size: int):
         """运行批量处理"""
         try:
-            results = self.crawler.batch_process_price_reviews(start_page, end_page, page_size)
+            # 获取商品列表
+            products = self.crawler.crawl(start_page, end_page, page_size)
+            
+            if not products:
+                self.logger.info("没有找到需要开通JIT的商品")
+                messagebox.showinfo("提示", "没有找到需要开通JIT的商品")
+                return
+                
+            # 转换为JitProduct对象列表
+            jit_products = []
+            for product in products:
+                for skc in product.get('skcList', []):
+                    if skc.get('applyJitStatus') == 1:  # 只处理未开通JIT的商品
+                        jit_products.append(JitProduct(
+                            productId=product['productId'],
+                            productName=product['productName'],
+                            skcId=skc['skcId'],
+                            extCode=skc.get('extCode', ''),
+                            supplierPrice=skc.get('supplierPrice', ''),
+                            buyerName=product.get('buyerName', ''),
+                            productCreatedAt=product['productCreatedAt'],
+                            applyJitStatus=skc.get('applyJitStatus', 0)
+                        ))
+            
+            if not jit_products:
+                self.logger.info("没有找到需要开通JIT的商品")
+                messagebox.showinfo("提示", "没有找到需要开通JIT的商品")
+                return
+                
+            # 批量开通JIT
+            results = self.crawler.open_jit(jit_products)
             
             # 统计处理结果
             success_count = sum(1 for r in results if r['success'])
