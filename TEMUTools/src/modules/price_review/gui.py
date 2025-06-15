@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import threading
 import json
 import logging
+import os
 from datetime import datetime
 from .crawler import PriceReviewCrawler, PriceReviewSuggestion
 from ..system_config.config import SystemConfig
@@ -138,6 +139,10 @@ class PriceReviewTab(ttk.Frame):
         # 初始化默认值
         self.config = SystemConfig()
         self.current_data = []  # 存储当前获取的数据
+        
+        # 创建日志目录
+        self.log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
+        os.makedirs(self.log_dir, exist_ok=True)
         
         # 设置UI
         self.setup_ui()
@@ -286,8 +291,40 @@ class PriceReviewTab(ttk.Frame):
         text_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
         self.logger.addHandler(text_handler)
         
+        # 添加文件处理器
+        log_file = os.path.join(self.log_dir, f'price_review_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        self.logger.addHandler(file_handler)
+        
         # 添加一个初始日志
         self.logger.info("核价管理工具已初始化")
+        self.logger.info(f"日志文件保存在: {log_file}")
+        
+    def log_price_review(self, product_id: int, ext_code: str, suggestion: PriceReviewSuggestion, action: str, success: bool, message: str):
+        """记录核价操作
+        
+        Args:
+            product_id: 商品ID
+            ext_code: 商品货号
+            suggestion: 核价建议
+            action: 操作类型（同意/拒绝）
+            success: 是否成功
+            message: 处理结果说明
+        """
+        log_entry = {
+            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'product_id': product_id,
+            'ext_code': ext_code,
+            'current_price': suggestion.supplyPrice / 100,
+            'suggest_price': suggestion.suggestSupplyPrice / 100,
+            'action': action,
+            'success': success,
+            'message': message
+        }
+        
+        # 记录到日志文件
+        self.logger.info(f"核价操作: {json.dumps(log_entry, ensure_ascii=False)}")
         
     def start_crawling(self):
         """开始爬取数据"""

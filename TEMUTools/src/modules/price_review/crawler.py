@@ -1,5 +1,6 @@
 import json
 import time
+import random
 import logging
 from datetime import datetime
 from dataclasses import dataclass
@@ -186,6 +187,26 @@ class PriceReviewCrawler:
         # 停止标志
         self._stop_flag = False
         
+        # 延时配置（单位：秒）
+        self.delay_config = {
+            'page_request': (3, 5),      # 翻页请求延时范围
+            'review_info': (2, 4),       # 获取核价信息延时范围
+            'action': (1, 3),            # 同意/拒绝操作延时范围
+            'between_items': (2, 4)      # 处理商品之间的延时范围
+        }
+        
+    def random_delay(self, delay_type: str):
+        """随机延时
+        
+        Args:
+            delay_type: 延时类型，对应delay_config中的键
+        """
+        if delay_type in self.delay_config:
+            min_delay, max_delay = self.delay_config[delay_type]
+            delay = random.uniform(min_delay, max_delay)
+            self.logger.debug(f"随机延时 {delay:.2f} 秒 ({delay_type})")
+            time.sleep(delay)
+        
     def stop(self):
         """停止爬取"""
         self._stop_flag = True
@@ -202,6 +223,9 @@ class PriceReviewCrawler:
             self.logger.info(f"正在获取第 {page} 页数据")
             self.logger.debug(f"请求URL: {self.api_url}")
             self.logger.debug(f"请求体: {json.dumps(payload, ensure_ascii=False)}")
+            
+            # 添加翻页请求延时
+            self.random_delay('page_request')
             
             result = self.request.post(self.api_url, data=payload)
             
@@ -264,6 +288,9 @@ class PriceReviewCrawler:
                 "orderId": order_id
             }
             
+            # 添加获取核价信息延时
+            self.random_delay('review_info')
+            
             result = self.request.post(self.price_review_url, data=payload)
             
             if not result or not result.get('success'):
@@ -313,6 +340,9 @@ class PriceReviewCrawler:
                 "bargainReasonList": []
             }
             
+            # 添加操作延时
+            self.random_delay('action')
+            
             result = self.request.post(self.accept_price_url, data=payload)
             
             if not result or not result.get('success'):
@@ -341,6 +371,9 @@ class PriceReviewCrawler:
             payload = {
                 "priceOrderId": price_order_id
             }
+            
+            # 添加操作延时
+            self.random_delay('action')
             
             result = self.request.post(self.reject_price_url, data=payload)
             
@@ -401,18 +434,28 @@ class PriceReviewCrawler:
             if suggestion.suggestSupplyPrice < threshold_cents:
                 # 价格低于底线，拒绝
                 if self.reject_price_review(price_order_id):
-                    return True, f"已拒绝核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 低于底线 {threshold}元"
+                    message = f"已拒绝核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 低于底线 {threshold}元"
+                    self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                    return True, message
                 else:
-                    return False, "拒绝核价建议失败"
+                    message = "拒绝核价建议失败"
+                    self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                    return False, message
             else:
                 # 价格高于底线，同意
                 if self.accept_price_review(price_order_id, product_sku_id, suggestion.suggestSupplyPrice):
-                    return True, f"已同意核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 高于底线 {threshold}元"
+                    message = f"已同意核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 高于底线 {threshold}元"
+                    self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                    return True, message
                 else:
-                    return False, "同意核价建议失败"
+                    message = "同意核价建议失败"
+                    self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                    return False, message
                     
         except Exception as e:
-            return False, f"处理核价时发生错误: {str(e)}"
+            error_message = f"处理核价时发生错误: {str(e)}"
+            self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {error_message}")
+            return False, error_message
             
     def batch_process_price_reviews(self, max_pages: int = 1) -> List[Dict]:
         """批量处理核价
@@ -431,6 +474,10 @@ class PriceReviewCrawler:
             
             # 处理每个商品
             for product in products:
+                if self._stop_flag:
+                    self.logger.info("批量处理已停止")
+                    break
+                    
                 product_id = product.get('productId')
                 self.logger.info(f"正在处理商品 {product_id}")
                 
@@ -442,8 +489,8 @@ class PriceReviewCrawler:
                     'message': message
                 })
                 
-                # 添加延迟，避免请求过快
-                time.sleep(1)
+                # 添加商品之间的延时
+                self.random_delay('between_items')
                 
             return results
             
