@@ -25,6 +25,20 @@
 # 安装工具
 npm install -g temu-seller-automation
 ```
+##### 如果PowerShell运行报错
+问题分析
+我看到你在 PowerShell 中运行 npm -v 命令时遇到了权限错误。这个错误提示说系统禁止运行脚本，这是一个 PowerShell 的执行策略（Execution Policy）限制导致的问题。
+错误原因解释
+PowerShell 默认的安全策略比较严格，默认情况下不允许运行脚本
+错误信息中的 "about_Execution_Policies" 链接指向了微软的官方文档，说明了这个限制
+而 CMD 没有这样的限制，所以可以在 CMD 中正常运行
+解决方案
+我建议通过以下步骤解决这个问题：
+首先，让我们以管理员身份运行 PowerShell 并修改执行策略。我会帮你执行这个命令
+
+```
+Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
 
 ### 2. 启动 Chrome 浏览器
 
@@ -33,9 +47,11 @@ npm install -g temu-seller-automation
 ```bash
 # 创建配置目录（在 C 盘根目录下）
 mkdir C:\selenium\ChromeProfile
-
+# & 是 PowerShell 中的调用运算符，用来运行带空格路径的可执行文件。
+# 如果不加 &，PowerShell 会把整个字符串看成一个普通字符串，而不是命令。
 # 启动 Chrome（使用完整路径）
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\selenium\ChromeProfile"
+
 ```
 
 注意：
