@@ -11,6 +11,7 @@ from modules.logger.gui import LogFrame
 from modules.logger.logger import Logger
 from modules.price_review.gui import PriceReviewTab
 from modules.jit.gui import JitTab
+from modules.confirm_upload.gui import ConfirmUploadTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -283,6 +284,9 @@ class TEMUToolsApp:
 
         self.price_review_tab = PriceReviewTab(self.notebook)
         self.notebook.add(self.price_review_tab, text="核价管理")
+
+        self.confirm_upload_tab = ConfirmUploadTab(self.notebook)
+        self.notebook.add(self.confirm_upload_tab, text="确认上新")
         
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text="链接检查")
