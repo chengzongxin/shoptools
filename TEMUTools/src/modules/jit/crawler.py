@@ -278,15 +278,15 @@ class JitCrawler:
                             jit_items.append(jit_product)
                             
                             # 打印商品详细信息
-                            self.logger.info(f"待开通JIT商品信息:")
-                            self.logger.info(f"商品ID: {jit_product.productId}")
-                            self.logger.info(f"商品名称: {jit_product.productName}")
-                            self.logger.info(f"SKC ID: {jit_product.skcId}")
-                            self.logger.info(f"货号: {jit_product.extCode}")
-                            self.logger.info(f"价格: {jit_product.supplierPrice}")
-                            self.logger.info(f"买家: {jit_product.buyerName}")
-                            self.logger.info(f"创建时间: {datetime.fromtimestamp(jit_product.productCreatedAt/1000).strftime('%Y-%m-%d %H:%M:%S')}")
-                            self.logger.info("-" * 50)
+                            # self.logger.info(f"待开通JIT商品信息:")
+                            # self.logger.info(f"商品ID: {jit_product.productId}")
+                            # self.logger.info(f"商品名称: {jit_product.productName}")
+                            # self.logger.info(f"SKC ID: {jit_product.skcId}")
+                            # self.logger.info(f"货号: {jit_product.extCode}")
+                            # self.logger.info(f"价格: {jit_product.supplierPrice}")
+                            # self.logger.info(f"买家: {jit_product.buyerName}")
+                            # self.logger.info(f"创建时间: {datetime.fromtimestamp(jit_product.productCreatedAt/1000).strftime('%Y-%m-%d %H:%M:%S')}")
+                            # self.logger.info("-" * 50)
                             break  # 只取第一个SKC
                             
                 if not jit_items:
