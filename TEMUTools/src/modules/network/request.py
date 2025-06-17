@@ -41,7 +41,7 @@ class NetworkRequest:
             headers = self._get_headers(use_compliance)
             response = self.session.get(url, params=params, headers=headers)
             response.raise_for_status()
-            self.logger.info(f"GET请求成功: {response.json()}")
+            self.logger.info(f"GET请求成功")
             return response.json()
         except requests.exceptions.RequestException as e:
             self.logger.error(f"GET请求失败: {str(e)}")
@@ -53,7 +53,7 @@ class NetworkRequest:
             headers = self._get_headers(use_compliance)
             response = self.session.post(url, json=data, headers=headers)
             response.raise_for_status()
-            self.logger.info(f"POST请求成功: {response.json()}")
+            self.logger.info(f"POST请求成功")
             return response.json()
         except requests.exceptions.RequestException as e:
             self.logger.error(f"POST请求失败: {str(e)}")
@@ -65,7 +65,7 @@ class NetworkRequest:
             headers = self._get_headers(use_compliance)
             response = self.session.put(url, json=data, headers=headers)
             response.raise_for_status()
-            self.logger.info(f"PUT请求成功: {response.json()}")
+            self.logger.info(f"PUT请求成功")
             return response.json()
         except requests.exceptions.RequestException as e:
             self.logger.error(f"PUT请求失败: {str(e)}")
@@ -77,7 +77,7 @@ class NetworkRequest:
             headers = self._get_headers(use_compliance)
             response = self.session.delete(url, headers=headers)
             response.raise_for_status()
-            self.logger.info(f"DELETE请求成功: {response.json()}")
+            self.logger.info(f"DELETE请求成功")
             return response.json()
         except requests.exceptions.RequestException as e:
             self.logger.error(f"DELETE请求失败: {str(e)}")
