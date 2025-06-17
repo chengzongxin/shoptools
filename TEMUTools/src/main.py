@@ -282,6 +282,10 @@ class TEMUToolsApp:
         # 添加合规批量上传Tab
         self.compliance_tab = ComplianceUploaderTab(self.notebook)
         self.notebook.add(self.compliance_tab, text="合规批量上传")
+
+        # 添加商品列表Tab- 商品列表、商品码、库存
+        self.product_list_tab = ProductListTab(self.notebook)
+        self.notebook.add(self.product_list_tab, text="商品码、库存")
         
         # 添加各个功能标签页
         self.jit_tab = JitTab(self.notebook)
@@ -296,8 +300,6 @@ class TEMUToolsApp:
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text="链接检查")
         
-        self.product_list_tab = ProductListTab(self.notebook)
-        self.notebook.add(self.product_list_tab, text="商品列表")
         
         self.violation_list_tab = ViolationListTab(self.notebook)
         self.notebook.add(self.violation_list_tab, text="违规列表")
