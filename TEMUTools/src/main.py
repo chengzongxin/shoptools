@@ -12,6 +12,7 @@ from modules.logger.logger import Logger
 from modules.price_review.gui import PriceReviewTab
 from modules.jit.gui import JitTab
 from modules.confirm_upload.gui import ConfirmUploadTab
+from modules.compliance_uploader.gui import ComplianceUploaderTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -277,6 +278,10 @@ class TEMUToolsApp:
         # 创建标签页
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
+        
+        # 添加合规批量上传Tab
+        self.compliance_tab = ComplianceUploaderTab(self.notebook)
+        self.notebook.add(self.compliance_tab, text="合规批量上传")
         
         # 添加各个功能标签页
         self.jit_tab = JitTab(self.notebook)
