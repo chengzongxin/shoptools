@@ -23,12 +23,13 @@ def build_executable():
         os.remove("TEMUTools.spec")
     
     # 创建打包命令
+    sep = ';' if sys.platform.startswith('win') else ':'
     cmd = [
         "pyinstaller",
         "--name=TEMUTools",
         "--windowed",  # 不显示控制台窗口
         "--icon=assets/icon.ico",  # 应用图标
-        "--add-data=assets;assets",  # 添加资源文件
+        f"--add-data=assets{sep}assets",  # 添加资源文件
         "--hidden-import=PIL._tkinter_finder",  # 添加隐藏导入
         "--noconfirm",  # 不询问确认
         "--clean",  # 清理临时文件
