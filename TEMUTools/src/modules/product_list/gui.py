@@ -22,12 +22,12 @@ class ProductListTab(ttk.Frame):
     def setup_ui(self):
         # 页数输入
         ttk.Label(self, text="获取页数:").grid(row=0, column=0, sticky=tk.W)
-        self.pages_var = tk.StringVar(value="2")
+        self.pages_var = tk.StringVar(value="1")
         self.pages_entry = ttk.Entry(self, textvariable=self.pages_var, width=10)
         self.pages_entry.grid(row=0, column=1, sticky=tk.W)
         # 每页数据量输入
-        ttk.Label(self, text="每页数据量:").grid(row=1, column=0, sticky=tk.W)
-        self.page_size_var = tk.StringVar(value="20")
+        ttk.Label(self, text="每页数量:").grid(row=1, column=0, sticky=tk.W)
+        self.page_size_var = tk.StringVar(value="100")
         self.page_size_entry = ttk.Entry(self, textvariable=self.page_size_var, width=10)
         self.page_size_entry.grid(row=1, column=1, sticky=tk.W)
         # 进度条

@@ -64,7 +64,7 @@ class JitSignTab(ttk.Frame):
         # 每页数量
         ttk.Label(parent, text="每页数量:").grid(row=0, column=4, padx=5, pady=5)
         self.page_size = ttk.Entry(parent, width=10)
-        self.page_size.insert(0, "50")
+        self.page_size.insert(0, "100")
         self.page_size.grid(row=0, column=5, padx=5, pady=5)
         
     def create_progress_bar(self, parent):

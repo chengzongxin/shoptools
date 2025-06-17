@@ -192,7 +192,7 @@ class PriceReviewTab(ttk.Frame):
         
         # 每页数量输入
         ttk.Label(parent, text="每页数量:").grid(row=0, column=4, sticky=tk.W, pady=5)
-        self.page_size_var = tk.StringVar(value="50")
+        self.page_size_var = tk.StringVar(value="100")
         self.page_size_entry = ttk.Entry(parent, textvariable=self.page_size_var, width=10)
         self.page_size_entry.grid(row=0, column=5, sticky=tk.W, pady=5)
         
