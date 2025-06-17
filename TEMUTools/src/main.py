@@ -13,6 +13,7 @@ from modules.price_review.gui import PriceReviewTab
 from modules.jit.gui import JitTab
 from modules.confirm_upload.gui import ConfirmUploadTab
 from modules.compliance_uploader.gui import ComplianceUploaderTab
+from modules.jit_sign.gui import JitSignTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -290,6 +291,9 @@ class TEMUToolsApp:
         # 添加各个功能标签页
         self.jit_tab = JitTab(self.notebook)
         self.notebook.add(self.jit_tab, text="JIT管理")
+
+        self.jit_sign_tab = JitSignTab(self.notebook)
+        self.notebook.add(self.jit_sign_tab, text="JIT签署")
 
         self.price_review_tab = PriceReviewTab(self.notebook)
         self.notebook.add(self.price_review_tab, text="核价管理")

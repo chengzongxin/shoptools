@@ -53,7 +53,7 @@ class NetworkRequest:
             headers = self._get_headers(use_compliance)
             response = self.session.post(url, json=data, headers=headers)
             response.raise_for_status()
-            self.logger.info(f"POST请求成功")
+            self.logger.info(f"POST请求成功: {response.json()}")
             return response.json()
         except requests.exceptions.RequestException as e:
             self.logger.error(f"POST请求失败: {str(e)}")
