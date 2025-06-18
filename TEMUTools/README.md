@@ -98,8 +98,82 @@ MIT License
 保存合并后的文件
 
 
-{
-  "cookie": "api_uid=Ctxz/mgXjlV6CABNVNWbAg==; _bee=jOHrLzfH6NtGxvbUWZF2S2QS8p5wSapE; njrpl=jOHrLzfH6NtGxvbUWZF2S2QS8p5wSapE; dilx=rHHJULtHYX0y-syqPWiDr; hfsc=L3yOfo0y4Tz80J7Feg==; timezone=Asia%2FShanghai; _nano_fp=XpmYl0mjnq98X0dyno_fxwbYByrCp0Y6TCwjmMZT; seller_temp=N_eyJ0Ijoidko5M1lQSHppSnRSdmtlbW5Bb2gzN01NeFBaTldLQnVuU1Z0M3lBWFlFUWxKZWpUQnhaWjhnMlRBZnNDSGhZZ2RWRHo1Q3k0bTl1OTQrT3RRczAvd1E9PSIsInYiOjEsInMiOjEwMDAxLCJ1IjoyNDE1MTU0NjgxNzcwMX0=; mallid=634418223796259",
-  "anti_content": "0aqAfxiUGslaU99VUcmM0whphwBXntrmM2cfwZCCqTPPEs9X_DU4CmiklittuPqUDCbX1Zb-5039HL2hqSZlb5B8WYDSSJWNVRFs47jklpmt9Izvx0_twQwUMUA4izPR_cjf6ybFTNOs62XFLb5kpVzrISJY37cLALbMO35MguEjyjO-9C5FnQyCIgpMwTayHp8c-t7y8ue-o2UKm_qtpWmNqCOICVURFqX37KfzF8CPwzvatgCVwtP__gGIU6COp3YB5q4wkqH-P2XKi3cJFb45NNehBB5hma4qa8FYL4Bpw7i26pKVPDNpiF-rX9WAXZWZEv18BZm40-mxBcMdgc4ty90yH7zXri3jJJL7EIZDT5d7cZ2QDQnPA-bUVc0GK-l5Gap3LoHWHf0SJrFdqbC7d7hCWgw5DCdHRuzsBRCQrvM7KiEjvIHjRKrjz-3S6DqMMI386iiW4HWhQwSpD1ETKbS",
-  "mallid": "634418223796259"
-}
+   # 🐍 macOS 下 Python tkinter 无法使用问题总结
+
+   ## 🧩 问题现象
+
+   在使用 `pyenv` 安装 Python 3.11.9 后，尝试导入 `tkinter` 模块时报错：
+
+   ```bash
+   ModuleNotFoundError: No module named '_tkinter'
+   ```
+
+   并且使用 `python3 -m tkinter` 测试失败。
+
+   ---
+
+   ## 🎯 问题原因
+
+   macOS 使用 Homebrew 安装的 `tcl-tk` 默认是 **9.0 预发布版**，而 Python 3.11.x 的官方编译器尚不支持 `tcl-tk 9.0`，因此：
+
+   - pyenv 编译 Python 时无法正确链接到 `libtk` 和 `libtcl`；
+   - 导致最终生成的 `_tkinter` 模块缺失。
+
+   ---
+
+   ## 🛠 解决方案
+
+   1. **卸载 tcl-tk 9.0**（会与 tkinter 不兼容）：
+
+      ```bash
+      brew uninstall --ignore-dependencies tcl-tk
+      ```
+
+   2. **安装兼容的 tcl-tk@8 版本**：
+
+      ```bash
+      brew install tcl-tk@8
+      ```
+
+   3. **设置环境变量，让 pyenv 编译时链接正确版本的 Tcl/Tk**：
+
+      ```bash
+      export PATH="/opt/homebrew/opt/tcl-tk@8/bin:$PATH"
+      export LDFLAGS="-L/opt/homebrew/opt/tcl-tk@8/lib"
+      export CPPFLAGS="-I/opt/homebrew/opt/tcl-tk@8/include"
+      export PKG_CONFIG_PATH="/opt/homebrew/opt/tcl-tk@8/lib/pkgconfig"
+      ```
+
+   4. **重新编译安装 Python，并显式指定 Tcl/Tk 的路径**：
+
+      ```bash
+      env PYTHON_CONFIGURE_OPTS="--with-tcltk-includes='-I/opt/homebrew/opt/tcl-tk@8/include' --with-tcltk-libs='-L/opt/homebrew/opt/tcl-tk@8/lib'" \
+         pyenv install 3.11.9
+      ```
+
+   5. **设为默认版本**：
+
+      ```bash
+      pyenv global 3.11.9
+      ```
+
+   6. **验证 tkinter 是否成功**：
+
+      ```bash
+      python3 -m tkinter
+      ```
+
+      成功后会弹出一个 `tk` 小窗口，证明 tkinter 可用 ✅。
+
+   ---
+
+   ## ✅ 补充建议
+
+   如果你频繁使用 pyenv 安装 Python，建议将 `tcl-tk@8` 永久加入 shell 的配置文件，例如 `.zshrc`：
+
+   ```bash
+   export PATH="/opt/homebrew/opt/tcl-tk@8/bin:$PATH"
+   export LDFLAGS="-L/opt/homebrew/opt/tcl-tk@8/lib"
+   export CPPFLAGS="-I/opt/homebrew/opt/tcl-tk@8/include"
+   export PKG_CONFIG_PATH="/opt/homebrew/opt/tcl-tk@8/lib/pkgconfig"
+   ```

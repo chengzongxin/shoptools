@@ -6,6 +6,14 @@ from collections import defaultdict
 from modules.product_list.gui import ProductListTab
 from modules.link_checker.gui import LinkCheckerTab
 from modules.violation_list.gui import ViolationListTab
+from modules.system_config.gui import SystemConfigTab
+from modules.logger.gui import LogFrame
+from modules.logger.logger import Logger
+from modules.price_review.gui import PriceReviewTab
+from modules.jit.gui import JitTab
+from modules.confirm_upload.gui import ConfirmUploadTab
+from modules.compliance_uploader.gui import ComplianceUploaderTab
+from modules.jit_sign.gui import JitSignTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -261,30 +269,77 @@ def should_skip_file(filename):
     return any(skip in filename for skip in skip_files)
 
 class TEMUToolsApp:
+    """TEMU工具集主程序"""
+    
     def __init__(self, root):
         self.root = root
         self.root.title("TEMU工具集")
+        self.logger = Logger()
         
-        # 设置应用程序图标
-        icon_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'assets', 'app.ico')
-        if os.path.exists(icon_path):
-            self.root.iconbitmap(icon_path)
-        
-        # 创建notebook（选项卡控件）
+        # 创建标签页
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
         
-        # 创建商品列表管理选项卡
+        # 添加合规批量上传Tab
+        self.compliance_tab = ComplianceUploaderTab(self.notebook)
+        self.notebook.add(self.compliance_tab, text="合规批量上传")
+
+        # 添加商品列表Tab- 商品列表、商品码、库存
         self.product_list_tab = ProductListTab(self.notebook)
-        self.notebook.add(self.product_list_tab, text='商品列表管理')
+        self.notebook.add(self.product_list_tab, text="商品码、库存")
         
-        # 创建链接重复检测选项卡
+        # 添加各个功能标签页
+        self.jit_tab = JitTab(self.notebook)
+        self.notebook.add(self.jit_tab, text="JIT管理")
+
+        self.jit_sign_tab = JitSignTab(self.notebook)
+        self.notebook.add(self.jit_sign_tab, text="JIT签署")
+
+        self.price_review_tab = PriceReviewTab(self.notebook)
+        self.notebook.add(self.price_review_tab, text="核价管理")
+
+        self.confirm_upload_tab = ConfirmUploadTab(self.notebook)
+        self.notebook.add(self.confirm_upload_tab, text="确认上新")
+        
         self.link_checker_tab = LinkCheckerTab(self.notebook)
-        self.notebook.add(self.link_checker_tab, text='链接重复检测')
+        self.notebook.add(self.link_checker_tab, text="链接检查")
         
-        # 创建违规商品列表选项卡
+        
         self.violation_list_tab = ViolationListTab(self.notebook)
-        self.notebook.add(self.violation_list_tab, text='违规商品列表')
+        self.notebook.add(self.violation_list_tab, text="违规列表")
+        
+        self.system_config_tab = SystemConfigTab(self.notebook)
+        self.notebook.add(self.system_config_tab, text="系统配置")
+        
+        # 添加日志框架
+        self.log_frame = LogFrame(root)
+        self.log_frame.pack(fill='x', padx=5, pady=5)
+        
+        # 设置窗口大小和位置
+        self.setup_window()
+        
+        # 记录启动日志
+        self.logger.info("TEMU工具集已启动")
+
+    def setup_window(self):
+        """设置窗口大小和位置"""
+        # 获取屏幕尺寸
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        
+        # 设置窗口大小
+        window_width = 1200
+        window_height = 800
+        
+        # 计算窗口位置
+        x = (screen_width - window_width) // 2
+        y = (screen_height - window_height) // 2
+        
+        # 设置窗口大小和位置
+        self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+        
+        # 设置最小窗口大小
+        self.root.minsize(800, 600)
 
 def main():
     root = tk.Tk()
