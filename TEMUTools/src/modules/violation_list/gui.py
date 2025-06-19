@@ -242,11 +242,12 @@ class ViolationListTab(ttk.Frame):
                 bottom=Side(style='thin')
             )
             
-            # 写入表头
+            # 写入表头 - 添加违规站点数量和违规记录数量
             headers = [
                 "SPUID", "商品名称", "违规原因", "违规描述",
-                "处罚类型", "处罚影响", "违规详情", "整改建议",
-                "开始时间", "结束时间", "申诉状态", "申诉次数", "最大申诉次数"
+                "违规站点数量", "违规记录数量", "处罚类型", "处罚影响", 
+                "违规详情", "整改建议", "开始时间", "结束时间", 
+                "申诉状态", "申诉次数", "最大申诉次数"
             ]
             
             for col, header in enumerate(headers, 1):
@@ -275,20 +276,38 @@ class ViolationListTab(ttk.Frame):
                 start_time = self.format_timestamp(punish_detail.get('start_time'))
                 end_time = self.format_timestamp(punish_detail.get('plan_end_time'))
                 
+                # 处理违规站点数量 - 处理特殊情况
+                site_num = product.get('site_num', 0)
+                punish_num = product.get('punish_num', 0)
+                
+                # 检查是否有全部站点违规的情况（site_id为-1）
+                punish_details = product.get('punish_detail_list', [])
+                has_all_sites_violation = any(
+                    detail.get('site_id') == -1 for detail in punish_details
+                )
+                
+                # 格式化站点数量显示
+                if has_all_sites_violation:
+                    site_num_display = "全部站点"
+                else:
+                    site_num_display = str(site_num) if site_num > 0 else "0"
+                
                 # 写入一行数据
                 ws.cell(row=row, column=1, value=product.get('spu_id', ''))
                 ws.cell(row=row, column=2, value=product.get('goods_name', ''))
                 ws.cell(row=row, column=3, value=product.get('leaf_reason_name', ''))
                 ws.cell(row=row, column=4, value=product.get('violation_desc', ''))
-                ws.cell(row=row, column=5, value=punish_detail.get('punish_appeal_type', ''))
-                ws.cell(row=row, column=6, value=punish_detail.get('punish_infect_desc', ''))
-                ws.cell(row=row, column=7, value=illegal_desc)
-                ws.cell(row=row, column=8, value=punish_detail.get('rectification_suggestion', ''))
-                ws.cell(row=row, column=9, value=start_time)
-                ws.cell(row=row, column=10, value=end_time)
-                ws.cell(row=row, column=11, value=self.format_appeal_status(punish_detail.get('appeal_status', 0)))
-                ws.cell(row=row, column=12, value=punish_detail.get('now_appeal_time', 0))
-                ws.cell(row=row, column=13, value=punish_detail.get('max_appeal_time', 0))
+                ws.cell(row=row, column=5, value=site_num_display)  # 违规站点数量
+                ws.cell(row=row, column=6, value=punish_num)  # 违规记录数量
+                ws.cell(row=row, column=7, value=punish_detail.get('punish_appeal_type', ''))
+                ws.cell(row=row, column=8, value=punish_detail.get('punish_infect_desc', ''))
+                ws.cell(row=row, column=9, value=illegal_desc)
+                ws.cell(row=row, column=10, value=punish_detail.get('rectification_suggestion', ''))
+                ws.cell(row=row, column=11, value=start_time)
+                ws.cell(row=row, column=12, value=end_time)
+                ws.cell(row=row, column=13, value=self.format_appeal_status(punish_detail.get('appeal_status', 0)))
+                ws.cell(row=row, column=14, value=punish_detail.get('now_appeal_time', 0))
+                ws.cell(row=row, column=15, value=punish_detail.get('max_appeal_time', 0))
                 
                 row += 1
             
