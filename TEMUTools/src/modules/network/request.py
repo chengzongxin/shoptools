@@ -15,25 +15,49 @@ class NetworkRequest:
         """获取请求头"""
         cookie = self.config.get_compliance_cookie() if use_compliance else self.config.get_seller_cookie()
         mallid = self.config.get_mallid()
-        return {
-            "accept": "*/*",
-            "accept-encoding": "gzip, deflate, br, zstd",
-            "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-            "anti-content": "",
-            "cache-control": "max-age=0",
-            "content-type": "application/json",
-            "cookie": cookie,
-            "mallid": mallid,
-            "origin": "https://seller.kuajingmaihuo.com",
-            "referer": "https://seller.kuajingmaihuo.com/goods/product/list",
-            "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-            "sec-ch-ua-mobile": "?1",
-            "sec-ch-ua-platform": '"Android"',
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36"
-        }
+        
+        if use_compliance:
+            # 合规模式的请求头
+            return {
+                "accept": "*/*",
+                "accept-encoding": "gzip, deflate, br, zstd",
+                "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+                "anti-content": "",
+                "cache-control": "max-age=0",
+                "content-type": "application/json",
+                "cookie": cookie,
+                "mallid": mallid,
+                "origin": "https://agentseller.temu.com",
+                "referer": "https://agentseller.temu.com/mms/tmod_punish/agent/merchant_appeal/entrance/list",
+                "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+                "sec-ch-ua-mobile": "?1",
+                "sec-ch-ua-platform": '"Android"',
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36"
+            }
+        else:
+            # 商家中心的请求头
+            return {
+                "accept": "*/*",
+                "accept-encoding": "gzip, deflate, br, zstd",
+                "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
+                "anti-content": "",
+                "cache-control": "max-age=0",
+                "content-type": "application/json",
+                "cookie": cookie,
+                "mallid": mallid,
+                "origin": "https://seller.kuajingmaihuo.com",
+                "referer": "https://seller.kuajingmaihuo.com/goods/product/list",
+                "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+                "sec-ch-ua-mobile": "?1",
+                "sec-ch-ua-platform": '"Android"',
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36"
+            }
         
     def get(self, url: str, params: Optional[Dict] = None, use_compliance: bool = False) -> Optional[Dict]:
         """发送GET请求"""
