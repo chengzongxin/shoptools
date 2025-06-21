@@ -38,7 +38,7 @@ class RealPictureUploader:
             },
             {
                 "name": "冰袖",
-                "cate_id": 27339,
+                "cate_id": 34959,
                 "image_file": "头巾-骑行手套.jpg"
             },
             {
@@ -90,14 +90,22 @@ class RealPictureUploader:
         """
         self.random_delay()
         
+        # payload = {
+        #     "page": page,
+        #     "page_size": page_size,
+        #     "need_on_sale": True,
+        #     "from_batch_upload": True,
+        #     "spu_id_list": [],
+        #     "cate_id_list": [category["cate_id"]],
+        #     "have_upload": False
+        # }
+
         payload = {
             "page": page,
             "page_size": page_size,
-            "need_on_sale": True,
-            "from_batch_upload": True,
-            "spu_id_list": [],
             "cate_id_list": [category["cate_id"]],
-            "have_upload": False
+            "check_type_status_list": [1],
+            "rapid_screen_status_list": [1]
         }
         
         self.logger.info(f"查询 {category['name']} 未上传商品，第 {page} 页")
