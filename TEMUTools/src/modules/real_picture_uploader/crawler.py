@@ -3,6 +3,7 @@ import time
 import random
 import os
 import requests
+import sys
 from typing import List, Dict, Any, Optional
 from ..network.request import NetworkRequest
 
@@ -68,7 +69,14 @@ class RealPictureUploader:
         ]
         
         # 图片文件路径
-        self.images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'assets', 'images')
+        if getattr(sys, 'frozen', False):
+            # The application is frozen (packaged)
+            base_path = sys._MEIPASS
+        else:
+            # The application is running from source
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        
+        self.images_dir = os.path.join(base_path, 'assets', 'images')
         
     def random_delay(self, min_sec=0, max_sec=1):
         """随机延迟，模拟人工操作"""

@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import threading
 import logging
 import os
+import sys
 from datetime import datetime
 from .crawler import RealPictureUploader
 
@@ -172,7 +173,14 @@ class RealPictureUploaderTab(ttk.Frame):
             return
             
         # 检查图片文件是否存在
-        images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'assets', 'images')
+        if getattr(sys, 'frozen', False):
+            # The application is frozen (packaged)
+            base_path = sys._MEIPASS
+        else:
+            # The application is running from source
+            base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+        images_dir = os.path.join(base_path, 'assets', 'images')
         if not os.path.exists(images_dir):
             messagebox.showerror("错误", f"图片目录不存在: {images_dir}\n请在程序根目录创建 assets/images 文件夹，并放入所需图片。")
             return
