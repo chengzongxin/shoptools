@@ -14,6 +14,7 @@ from modules.jit.gui import JitTab
 from modules.confirm_upload.gui import ConfirmUploadTab
 from modules.compliance_uploader.gui import ComplianceUploaderTab
 from modules.jit_sign.gui import JitSignTab
+from modules.real_picture_uploader.gui import RealPictureUploaderTab
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -287,6 +288,10 @@ class TEMUToolsApp:
         # 添加商品列表Tab- 商品列表、商品码、库存
         self.product_list_tab = ProductListTab(self.notebook)
         self.notebook.add(self.product_list_tab, text="商品码、库存")
+
+        # 添加实拍图上传Tab
+        self.real_picture_tab = RealPictureUploaderTab(self.notebook)
+        self.notebook.add(self.real_picture_tab, text="上传实拍图")
         
         # 添加各个功能标签页
         self.jit_tab = JitTab(self.notebook)

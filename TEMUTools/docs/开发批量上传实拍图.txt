@@ -1,0 +1,123 @@
+我现在要开发一个批量上传商品实拍图的功能
+
+我的功能是直接调用网页端接口实现的
+
+主要功能是这样的，先查询未上传实拍图的商品，一共有8个类别，每个类别对应的查询列表条件和上传的图片不一样
+
+其中主要有8个类别，我现在首先以抽绳健身包为例，说明上传的过程
+
+1. 首先查询未上传实拍图的接口
+https://agentseller.temu.com/api/flash/real_picture/list
+
+
+抽绳健身包：
+参数是
+{"page":1,"page_size":50,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[31563],"have_upload":false}
+
+
+
+返回结果是
+@list.json
+
+2.然后进行对这批商品进行上传实拍图
+先调用查询上传签名接口
+https://agentseller.temu.com/ms/bg-flux-ms/compliance_property/signature
+参数是
+{"tag":"flash-tag"}
+结果是
+{
+    "success": true,
+    "error_code": 1000000,
+    "result": "MDowDy8_LuE3SJMOGcjL3bq69d-sF-KDdupjqqlOOlgqI2WnupsZPCeeWmblX9hP6hfgze6dXnPkAGQXRAwZeumDSucm9dy--Jjgt7GbxfBC8QzN4Q33PLK3puGWbJROGB0Vs9njkg9SfzeXItdMOEdfZ-FMM9EfkeTc7CLTz7d-Bp7Wkm_MvsfwRz9gR4uThmAGDVNhNcBUDEtrhptuYIxiWej41qHeAZRD722thsefupTB3-wFdYO3k9lr7QURi4qfhxcN94X3wrF61dUFpHDZX5UxM3Hxcu7wguPAA2ye-JmlymxwgUBB6Pv7VxqW3kS-o5_dEDdSWOK155UtluEEFE9tHMDNY28H6nBtqFIwlpeqAVXAuROvPYNz3mIhXlwNSIcN8AucyuAsn1wIPV-jB6HNdBUj7LJW4_oNeC0kUTZ0x3QclcdY-5xnw-QUXXN0Anx1edCYlN-3548mtDxIkz-iXedE82VHINR5wHgFVw0CjHHW53ZgVVErI3EnyD1VEO6TxmNVbulSrDmiWZxigMpzg1hcuSCxVX_G2TtYrwQ-UQmhfBtlKJXUL4O1jdY="
+}
+
+3. 之后开始上传实拍图
+https://agentseller.temu.com/api/galerie/v3/store_image?sdk_version=js-0.0.40&tag_name=flash-tag
+查询字符串参数是
+sdk_version=js-0.0.40&tag_name=flash-tag
+然后对本地图片进行上传
+------WebKitFormBoundaryY7nrIkj4QeefIrKq
+Content-Disposition: form-data; name="url_width_height"
+
+true
+------WebKitFormBoundaryY7nrIkj4QeefIrKq
+Content-Disposition: form-data; name="image"; filename="帆布袋、束口袋.jpg"
+Content-Type: image/jpeg
+
+
+------WebKitFormBoundaryY7nrIkj4QeefIrKq
+Content-Disposition: form-data; name="upload_sign"
+
+MDowDy8_LuE3SJMOGcjL3bq69d-sF-KDdupjqqlOOlgqI2WnupsZPCeeWmblX9hP6hfgze6dXnPkAGQXRAwZeumDSucm9dy--Jjgt7GbxfBC8QzN4Q33PLK3puGWbJROGB0Vs9njkg9SfzeXItdMOEdfZ-FMM9EfkeTc7CLTz7d-Bp7Wkm_MvsfwRz9gR4uThmAGDVNhNcBUDEtrhptuYIxiWej41qHeAZRD722thsefupTB3-wFdYO3k9lr7QURi4qfhxcN94X3wrF61dUFpHDZX5UxM3Hxcu7wguPAA2ye-JmlymxwgUBB6Pv7VxqW3kRp8cnSGNCWNrV4HtmeQqLKFE9tHMDNY28H6nBtqFIwlquLNTymhwsYbJdUU20TKGq-mUhf-sggYF66VF9eM9sPE7LYk0zk5ddoA2pfkKNPD8b_fMRaLozkwiLCGifcMZjmklUfgsgO2fkTtYcThMYh9_WBDRGr1c5KjfSxhmY3lQ0CjHHW53ZgVVErI3EnyD2SS3WQ9dnGjgu5Dn71V6ErRtl_avkmmEg08l-sJZ2ue5uqVbNVNy_zCJuYM_o5uCo=
+------WebKitFormBoundaryY7nrIkj4QeefIrKq--
+
+得到返回结果是
+{
+    "url": "https://pos.file.temu.com/flash-tag/20237f36da/1e9dbe2b-d970-46ac-b4da-6335023e02cd_3860x2876.jpeg",
+    "width": 3860,
+    "height": 2876,
+    "size": 2182929,
+    "etag": "b5bb97166320b48a664077537fdd87ac"
+}
+
+4. 最后一步调用批量上传接口
+https://agentseller.temu.com/api/flash/real_picture/batch_upload
+参数是
+{"spu_ids":[8286595785,2201842364],"confirm_type":4,"upload_image_list":[{"type":2,"image":"https://pos.file.temu.com/flash-tag/20237f36da/1e9dbe2b-d970-46ac-b4da-6335023e02cd_3860x2876.jpeg"}]}
+之后会返回结果 ,会显示此次批量上传的结果
+@result.json
+
+然后再进行下一轮的批量上传操作，短暂延迟后，再重新查询第一页，继续批量上传，一直到这一个品类的数据全部上传完为止，然后再进行下一个品类实拍图上传
+
+注意，每个类别对应的查询未上传列表的接口和上传的图片不同，下面是我列出的具体参数
+
+总共有以下8个品类
+
+1.抽绳健身包：
+参数是
+{"page":1,"page_size":50,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[31563],"have_upload":false}
+图片是
+帆布袋、束口袋.jpg
+
+2.帆布袋
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[29157],"have_upload":false}
+图片是
+帆布袋、束口袋.jpg
+
+3.冰袖
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[27339],"have_upload":false}
+图片是
+头巾-骑行手套.jpg
+
+4.头带
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[27618],"have_upload":false}
+图片是
+头带.jpg
+
+5.头巾
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[31087],"have_upload":false}
+图片是
+头巾-骑行手套.jpg
+
+6.袜子
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[30242],"have_upload":false}
+图片是
+袜子.jpg
+
+7.围裙
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[28769],"have_upload":false}
+图片是
+围裙.jpg
+
+8.抱枕
+参数是
+{"page":1,"page_size":10,"need_on_sale":true,"from_batch_upload":true,"spu_id_list":[],"cate_id_list":[12044],"have_upload":false}
+图片是
+头带.jpg
+
