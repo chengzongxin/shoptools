@@ -227,21 +227,19 @@ class RealPictureUploader:
         
     def process_category(self, category: Dict[str, Any]) -> bool:
         """
-        处理单个品类的所有商品
+        处理单个品类的所有商品，持续处理第一页直到完成
         """
-        self.logger.info(f"开始处理品类: {category['name']}")
+        self.logger.info(f"===== 开始处理品类: {category['name']} =====")
 
-        # 1. 先查询第一页，看是否有商品
+        # 1. 先查询第一页，看是否有商品，如果没有则直接跳过
         if self.stop_flag_callback(): return False
-        page = 1
-        products_to_process = self.get_pending_products(category, page, 10)
-        if not products_to_process:
-            self.logger.info(f"品类 {category['name']} 没有需要处理的商品，直接跳过。")
+        initial_products = self.get_pending_products(category, page=1)
+        if not initial_products:
+            self.logger.info(f"品类 {category['name']} 当前没有需要处理的商品，跳过。")
             return True
 
         # 2. 如果有商品，再获取签名和上传图片
-        self.logger.info(f"品类 {category['name']} 发现有待处理商品，开始准备上传...")
-        
+        self.logger.info(f"品类 {category['name']} 发现待处理商品，正在准备上传资源...")
         if self.stop_flag_callback(): return False
         signature = self.get_upload_signature()
         if not signature:
@@ -249,31 +247,29 @@ class RealPictureUploader:
             return False
             
         if self.stop_flag_callback(): return False
-        # 获取图片路径
         image_path = os.path.join(self.images_dir, category["image_file"])
         if not os.path.exists(image_path):
-            self.logger.error(f"图片文件不存在: {image_path}")
+            self.logger.error(f"图片文件不存在: {image_path}，跳过品类 {category['name']}")
             return False
             
         if self.stop_flag_callback(): return False
-        # 上传图片
         image_url = self.upload_image(image_path, signature)
         if not image_url:
             self.logger.error(f"上传图片失败，跳过品类 {category['name']}")
             return False
             
-        # page = 1 # Redundant
-        total_processed = 0
+        total_processed_in_category = 0
         
-        # 3. 循环处理所有页面
+        # 3. 循环处理第一页，直到第一页返回空
         while True:
             if self.stop_flag_callback():
                 self.logger.info(f"检测到停止信号，中断 {category['name']} 的处理。")
                 break
-            # 获取当前页的商品
-            products = self.get_pending_products(category, page)
+                
+            # 每次都重新获取第一页的商品
+            products = self.get_pending_products(category, page=1)
             if not products:
-                self.logger.info(f"品类 {category['name']} 第 {page} 页没有商品，处理完成")
+                self.logger.info(f"品类 {category['name']} 第一页已无待处理商品，该品类处理完成。")
                 break
                 
             # 提取SPU ID列表
@@ -283,22 +279,14 @@ class RealPictureUploader:
             result = self.batch_upload_products(spu_ids, image_url)
             
             if result.get("success"):
-                total_processed += len(spu_ids)
-                total_success = result.get("result", {}).get("total_success", 0)
-                total_fail = result.get("result", {}).get("total_fail", 0)
-                self.logger.info(f"品类 {category['name']} 第 {page} 页处理完成，已处理 {total_processed} 个商品，成功 {total_success} 个，失败 {total_fail} 个")
+                success_count = result.get("result", {}).get("total_success", 0)
+                fail_count = result.get("result", {}).get("total_fail", 0)
+                total_processed_in_category += success_count
+                self.logger.info(f"品类 {category['name']}：处理了一批商品，成功 {success_count} 个，失败 {fail_count} 个。")
             else:
-                self.logger.error(f"品类 {category['name']} 第 {page} 页处理失败")
-                
-            page += 1
+                self.logger.error(f"品类 {category['name']}：处理一批商品时发生API错误。")
             
-            # 更新进度
-            if self.progress_callback:
-                # Since we don't know total pages, we can't show granular progress.
-                # Let's keep overall progress per category.
-                pass
-                
-        self.logger.info(f"品类 {category['name']} 处理完成，共处理 {total_processed} 个商品")
+        self.logger.info(f"品类 {category['name']} 处理结束，共成功处理 {total_processed_in_category} 个商品。")
         return True
         
     def batch_upload_all(self):
