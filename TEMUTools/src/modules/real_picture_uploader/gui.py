@@ -205,7 +205,8 @@ class RealPictureUploaderTab(ttk.Frame):
         # 创建上传器
         self.uploader = RealPictureUploader(
             logger=self.logger,
-            progress_callback=self.update_progress
+            progress_callback=self.update_progress,
+            stop_flag_callback=lambda: self._stop_flag
         )
         
         # 过滤选中的品类

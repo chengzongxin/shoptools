@@ -10,9 +10,10 @@ class RealPictureUploader:
     """
     实拍图批量上传核心逻辑
     """
-    def __init__(self, logger: logging.Logger, progress_callback=None):
+    def __init__(self, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         self.logger = logger
         self.progress_callback = progress_callback
+        self.stop_flag_callback = stop_flag_callback or (lambda: False)
         self.request = NetworkRequest()
         
         # 基础URL
@@ -69,7 +70,7 @@ class RealPictureUploader:
         # 图片文件路径
         self.images_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 'assets', 'images')
         
-    def random_delay(self, min_sec=1, max_sec=3):
+    def random_delay(self, min_sec=0, max_sec=1):
         """随机延迟，模拟人工操作"""
         delay = random.uniform(min_sec, max_sec)
         self.logger.info(f"随机延时 {delay:.2f} 秒")
@@ -164,7 +165,7 @@ class RealPictureUploader:
                 params=params,
                 files=files,
                 headers=headers,
-                timeout=60
+                timeout=180
             )
             
             response.raise_for_status()
@@ -231,6 +232,7 @@ class RealPictureUploader:
         self.logger.info(f"开始处理品类: {category['name']}")
 
         # 1. 先查询第一页，看是否有商品
+        if self.stop_flag_callback(): return False
         page = 1
         products_to_process = self.get_pending_products(category, page, 10)
         if not products_to_process:
@@ -240,27 +242,34 @@ class RealPictureUploader:
         # 2. 如果有商品，再获取签名和上传图片
         self.logger.info(f"品类 {category['name']} 发现有待处理商品，开始准备上传...")
         
+        if self.stop_flag_callback(): return False
         signature = self.get_upload_signature()
         if not signature:
             self.logger.error(f"获取上传签名失败，跳过品类 {category['name']}")
             return False
             
+        if self.stop_flag_callback(): return False
         # 获取图片路径
         image_path = os.path.join(self.images_dir, category["image_file"])
         if not os.path.exists(image_path):
             self.logger.error(f"图片文件不存在: {image_path}")
             return False
             
+        if self.stop_flag_callback(): return False
         # 上传图片
         image_url = self.upload_image(image_path, signature)
         if not image_url:
             self.logger.error(f"上传图片失败，跳过品类 {category['name']}")
             return False
             
-        page = 1
+        # page = 1 # Redundant
         total_processed = 0
         
+        # 3. 循环处理所有页面
         while True:
+            if self.stop_flag_callback():
+                self.logger.info(f"检测到停止信号，中断 {category['name']} 的处理。")
+                break
             # 获取当前页的商品
             products = self.get_pending_products(category, page)
             if not products:
@@ -285,8 +294,9 @@ class RealPictureUploader:
             
             # 更新进度
             if self.progress_callback:
-                progress = (page - 1) / max(1, len(products)) * 100
-                self.progress_callback(progress)
+                # Since we don't know total pages, we can't show granular progress.
+                # Let's keep overall progress per category.
+                pass
                 
         self.logger.info(f"品类 {category['name']} 处理完成，共处理 {total_processed} 个商品")
         return True
@@ -298,6 +308,10 @@ class RealPictureUploader:
         total_categories = len(self.categories)
         
         for idx, category in enumerate(self.categories):
+            if self.stop_flag_callback():
+                self.logger.info("检测到停止信号，中断所有上传任务。")
+                break
+                
             self.logger.info(f"开始处理第 {idx + 1}/{total_categories} 个品类: {category['name']}")
             
             try:
@@ -316,7 +330,12 @@ class RealPictureUploader:
                 
             # 品类间延迟
             if idx < total_categories - 1:
-                self.logger.info("品类间延迟 5 秒")
-                time.sleep(5)
+                if self.stop_flag_callback():
+                    self.logger.info("检测到停止信号，不再处理下一个品类。")
+                    break
+                self.random_delay()
                 
-        self.logger.info("所有品类处理完成") 
+        if not self.stop_flag_callback():
+            self.logger.info("所有品类处理完成")
+        else:
+            self.logger.info("上传任务已由用户手动停止。") 
