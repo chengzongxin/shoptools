@@ -18,7 +18,7 @@ class UploadProduct:
     extCode: str
 
 class ConfirmUploadCrawler:
-    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None):
+    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
         self.base_url = "https://seller.kuajingmaihuo.com"
         self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
@@ -31,9 +31,7 @@ class ConfirmUploadCrawler:
         self.cookie = cookie
         self.logger = logger
         self.progress_callback = progress_callback
-        
-        # 停止标志
-        self._stop_flag = False
+        self.stop_flag_callback = stop_flag_callback or (lambda: False)
         
         # 延时配置（单位：秒）
         self.delay_config = {
@@ -53,10 +51,6 @@ class ConfirmUploadCrawler:
             delay = random.uniform(min_delay, max_delay)
             self.logger.debug(f"随机延时 {delay:.2f} 秒 ({delay_type})")
             time.sleep(delay)
-        
-    def stop(self):
-        """停止爬取"""
-        self._stop_flag = True
         
     def get_page_data(self, page: int, page_size: int) -> Dict:
         """获取指定页码的数据"""
@@ -101,7 +95,7 @@ class ConfirmUploadCrawler:
         total_pages = end_page - start_page + 1
         
         for page in range(start_page, end_page + 1):
-            if self._stop_flag:
+            if self.stop_flag_callback():
                 self.logger.info("爬取已停止")
                 break
                 
@@ -236,44 +230,42 @@ class ConfirmUploadCrawler:
             
             return results
             
-    def batch_process(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
-        """批量处理确认上新
-        
-        Args:
-            start_page: 起始页码
-            end_page: 结束页码
-            page_size: 每页数量
+    def batch_process(self) -> List[Dict]:
+        """批量处理确认上新（循环处理第一页直到完成）
             
         Returns:
             List[Dict]: 处理结果列表，每个结果包含商品ID、处理状态和说明
         """
         results = []
-        total_pages = end_page - start_page + 1
+        total_processed = 0
         
         try:
-            # 逐页处理
-            for page in range(start_page, end_page + 1):
-                if self._stop_flag:
+            while True:
+                if self.stop_flag_callback():
                     self.logger.info("批量处理已停止")
                     break
                     
-                self.logger.info(f"正在处理第 {page} 页数据")
+                self.logger.info("正在获取第一页待确认上新商品...")
                 
-                # 获取当前页数据
-                result = self.get_page_data(page, page_size)
+                # 获取第一页数据
+                result = self.get_page_data(1, 20)  # 固定获取第一页，每页20条
                 if not result:
-                    self.logger.error(f"第 {page} 页数据获取失败")
-                    continue
+                    self.logger.error("第一页数据获取失败")
+                    break
                     
                 # 获取商品列表数据
                 items = result.get('result', {}).get('dataList', [])
                 if not items:
-                    self.logger.info("没有更多数据")
+                    self.logger.info("第一页没有待确认上新的商品，所有商品已处理完成")
                     break
                     
                 # 转换数据格式
                 upload_items = []
                 for item in items:
+                    if self.stop_flag_callback():
+                        self.logger.info("用户手动停止处理")
+                        break
+                        
                     # 获取第一个SKC的数据
                     skc_list = item.get('skcList', [])
                     if skc_list:
@@ -300,22 +292,39 @@ class ConfirmUploadCrawler:
                         self.logger.info("-" * 50)
                             
                 if not upload_items:
-                    self.logger.info(f"第 {page} 页没有需要确认上新的商品")
-                    continue
+                    self.logger.info("第一页没有需要确认上新的商品，所有商品已处理完成")
+                    break
                     
-                # 处理当前页的确认上新
-                self.logger.info(f"第 {page} 页共有 {len(upload_items)} 个商品需要确认上新")
+                # 处理确认上新
+                self.logger.info(f"第一页共有 {len(upload_items)} 个商品需要确认上新")
+                
+                if self.stop_flag_callback():
+                    self.logger.info("用户手动停止处理")
+                    break
+                    
                 page_results = self.confirm_upload(upload_items)
                 results.extend(page_results)
                 
-                # 更新进度
+                # 统计本批次结果
+                success_count = sum(1 for r in page_results if r['success'])
+                total_processed += success_count
+                self.logger.info(f"本批次处理完成，成功 {success_count} 个，累计成功 {total_processed} 个")
+                
+                # 更新进度（这里用循环次数来模拟进度）
                 if self.progress_callback:
-                    progress = ((page - start_page + 1) / total_pages) * 100
+                    # 由于不知道总数量，我们用循环次数来显示进度
+                    # 每处理一批次，进度增加10%，最大到90%
+                    progress = min(90, len(results) // 20 * 10)
                     self.progress_callback(progress)
-                    
-                # 添加翻页请求延时
+                
+                # 批次间延时
                 self.random_delay('page_request')
                 
+            # 完成时设置进度为100%
+            if self.progress_callback:
+                self.progress_callback(100)
+                
+            self.logger.info(f"批量处理完成，总共处理 {total_processed} 个商品")
             return results
             
         except Exception as e:
