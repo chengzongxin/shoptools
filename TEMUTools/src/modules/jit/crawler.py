@@ -19,7 +19,7 @@ class JitProduct:
     applyJitStatus: int
 
 class JitCrawler:
-    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None):
+    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
         self.base_url = "https://seller.kuajingmaihuo.com"
         self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
@@ -33,8 +33,8 @@ class JitCrawler:
         self.logger = logger
         self.progress_callback = progress_callback
         
-        # 停止标志
-        self._stop_flag = False
+        # 停止标志回调
+        self.stop_flag_callback = stop_flag_callback or (lambda: False)
         
         # 延时配置（单位：秒）
         self.delay_config = {
@@ -54,10 +54,6 @@ class JitCrawler:
             delay = random.uniform(min_delay, max_delay)
             self.logger.debug(f"随机延时 {delay:.2f} 秒 ({delay_type})")
             time.sleep(delay)
-        
-    def stop(self):
-        """停止爬取"""
-        self._stop_flag = True
         
     def get_page_data(self, page: int, page_size: int) -> Dict:
         """获取指定页码的数据"""
@@ -102,7 +98,7 @@ class JitCrawler:
         total_pages = end_page - start_page + 1
         
         for page in range(start_page, end_page + 1):
-            if self._stop_flag:
+            if self.stop_flag_callback():
                 self.logger.info("爬取已停止")
                 break
                 
@@ -242,7 +238,7 @@ class JitCrawler:
         try:
             # 逐页处理
             for page in range(start_page, end_page + 1):
-                if self._stop_flag:
+                if self.stop_flag_callback():
                     self.logger.info("批量处理已停止")
                     break
                     

@@ -248,7 +248,7 @@ class ConfirmUploadCrawler:
                 self.logger.info("正在获取第一页待确认上新商品...")
                 
                 # 获取第一页数据
-                result = self.get_page_data(1, 20)  # 固定获取第一页，每页20条
+                result = self.get_page_data(1, 20)  # 固定获取第一页，每页20条, 注意如果设置多了会报错400，之前设置的是100，接口报错400，所以这里设置20
                 if not result:
                     self.logger.error("第一页数据获取失败")
                     break

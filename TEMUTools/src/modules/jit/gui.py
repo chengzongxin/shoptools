@@ -216,16 +216,21 @@ class JitTab(ttk.Frame):
                 
             # 禁用开始按钮,启用停止按钮
             self.start_button.config(state='disabled')
+            self.batch_button.config(state='disabled')
             self.stop_button.config(state='normal')
             
             # 清空进度条
             self.progress_var.set(0)
             
+            # 设置停止标志
+            self._stop_flag = False
+            
             # 创建爬虫实例
             self.crawler = JitCrawler(
                 cookie=cookie,
                 logger=self.logger,
-                progress_callback=self.update_progress
+                progress_callback=self.update_progress,
+                stop_flag_callback=lambda: self._stop_flag
             )
             
             # 在新线程中运行爬虫
@@ -233,6 +238,7 @@ class JitTab(ttk.Frame):
                 target=self.run_crawler,
                 args=(start_page, end_page, page_size)
             )
+            self.crawler_thread.daemon = True
             self.crawler_thread.start()
             
         except ValueError:
@@ -258,13 +264,14 @@ class JitTab(ttk.Frame):
         finally:
             # 恢复按钮状态
             self.start_button.config(state='normal')
+            self.batch_button.config(state='normal')
             self.stop_button.config(state='disabled')
             
     def stop_crawling(self):
         """停止爬取"""
-        if hasattr(self, 'crawler'):
-            self.crawler.stop()
-            self.logger.info("已停止爬取")
+        self._stop_flag = True
+        self.logger.info("用户请求停止，任务将在当前页面处理完成后停止。")
+        messagebox.showinfo("提示", "正在停止，任务将在当前页处理完成后自动结束。")
             
     def update_progress(self, value):
         """更新进度条"""
@@ -338,16 +345,25 @@ class JitTab(ttk.Frame):
             
             # 清空进度条
             self.progress_var.set(0)
+
+            # 设置停止标志
+            self._stop_flag = False
             
             # 创建爬虫实例
             self.crawler = JitCrawler(
                 cookie=cookie,
                 logger=self.logger,
-                progress_callback=self.update_progress
+                progress_callback=self.update_progress,
+                stop_flag_callback=lambda: self._stop_flag
             )
             
-            # 直接在当前线程中运行批量处理
-            self.run_batch_processing(start_page, end_page, page_size)
+            # 在新线程中运行批量处理
+            self.batch_thread = threading.Thread(
+                target=self.run_batch_processing,
+                args=(start_page, end_page, page_size)
+            )
+            self.batch_thread.daemon = True
+            self.batch_thread.start()
             
         except ValueError:
             messagebox.showerror("错误", "请输入有效的数字")
