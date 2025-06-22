@@ -23,7 +23,7 @@ class SystemConfigTab(ttk.Frame):
         self.seller_cookie_text.insert('1.0', self.config.get_seller_cookie())
         
         # 合规Cookie
-        ttk.Label(main_frame, text="合规Cookie:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="合规中心Cookie:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.compliance_cookie_text = tk.Text(main_frame, height=3, width=50)
         self.compliance_cookie_text.grid(row=1, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         self.compliance_cookie_text.insert('1.0', self.config.get_compliance_cookie())

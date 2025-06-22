@@ -10,7 +10,7 @@ from modules.system_config.gui import SystemConfigTab
 from modules.logger.gui import LogFrame
 from modules.logger.logger import Logger
 from modules.price_review.gui import PriceReviewTab
-from modules.jit.gui import JitTab
+from modules.jit_open.gui import JitOpenTab
 from modules.confirm_upload.gui import ConfirmUploadTab
 from modules.compliance_uploader.gui import ComplianceUploaderTab
 from modules.jit_sign.gui import JitSignTab
@@ -294,8 +294,8 @@ class TEMUToolsApp:
         self.notebook.add(self.real_picture_tab, text="上传实拍图")
         
         # 添加各个功能标签页
-        self.jit_tab = JitTab(self.notebook)
-        self.notebook.add(self.jit_tab, text="JIT开通")
+        self.jit_open_tab = JitOpenTab(self.notebook)
+        self.notebook.add(self.jit_open_tab, text="JIT开通")
 
         self.jit_sign_tab = JitSignTab(self.notebook)
         self.notebook.add(self.jit_sign_tab, text="JIT签署")
@@ -308,8 +308,7 @@ class TEMUToolsApp:
         
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text="链接检查")
-        
-        
+
         self.violation_list_tab = ViolationListTab(self.notebook)
         self.notebook.add(self.violation_list_tab, text="违规列表")
         

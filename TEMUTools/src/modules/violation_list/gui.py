@@ -2,10 +2,12 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import json
 import os
+import threading
 from datetime import datetime
 from .crawler import ViolationListCrawler
 from .excel_exporter import ViolationListExcelExporter
 import logging
+from ..system_config.config import SystemConfig
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,7 @@ class ViolationListTab(ttk.Frame):
         super().__init__(parent)
         self.crawler = ViolationListCrawler()
         self.excel_exporter = ViolationListExcelExporter()
+        self.config = SystemConfig()
         
         # 设置配置文件路径
         self.config_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config')
@@ -32,79 +35,95 @@ class ViolationListTab(ttk.Frame):
         
     def setup_ui(self):
         """设置用户界面"""
-        # 创建输入字段
-        self.create_input_fields()
+        # 创建主框架
+        main_frame = ttk.Frame(self, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # 创建Cookie输入区域
-        self.create_cookie_input()
+        # 创建输入字段
+        self.create_input_fields(main_frame)
+        
+        # 创建进度条
+        self.create_progress_bar(main_frame)
         
         # 创建日志显示区域
-        self.create_log_area()
+        self.create_log_area(main_frame)
         
         # 创建按钮
-        self.create_buttons()
+        self.create_buttons(main_frame)
         
-        # 配置日志处理器
-        self.setup_logging()
+        # 配置网格权重
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(1, weight=1)
         
-    def create_input_fields(self):
+    def create_input_fields(self, parent):
         """创建输入字段"""
-        # 页数输入
-        ttk.Label(self, text="获取页数:").grid(row=0, column=0, sticky=tk.W)
+        # 创建一个子框架来容纳输入字段
+        input_frame = ttk.Frame(parent)
+        input_frame.grid(row=0, column=0, columnspan=2, pady=5, sticky=tk.W)
+        
+        # 起始页输入
+        ttk.Label(input_frame, text="起始页:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
         self.start_page_var = tk.StringVar(value="1")
-        self.start_page_entry = ttk.Entry(self, textvariable=self.start_page_var, width=10)
-        self.start_page_entry.grid(row=0, column=1, sticky=tk.W)
+        self.start_page_entry = ttk.Entry(input_frame, textvariable=self.start_page_var, width=10)
+        self.start_page_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
         
-        # 每页数据量输入
-        ttk.Label(self, text="每页数据量:").grid(row=1, column=0, sticky=tk.W)
+        # 结束页输入
+        ttk.Label(input_frame, text="结束页:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
+        self.end_page_var = tk.StringVar(value="1")
+        self.end_page_entry = ttk.Entry(input_frame, textvariable=self.end_page_var, width=10)
+        self.end_page_entry.grid(row=0, column=3, sticky=tk.W, padx=(0, 20))
+        
+        # 每页数量输入
+        ttk.Label(input_frame, text="每页数量:").grid(row=0, column=4, sticky=tk.W, padx=(0, 5))
         self.page_size_var = tk.StringVar(value="100")
-        self.page_size_entry = ttk.Entry(self, textvariable=self.page_size_var, width=10)
-        self.page_size_entry.grid(row=1, column=1, sticky=tk.W)
+        self.page_size_entry = ttk.Entry(input_frame, textvariable=self.page_size_var, width=10)
+        self.page_size_entry.grid(row=0, column=5, sticky=tk.W)
         
-    def create_cookie_input(self):
-        """创建Cookie输入区域"""
-        # Cookie输入框架
-        cookie_frame = ttk.LabelFrame(self, text="请求头设置", padding="5")
-        cookie_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        # 配置输入框架的网格权重，使其左对齐
+        input_frame.columnconfigure(0, weight=0)
+        input_frame.columnconfigure(1, weight=0)
+        input_frame.columnconfigure(2, weight=0)
+        input_frame.columnconfigure(3, weight=0)
+        input_frame.columnconfigure(4, weight=0)
+        input_frame.columnconfigure(5, weight=0)
         
-        # Cookie输入
-        ttk.Label(cookie_frame, text="Cookie:").grid(row=0, column=0, sticky=tk.W)
-        self.cookie_entry = ttk.Entry(cookie_frame, width=80)
-        self.cookie_entry.grid(row=0, column=1, sticky=(tk.W, tk.E), padx=5)
+        # 配置父框架的网格权重
+        parent.columnconfigure(0, weight=1)
+        parent.columnconfigure(1, weight=1)
         
-        # Anti-content输入
-        ttk.Label(cookie_frame, text="Anti-content:").grid(row=1, column=0, sticky=tk.W)
-        self.anti_content_entry = ttk.Entry(cookie_frame, width=80)
-        self.anti_content_entry.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5)
+    def create_progress_bar(self, parent):
+        """创建进度条"""
+        self.progress_var = tk.DoubleVar()
+        self.progress_bar = ttk.Progressbar(
+            parent,
+            variable=self.progress_var,
+            maximum=100
+        )
+        self.progress_bar.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         
-        # MallID输入
-        ttk.Label(cookie_frame, text="MallID:").grid(row=2, column=0, sticky=tk.W)
-        self.mallid_entry = ttk.Entry(cookie_frame, width=80)
-        self.mallid_entry.grid(row=2, column=1, sticky=(tk.W, tk.E), padx=5)
-        
-        # 添加说明标签
-        ttk.Label(
-            cookie_frame, 
-            text="请从浏览器开发者工具中复制Cookie、Anti-content和MallID值",
-            font=("Arial", 8)
-        ).grid(row=3, column=0, columnspan=2, sticky=tk.W, padx=5)
-        
-    def create_log_area(self):
+    def create_log_area(self, parent):
         """创建日志显示区域"""
+        log_frame = ttk.LabelFrame(parent, text="操作日志", padding="5")
+        log_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        
         # 创建日志文本框
-        self.log_text = tk.Text(self, height=15, width=80)
-        self.log_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.log_text = tk.Text(log_frame, height=15, width=80, state='disabled')
+        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # 添加滚动条
-        scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.log_text.yview)
-        scrollbar.grid(row=3, column=2, sticky=(tk.N, tk.S))
+        scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         self.log_text['yscrollcommand'] = scrollbar.set
         
-    def create_buttons(self):
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(0, weight=1)
+        
+    def create_buttons(self, parent):
         """创建按钮"""
         # 创建按钮框架
-        button_frame = ttk.Frame(self)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=10)
+        button_frame = ttk.Frame(parent)
+        button_frame.grid(row=3, column=0, columnspan=2, pady=10)
         
         # 开始按钮
         self.start_button = ttk.Button(
@@ -113,6 +132,15 @@ class ViolationListTab(ttk.Frame):
             command=self.start_crawling
         )
         self.start_button.pack(side=tk.LEFT, padx=5)
+        
+        # 停止按钮
+        self.stop_button = ttk.Button(
+            button_frame,
+            text="停止",
+            command=self.stop_crawling,
+            state='disabled'
+        )
+        self.stop_button.pack(side=tk.LEFT, padx=5)
         
         # 导出Excel按钮
         self.export_button = ttk.Button(
@@ -156,15 +184,14 @@ class ViolationListTab(ttk.Frame):
             if os.path.exists(self.config_file):
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
-                    self.cookie_entry.insert(0, config.get('cookie', ''))
-                    self.anti_content_entry.insert(0, config.get('anti_content', ''))
-                    self.mallid_entry.insert(0, config.get('mallid', ''))
-                    self.start_page_var.set(config.get('pages', '1'))
+                    self.start_page_var.set(config.get('start_page', '1'))
+                    self.end_page_var.set(config.get('end_page', '1'))
                     self.page_size_var.set(config.get('page_size', '100'))
         except Exception as e:
             self.logger.error(f"加载配置失败: {str(e)}")
             # 使用默认值
             self.start_page_var.set('1')
+            self.end_page_var.set('1')
             self.page_size_var.set('100')
     
     def save_config(self):
@@ -174,10 +201,8 @@ class ViolationListTab(ttk.Frame):
             os.makedirs(os.path.dirname(self.config_file), exist_ok=True)
             
             config = {
-                'cookie': self.cookie_entry.get().strip(),
-                'anti_content': self.anti_content_entry.get().strip(),
-                'mallid': self.mallid_entry.get().strip(),
-                'pages': self.start_page_var.get().strip(),
+                'start_page': self.start_page_var.get().strip(),
+                'end_page': self.end_page_var.get().strip(),
                 'page_size': self.page_size_var.get().strip()
             }
             
@@ -225,47 +250,73 @@ class ViolationListTab(ttk.Frame):
 
     def start_crawling(self):
         """开始爬取数据"""
-        # 获取配置
-        cookie = self.cookie_entry.get().strip()
-        anti_content = self.anti_content_entry.get().strip()
-        mallid = self.mallid_entry.get().strip()
+        # 获取系统配置
+        cookie = self.config.get_seller_cookie()
         
-        # 验证配置
-        if not all([cookie, anti_content, mallid]):
-            messagebox.showerror("错误", "请填写完整的配置信息！")
+        if not cookie:
+            messagebox.showerror("错误", "请先在系统配置中设置Cookie")
             return
             
         # 获取分页设置
         try:
             start_page = int(self.start_page_var.get())
+            end_page = int(self.end_page_var.get())
             page_size = int(self.page_size_var.get())
             
-            if start_page < 1 or page_size < 1:
-                messagebox.showerror("错误", "页码和页数必须大于0！")
+            if start_page <= 0 or end_page <= 0 or page_size <= 0:
+                messagebox.showerror("错误", "页码和每页数量必须大于0")
+                return
+                
+            if start_page > end_page:
+                messagebox.showerror("错误", "起始页不能大于结束页")
                 return
         except ValueError:
             messagebox.showerror("错误", "请输入有效的数字！")
             return
         
-        # 更新爬虫配置
-        self.crawler.headers.update({
-            "cookie": cookie,
-            "anti-content": anti_content,
-            "mallid": mallid
-        })
-        self.crawler.page_size = page_size
-        
         try:
-            # 禁用开始按钮，防止重复点击
+            # 禁用开始按钮，启用停止按钮
             self.start_button.config(state='disabled')
+            self.stop_button.config(state='normal')
             
-            # 清空日志
-            self.log_text.config(state='normal')
-            self.log_text.delete(1.0, tk.END)
-            self.log_text.config(state='disabled')
+            # 清空进度条
+            self.progress_var.set(0)
+            
+            # 设置停止标志
+            self._stop_flag = False
+            
+            # 创建爬虫实例
+            self.crawler = ViolationListCrawler()
+            
+            # 在新线程中运行爬虫
+            self.crawler_thread = threading.Thread(
+                target=self.run_crawler,
+                args=(cookie, start_page, end_page, page_size)
+            )
+            self.crawler_thread.daemon = True
+            self.crawler_thread.start()
+            
+        except Exception as e:
+            self.logger.error(f"启动爬虫失败: {str(e)}")
+            messagebox.showerror("错误", f"启动爬虫失败: {str(e)}")
+            # 恢复按钮状态
+            self.start_button.config(state='normal')
+            self.stop_button.config(state='disabled')
+    
+    def run_crawler(self, cookie: str, start_page: int, end_page: int, page_size: int):
+        """运行爬虫"""
+        try:
+            self.logger.info(f"开始获取第 {start_page} 到 {end_page} 页的数据")
             
             # 获取数据
-            self.violation_data = self.crawler.get_all_data(max_pages=start_page)
+            self.violation_data = self.crawler.get_all_data(
+                cookie=cookie,
+                start_page=start_page,
+                end_page=end_page,
+                page_size=page_size,
+                progress_callback=self.update_progress,
+                stop_flag_callback=lambda: self._stop_flag
+            )
             
             if not self.violation_data:
                 self.logger.info("未获取到数据！请检查配置信息是否正确。")
@@ -280,15 +331,24 @@ class ViolationListTab(ttk.Frame):
         except Exception as e:
             self.logger.error(f"获取数据时发生错误：{str(e)}")
         finally:
-            # 恢复开始按钮状态
+            # 恢复按钮状态
             self.start_button.config(state='normal')
+            self.stop_button.config(state='disabled')
+    
+    def stop_crawling(self):
+        """停止爬取"""
+        self._stop_flag = True
+        self.logger.info("用户请求停止，任务将在当前页面处理完成后停止。")
+        messagebox.showinfo("提示", "正在停止，任务将在当前页处理完成后自动结束。")
+    
+    def update_progress(self, value):
+        """更新进度条"""
+        self.progress_var.set(value)
     
     def clear_all(self):
         """清空所有内容"""
-        self.cookie_entry.delete(0, tk.END)
-        self.anti_content_entry.delete(0, tk.END)
-        self.mallid_entry.delete(0, tk.END)
         self.start_page_var.set("1")
+        self.end_page_var.set("1")
         self.page_size_var.set("100")
         
         # 清空日志
@@ -301,106 +361,9 @@ class ViolationListTab(ttk.Frame):
         
         # 禁用导出按钮
         self.export_button.config(state='disabled')
-    
-    def fetch_data(self):
-        """获取数据"""
-        try:
-            # 获取输入值
-            cookie = self.cookie_entry.get().strip()
-            anti_content = self.anti_content_entry.get().strip()
-            mallid = self.mallid_entry.get().strip()
-            start_page = int(self.start_page_var.get())
-            max_pages = int(self.page_size_var.get())
-            
-            # 验证输入
-            if not cookie:
-                messagebox.showerror("错误", "请输入Cookie")
-                return
-            if not anti_content:
-                messagebox.showerror("错误", "请输入Anti-Content")
-                return
-            if not mallid:
-                messagebox.showerror("错误", "请输入MallID")
-                return
-            
-            # 设置请求头
-            self.crawler.headers.update({
-                "cookie": cookie,
-                "anti-content": anti_content,
-                "mallid": mallid
-            })
-            
-            # 清空现有数据
-            self.clear_tree()
-            
-            # 获取数据
-            self.violation_data = self.crawler.get_all_data(start_page, max_pages)
-            
-            if not self.violation_data:
-                messagebox.showinfo("提示", "未获取到数据")
-                return
-            
-            # 显示数据
-            self.display_data(self.violation_data)
-            
-            # 启用导出按钮
-            self.export_button.config(state='normal')
-            
-            messagebox.showinfo("成功", f"成功获取 {len(self.violation_data)} 条数据")
-            
-        except ValueError as e:
-            messagebox.showerror("错误", "请输入有效的页码和页数")
-        except Exception as e:
-            logger.error(f"获取数据时出错: {str(e)}")
-            messagebox.showerror("错误", f"获取数据时出错: {str(e)}")
-    
-    def display_data(self, data: list):
-        """在表格中显示数据"""
-        for product in data:
-            # 获取处罚详情
-            punish_details = product.get('punish_detail_list', [])
-            if not punish_details:
-                # 如果没有处罚详情，添加基本信息
-                self.tree.insert('', 'end', values=(
-                    product.get('goods_id', ''),
-                    product.get('goods_name', ''),
-                    product.get('leaf_reason_name', ''),
-                    product.get('violation_desc', ''),
-                    '', '', '', '', '', '',
-                    self.excel_exporter.format_appeal_status(product.get('appeal_status', 0)),
-                    '', ''
-                ))
-                continue
-            
-            # 处理每个处罚详情
-            for detail in punish_details:
-                # 获取违规详情
-                illegal_details = detail.get('illegal_detail', [])
-                illegal_desc = '; '.join([
-                    f"{illegal.get('title', '')}: {illegal.get('value', '')}"
-                    for illegal in illegal_details
-                ])
-                
-                # 格式化时间戳
-                start_time = self.excel_exporter.format_timestamp(detail.get('start_time'))
-                end_time = self.excel_exporter.format_timestamp(detail.get('plan_end_time'))
-                
-                # 插入数据
-                self.tree.insert('', 'end', values=(
-                    product.get('goods_id', ''),
-                    product.get('goods_name', ''),
-                    product.get('leaf_reason_name', ''),
-                    product.get('violation_desc', ''),
-                    detail.get('punish_appeal_type', ''),
-                    detail.get('punish_infect_desc', ''),
-                    illegal_desc,
-                    detail.get('rectification_suggestion', ''),
-                    start_time,
-                    end_time,
-                    self.excel_exporter.format_appeal_status(detail.get('appeal_status', 0)),
-                    detail.get('now_appeal_time', 0),
-                    detail.get('max_appeal_time', 0)
-                ))
+        
+        # 清空进度条
+        self.progress_var.set(0)
     
     def export_to_excel(self):
         """导出数据到Excel"""

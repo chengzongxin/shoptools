@@ -1,10 +1,10 @@
-import requests
 import json
 import time
 import logging
 from datetime import datetime
 from dataclasses import dataclass, asdict
 from typing import List, Dict, Optional, Union, Any
+from ..network.request import NetworkRequest
 
 # 配置日志
 logging.basicConfig(
@@ -277,74 +277,33 @@ class ViolationListCrawler:
         self.base_url = "https://agentseller.temu.com"
         self.api_url = f"{self.base_url}/mms/tmod_punish/agent/merchant_appeal/entrance/list"
         
-        # 请求头
-        self.headers = {
-            "accept": "*/*",
-            "accept-encoding": "gzip, deflate, br, zstd",
-            "accept-language": "zh-CN,zh;q=0.9,en;q=0.8",
-            "anti-content": "",
-            "cache-control": "max-age=0",
-            "content-type": "application/json",
-            "cookie": "",
-            "mallid": "",
-            "origin": "https://agentseller.temu.com",
-            "referer": "https://agentseller.temu.com/mms/tmod_punish/agent/merchant_appeal/entrance/list",
-            "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
-            "sec-ch-ua-mobile": "?1",
-            "sec-ch-ua-platform": '"Android"',
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
-            "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36"
-        }
+        # 初始化网络请求对象
+        self.request = NetworkRequest()
         
-        # 分页参数
-        self.page_size = 100
-        self.current_page = 1
-        
-    def get_page_data(self, page: int) -> Optional[ViolationListResponse]:
+    def get_page_data(self, cookie: str, page: int, page_size: int) -> Optional[ViolationListResponse]:
         """获取指定页码的数据"""
         payload = {
             "page_num": page,
-            "page_size": self.page_size,
+            "page_size": page_size,
             "target_type": "goods"
         }
         
         try:
             logger.info(f"正在获取第 {page} 页数据")
             logger.debug(f"请求URL: {self.api_url}")
-            logger.debug(f"请求头: {json.dumps(self.headers, ensure_ascii=False)}")
             logger.debug(f"请求体: {json.dumps(payload, ensure_ascii=False)}")
             
-            # 验证请求头
-            if not self.headers.get("cookie"):
+            # 验证Cookie
+            if not cookie:
                 logger.error("Cookie未设置")
                 return None
-            if not self.headers.get("anti-content"):
-                logger.error("Anti-Content未设置")
-                return None
-            if not self.headers.get("mallid"):
-                logger.error("MallID未设置")
-                return None
             
-            response = requests.post(
-                self.api_url,
-                headers=self.headers,
-                json=payload,
-                timeout=30  # 添加超时设置
-            )
+            result = self.request.post(self.api_url, data=payload, use_compliance=True)
             
-            logger.debug(f"响应状态码: {response.status_code}")
-            logger.debug(f"响应头: {dict(response.headers)}")
-            logger.debug(f"响应内容: {response.text}")
-            
-            if response.status_code != 200:
-                logger.error(f"请求失败，状态码: {response.status_code}")
-                logger.error(f"响应内容: {response.text}")
+            if not result:
+                logger.error(f"第 {page} 页数据获取失败")
                 return None
                 
-            result = response.json()
-            
             # 检查响应结构
             if not result.get('success'):
                 logger.error(f"API返回错误: {result.get('error_msg')}")
@@ -376,32 +335,36 @@ class ViolationListCrawler:
             # 将响应数据转换为ViolationListResponse对象
             return ViolationListResponse.from_dict(result)
             
-        except requests.exceptions.RequestException as e:
-            logger.error(f"请求异常: {str(e)}")
-            return None
-        except json.JSONDecodeError as e:
-            logger.error(f"JSON解析错误: {str(e)}")
-            logger.error(f"响应内容: {response.text}")
-            return None
         except Exception as e:
             logger.error(f"获取第 {page} 页数据时发生错误: {str(e)}")
             return None
             
-    def get_all_data(self, start_page: int = 1, max_pages: int = 2) -> List[Dict[str, Any]]:
+    def get_all_data(self, cookie: str, start_page: int = 1, end_page: int = 1, page_size: int = 100, 
+                    progress_callback=None, stop_flag_callback=None) -> List[Dict[str, Any]]:
         """获取指定页数的数据
         
         Args:
+            cookie (str): 卖家Cookie
             start_page (int): 起始页码
-            max_pages (int): 最大页数
+            end_page (int): 结束页码
+            page_size (int): 每页数量
+            progress_callback: 进度回调函数
+            stop_flag_callback: 停止标志回调函数
             
         Returns:
             List[Dict[str, Any]]: 违规商品数据列表，每个商品数据为字典格式
         """
         all_data = []
+        total_pages = end_page - start_page + 1
         
-        for page in range(start_page, start_page + max_pages):
+        for page in range(start_page, end_page + 1):
+            # 检查停止标志
+            if stop_flag_callback and stop_flag_callback():
+                logger.info("用户请求停止，任务已中断")
+                break
+                
             try:
-                result = self.get_page_data(page)
+                result = self.get_page_data(cookie, page, page_size)
                 
                 if not result:
                     logger.error(f"第 {page} 页数据获取失败")
@@ -423,6 +386,11 @@ class ViolationListCrawler:
                         continue
                 
                 logger.info(f"已获取第 {page} 页数据，当前共 {len(all_data)} 条记录")
+                
+                # 更新进度
+                if progress_callback:
+                    progress = ((page - start_page + 1) / total_pages) * 100
+                    progress_callback(progress)
                 
                 # 检查是否还有更多数据
                 if len(all_data) >= result.result.total:

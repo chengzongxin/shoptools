@@ -8,7 +8,7 @@ from datetime import datetime
 from .crawler import JitCrawler, JitProduct
 from ..system_config.config import SystemConfig
 
-class JitTab(ttk.Frame):
+class JitOpenTab(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         # 初始化默认值
@@ -53,28 +53,39 @@ class JitTab(ttk.Frame):
         
     def create_input_fields(self, parent):
         """创建输入字段"""
+        # 创建一个子框架来容纳输入字段
+        input_frame = ttk.Frame(parent)
+        input_frame.grid(row=0, column=0, columnspan=2, pady=5, sticky=tk.W)
+        
         # 起始页输入
-        ttk.Label(parent, text="起始页:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(input_frame, text="起始页:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
         self.start_page_var = tk.StringVar(value="1")
-        self.start_page_entry = ttk.Entry(parent, textvariable=self.start_page_var, width=10)
-        self.start_page_entry.grid(row=0, column=1, sticky=tk.W, pady=5)
+        self.start_page_entry = ttk.Entry(input_frame, textvariable=self.start_page_var, width=10)
+        self.start_page_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
         
         # 结束页输入
-        ttk.Label(parent, text="结束页:").grid(row=0, column=2, sticky=tk.W, pady=5)
+        ttk.Label(input_frame, text="结束页:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
         self.end_page_var = tk.StringVar(value="1")
-        self.end_page_entry = ttk.Entry(parent, textvariable=self.end_page_var, width=10)
-        self.end_page_entry.grid(row=0, column=3, sticky=tk.W, pady=5)
+        self.end_page_entry = ttk.Entry(input_frame, textvariable=self.end_page_var, width=10)
+        self.end_page_entry.grid(row=0, column=3, sticky=tk.W, padx=(0, 20))
         
         # 每页数量输入
-        ttk.Label(parent, text="每页数量:").grid(row=0, column=4, sticky=tk.W, pady=5)
+        ttk.Label(input_frame, text="每页数量:").grid(row=0, column=4, sticky=tk.W, padx=(0, 5))
         self.page_size_var = tk.StringVar(value="100")
-        self.page_size_entry = ttk.Entry(parent, textvariable=self.page_size_var, width=10)
-        self.page_size_entry.grid(row=0, column=5, sticky=tk.W, pady=5)
+        self.page_size_entry = ttk.Entry(input_frame, textvariable=self.page_size_var, width=10)
+        self.page_size_entry.grid(row=0, column=5, sticky=tk.W)
         
-        # 配置网格权重
+        # 配置输入框架的网格权重，使其左对齐
+        input_frame.columnconfigure(0, weight=0)
+        input_frame.columnconfigure(1, weight=0)
+        input_frame.columnconfigure(2, weight=0)
+        input_frame.columnconfigure(3, weight=0)
+        input_frame.columnconfigure(4, weight=0)
+        input_frame.columnconfigure(5, weight=0)
+        
+        # 配置父框架的网格权重
+        parent.columnconfigure(0, weight=1)
         parent.columnconfigure(1, weight=1)
-        parent.columnconfigure(3, weight=1)
-        parent.columnconfigure(5, weight=1)
         
     def create_progress_bar(self, parent):
         """创建进度条"""
@@ -168,7 +179,7 @@ class JitTab(ttk.Frame):
                 self.text_widget.after(0, append)
         
         # 创建独立的logger
-        self.logger = logging.getLogger('jit')
+        self.logger = logging.getLogger('jit_open')
         self.logger.setLevel(logging.INFO)
         
         # 移除所有现有的处理器

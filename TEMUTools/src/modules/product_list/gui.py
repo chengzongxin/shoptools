@@ -360,26 +360,77 @@ class ProductListTab(ttk.Frame):
             return
             
         try:
-            # 获取保存路径
-            default_filename = f"库存模板_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            file_path = filedialog.asksaveasfilename(
-                defaultextension=".xlsx",
-                filetypes=[("Excel文件", "*.xlsx")],
-                initialfile=default_filename
-            )
-            
-            if not file_path:  # 用户取消保存
-                return
-                
-            # 准备Excel数据
-            excel_data = []
-            
+            # 收集所有SKU ID
+            all_sku_ids = []
             for product in self.current_data:
-                # 处理SKU信息
                 for sku in product['productSkuSummaries']:
-                    excel_data.append({
-                        'SKU ID': sku['productSkuId']
-                    })
+                    all_sku_ids.append(sku['productSkuId'])
+            
+            if not all_sku_ids:
+                messagebox.showwarning("警告", "没有找到SKU数据")
+                return
+            
+            # 计算需要拆分的文件数量
+            max_records_per_file = 1000
+            total_sku_count = len(all_sku_ids)
+            file_count = (total_sku_count + max_records_per_file - 1) // max_records_per_file
+            
+            if file_count == 1:
+                # 单个文件，使用原来的逻辑
+                default_filename = f"库存模板_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+                file_path = filedialog.asksaveasfilename(
+                    defaultextension=".xlsx",
+                    filetypes=[("Excel文件", "*.xlsx")],
+                    initialfile=default_filename
+                )
+                
+                if not file_path:  # 用户取消保存
+                    return
+                    
+                self.export_inventory_template_to_path(file_path, all_sku_ids)
+                logging.info(f"库存模板已导出到Excel: {file_path}")
+                messagebox.showinfo("成功", "库存模板导出成功！")
+                
+            else:
+                # 多个文件，选择保存目录
+                save_dir = filedialog.askdirectory(title="选择保存目录")
+                if not save_dir:  # 用户取消选择
+                    return
+                
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                
+                # 拆分并导出多个文件
+                for i in range(file_count):
+                    start_idx = i * max_records_per_file
+                    end_idx = min((i + 1) * max_records_per_file, total_sku_count)
+                    current_sku_ids = all_sku_ids[start_idx:end_idx]
+                    
+                    # 生成文件名
+                    if file_count == 1:
+                        filename = f"库存模板_{timestamp}.xlsx"
+                    else:
+                        filename = f"库存模板_{timestamp}-{i+1}.xlsx"
+                    
+                    file_path = os.path.join(save_dir, filename)
+                    self.export_inventory_template_to_path(file_path, current_sku_ids)
+                
+                logging.info(f"库存模板已拆分为 {file_count} 个文件并导出到目录: {save_dir}")
+                messagebox.showinfo("成功", f"库存模板已拆分为 {file_count} 个文件导出成功！\n每个文件最多包含 {max_records_per_file} 条记录。")
+            
+        except Exception as e:
+            error_msg = f"导出库存模板失败: {str(e)}"
+            logging.error(error_msg)
+            messagebox.showerror("错误", error_msg)
+
+    def export_inventory_template_to_path(self, file_path, sku_ids=None):
+        """导出库存模板到指定路径"""
+        try:
+            # 如果没有提供SKU ID列表，则从当前数据中收集
+            if sku_ids is None:
+                sku_ids = []
+                for product in self.current_data:
+                    for sku in product['productSkuSummaries']:
+                        sku_ids.append(sku['productSkuId'])
             
             # 创建工作簿
             wb = Workbook()
@@ -413,9 +464,9 @@ class ProductListTab(ttk.Frame):
             ws.cell(row=2, column=4, value="条件必填指当前的实际总库存，导入成功后将直接覆盖线上已有库存")
             
             # 写入数据
-            for row, data in enumerate(excel_data, 3):
+            for row, sku_id in enumerate(sku_ids, 3):
                 # SKU ID (第1列)
-                cell = ws.cell(row=row, column=1, value=data['SKU ID'])
+                cell = ws.cell(row=row, column=1, value=sku_id)
                 cell.alignment = Alignment(horizontal="left", vertical="center")
                 cell.border = border
                 
@@ -433,13 +484,8 @@ class ProductListTab(ttk.Frame):
             # 保存文件
             wb.save(file_path)
             
-            logging.info(f"库存模板已导出到Excel: {file_path}")
-            messagebox.showinfo("成功", "库存模板导出成功！")
-            
         except Exception as e:
-            error_msg = f"导出库存模板失败: {str(e)}"
-            logging.error(error_msg)
-            messagebox.showerror("错误", error_msg)
+            raise Exception(f"导出库存模板失败: {str(e)}")
 
     def export_all_templates(self):
         """一键导出所有模板"""
@@ -464,12 +510,41 @@ class ProductListTab(ttk.Frame):
             code_path = os.path.join(save_dir, f"商品码模板_{timestamp}.xlsx")
             self.export_product_code_template_to_path(code_path)
             
-            # 导出库存模板
-            inventory_path = os.path.join(save_dir, f"库存模板_{timestamp}.xlsx")
-            self.export_inventory_template_to_path(inventory_path)
+            # 导出库存模板（支持拆分）
+            all_sku_ids = []
+            for product in self.current_data:
+                for sku in product['productSkuSummaries']:
+                    all_sku_ids.append(sku['productSkuId'])
             
-            logging.info(f"所有模板已导出到目录: {save_dir}")
-            messagebox.showinfo("成功", "所有模板导出成功！")
+            if all_sku_ids:
+                # 计算需要拆分的文件数量
+                max_records_per_file = 1000
+                total_sku_count = len(all_sku_ids)
+                file_count = (total_sku_count + max_records_per_file - 1) // max_records_per_file
+                
+                # 拆分并导出多个库存模板文件
+                for i in range(file_count):
+                    start_idx = i * max_records_per_file
+                    end_idx = min((i + 1) * max_records_per_file, total_sku_count)
+                    current_sku_ids = all_sku_ids[start_idx:end_idx]
+                    
+                    # 生成文件名
+                    if file_count == 1:
+                        filename = f"库存模板_{timestamp}.xlsx"
+                    else:
+                        filename = f"库存模板_{timestamp}-{i+1}.xlsx"
+                    
+                    inventory_path = os.path.join(save_dir, filename)
+                    self.export_inventory_template_to_path(inventory_path, current_sku_ids)
+                
+                logging.info(f"所有模板已导出到目录: {save_dir}")
+                if file_count > 1:
+                    messagebox.showinfo("成功", f"所有模板导出成功！\n库存模板已拆分为 {file_count} 个文件，每个文件最多包含 {max_records_per_file} 条记录。")
+                else:
+                    messagebox.showinfo("成功", "所有模板导出成功！")
+            else:
+                logging.info(f"所有模板已导出到目录: {save_dir}")
+                messagebox.showinfo("成功", "所有模板导出成功！")
             
         except Exception as e:
             error_msg = f"导出模板失败: {str(e)}"
@@ -641,72 +716,4 @@ class ProductListTab(ttk.Frame):
             wb.save(file_path)
             
         except Exception as e:
-            raise Exception(f"导出商品码模板失败: {str(e)}")
-
-    def export_inventory_template_to_path(self, file_path):
-        """导出库存模板到指定路径"""
-        try:
-            # 准备Excel数据
-            excel_data = []
-            
-            for product in self.current_data:
-                # 处理SKU信息
-                for sku in product['productSkuSummaries']:
-                    excel_data.append({
-                        'SKU ID': sku['productSkuId']
-                    })
-            
-            # 创建工作簿
-            wb = Workbook()
-            ws = wb.active
-            ws.title = "库存模板"
-            
-            # 设置样式
-            header_font = Font(bold=True, color="FFFFFF")
-            header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            header_alignment = Alignment(horizontal="center", vertical="center")
-            border = Border(
-                left=Side(style='thin'),
-                right=Side(style='thin'),
-                top=Side(style='thin'),
-                bottom=Side(style='thin')
-            )
-            
-            # 写入表头
-            headers = ['SKU ID', '', '', '修改后库存']
-            for col, header in enumerate(headers, 1):
-                cell = ws.cell(row=1, column=col, value=header)
-                cell.font = header_font
-                cell.fill = header_fill
-                cell.alignment = header_alignment
-                cell.border = border
-                # 设置列宽
-                ws.column_dimensions[get_column_letter(col)].width = 20
-            
-            # 写入说明行
-            ws.cell(row=2, column=1, value="必填指Temu的SKU ID")
-            ws.cell(row=2, column=4, value="条件必填指当前的实际总库存，导入成功后将直接覆盖线上已有库存")
-            
-            # 写入数据
-            for row, data in enumerate(excel_data, 3):
-                # SKU ID (第1列)
-                cell = ws.cell(row=row, column=1, value=data['SKU ID'])
-                cell.alignment = Alignment(horizontal="left", vertical="center")
-                cell.border = border
-                
-                # 第2、3列保持为空
-                for col in [2, 3]:
-                    cell = ws.cell(row=row, column=col, value="")
-                    cell.alignment = Alignment(horizontal="left", vertical="center")
-                    cell.border = border
-                
-                # 默认库存值 (第4列)
-                cell = ws.cell(row=row, column=4, value=1000)
-                cell.alignment = Alignment(horizontal="left", vertical="center")
-                cell.border = border
-            
-            # 保存文件
-            wb.save(file_path)
-            
-        except Exception as e:
-            raise Exception(f"导出库存模板失败: {str(e)}") 
+            raise Exception(f"导出商品码模板失败: {str(e)}") 
