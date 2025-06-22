@@ -295,7 +295,7 @@ class TEMUToolsApp:
         
         # 添加各个功能标签页
         self.jit_tab = JitTab(self.notebook)
-        self.notebook.add(self.jit_tab, text="JIT管理")
+        self.notebook.add(self.jit_tab, text="JIT开通")
 
         self.jit_sign_tab = JitSignTab(self.notebook)
         self.notebook.add(self.jit_sign_tab, text="JIT签署")

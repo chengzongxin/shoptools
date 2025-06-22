@@ -17,42 +17,36 @@ class JitSignProduct:
 class JitSignCrawler:
     """JIT签署爬虫类"""
     
-    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None):
+    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         """初始化爬虫
         
         Args:
             cookie: 卖家cookie
             logger: 日志记录器
             progress_callback: 进度回调函数
+            stop_flag_callback: 停止标志回调函数
         """
         self.logger = logger
         self.progress_callback = progress_callback
+        self.stop_flag_callback = stop_flag_callback or (lambda: False)
         self.base_url = "https://seller.kuajingmaihuo.com/bg-visage-mms"
         self.request = NetworkRequest()
-        self._stop_flag = False
         
     def random_delay(self):
         """随机延时"""
         time.sleep(random.uniform(1, 2))
             
-    def stop(self):
-        """停止爬虫"""
-        self._stop_flag = True
+    def get_unsigned_products_page(self) -> Dict:
+        """获取待签署商品列表数据
         
-    def get_page_data(self, page: int, page_size: int) -> Dict:
-        """获取商品列表数据
-        
-        Args:
-            page: 页码
-            page_size: 每页数量
-            
         Returns:
             商品列表数据
         """
         url = f"{self.base_url}/product/skc/pageQuery"
         data = {
-            "page": page,
-            "pageSize": page_size
+            "skcJitStatus": 3,
+            "page": 1,
+            "pageSize": 100
         }
         
         try:
@@ -60,10 +54,10 @@ class JitSignCrawler:
             if result and result.get("success"):
                 return result["result"]
             else:
-                self.logger.error(f"获取商品列表失败: {result.get('errorMsg', '未知错误') if result else '无返回'}")
+                self.logger.error(f"获取待签署商品列表失败: {result.get('errorMsg', '未知错误') if result else '无返回'}")
                 return None
         except Exception as e:
-            self.logger.error(f"获取商品列表异常: {str(e)}")
+            self.logger.error(f"获取待签署商品列表异常: {str(e)}")
             return None
         
     def sign_jit(self, products: List[JitSignProduct]) -> Dict:
@@ -95,13 +89,8 @@ class JitSignCrawler:
             self.logger.error(f"批量签署异常: {str(e)}")
             return None
         
-    def batch_process(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
+    def batch_process(self) -> List[Dict]:
         """批量处理商品
-        
-        Args:
-            start_page: 起始页码
-            end_page: 结束页码
-            page_size: 每页数量
             
         Returns:
             处理结果列表
@@ -109,44 +98,53 @@ class JitSignCrawler:
         results = []
         total_processed = 0
         
-        for page in range(start_page, end_page + 1):
-            if self._stop_flag:
-                break
-                
-            # 获取商品列表
-            page_data = self.get_page_data(page, page_size)
-            if not page_data:
-                continue
-                
-            # 解析商品数据
-            products = [
-                JitSignProduct(
-                    productId=item["productId"],
-                    productSkcId=item["productSkcId"],
-                    productName=item["productName"],
-                    skcStatus=item["skcStatus"],
-                    productJitMode=item["productJitMode"]
-                )
-                for item in page_data["pageItems"]
-            ]
+        if self.stop_flag_callback():
+            return []
+
+        # 获取商品列表
+        self.logger.info("正在获取待签署商品列表...")
+        page_data = self.get_unsigned_products_page()
+        if not page_data or not page_data.get("pageItems"):
+            self.logger.info("未找到待签署的商品。")
+            return []
             
-            # 每20个商品一组进行签署
-            for i in range(0, len(products), 20):
-                if self._stop_flag:
-                    break
-                    
-                batch = products[i:i+20]
-                result = self.sign_jit(batch)
+        # 解析商品数据
+        products = [
+            JitSignProduct(
+                productId=item["productId"],
+                productSkcId=item["productSkcId"],
+                productName=item["productName"],
+                skcStatus=item["skcStatus"],
+                productJitMode=item["productJitMode"]
+            )
+            for item in page_data["pageItems"]
+        ]
+
+        total_to_process = len(products)
+        self.logger.info(f"共发现 {total_to_process} 个待签署的商品。")
+        
+        if self.progress_callback:
+            self.progress_callback(0, total_to_process)
+            
+        # 直接签署所有商品
+        if self.stop_flag_callback():
+            self.logger.info("用户手动停止签署。")
+            return []
+            
+        self.logger.info(f"正在签署 {total_to_process} 个商品...")
+        result = self.sign_jit(products)
+        
+        if result:
+            results.append(result)
+            success_num = result.get("successNum", 0)
+            total_processed = success_num
+            self.logger.info(f"签署完成，成功 {success_num} 个。")
+            
+            # 更新进度
+            if self.progress_callback:
+                self.progress_callback(total_processed, total_to_process)
                 
-                if result:
-                    results.append(result)
-                    total_processed += result["successNum"]
-                    
-                    # 更新进度
-                    if self.progress_callback:
-                        self.progress_callback(total_processed)
-                        
-                # 随机延时
-                self.random_delay()
-                
+        # 随机延时
+        self.random_delay()
+            
         return results 
