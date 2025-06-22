@@ -191,14 +191,15 @@ class JitSignTab(ttk.Frame):
         """更新进度条
         
         Args:
-            current: 当前进度
-            total: 总数
+            current: 当前批次
+            total: 总批次（在循环处理中，这个值会动态变化）
         """
         if total > 0:
+            # 显示批次进度
             percentage = (current / total) * 100
             self.progress_var.set(percentage)
-            self.progress_label.config(text=f"{current}/{total}")
+            self.progress_label.config(text=f"第 {current} 批")
         else:
             self.progress_var.set(0)
-            self.progress_label.config(text="0/0")
+            self.progress_label.config(text="准备中...")
         self.update_idletasks() 
