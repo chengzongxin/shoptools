@@ -4,6 +4,8 @@ from tkinter import messagebox
 from typing import Dict, Optional, Any
 import threading
 import platform
+import subprocess
+import os
 from ..system_config.config import SystemConfig
 from ..logger.logger import Logger
 
@@ -17,15 +19,67 @@ class NetworkRequest:
         # 用于存储根窗口的引用
         self._root_window = None
         self._is_macos = platform.system() == "Darwin"
+        self._is_windows = platform.system() == "Windows"
         
     def _show_config_error_dialog(self, error_msg: str):
-        """显示配置错误弹窗 - 兼容 macOS 和 Windows"""
+        """显示配置错误弹窗 - 跨平台兼容"""
+        try:
+            if self._is_macos:
+                # macOS: 使用系统原生通知
+                self._show_macos_notification(error_msg)
+            elif self._is_windows:
+                # Windows: 使用 tkinter 弹窗
+                self._show_windows_dialog(error_msg)
+            else:
+                # 其他系统: 记录日志
+                self.logger.error(f"配置错误: {error_msg}")
+                self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
+                
+        except Exception as e:
+            # 如果弹窗失败，至少记录日志
+            self.logger.error(f"显示配置错误弹窗失败: {str(e)}")
+            self.logger.error(f"原始错误信息: {error_msg}")
+            self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
+            
+    def _show_macos_notification(self, error_msg: str):
+        """在 macOS 上显示系统原生通知"""
+        try:
+            # 构建通知消息
+            title = "配置错误"
+            message = f"{error_msg}\n\n请前往'系统配置'页面检查Cookie和MallID设置"
+            
+            # 使用 osascript 调用系统通知
+            script = f'''
+            display notification "{message}" with title "{title}" sound name "Glass"
+            '''
+            
+            # 执行 AppleScript
+            result = subprocess.run(['osascript', '-e', script], 
+                                  capture_output=True, text=True, timeout=5)
+            
+            if result.returncode != 0:
+                self.logger.error(f"macOS 通知失败: {result.stderr}")
+                # 如果通知失败，记录日志
+                self.logger.error(f"配置错误: {error_msg}")
+                self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
+            else:
+                self.logger.info("macOS 通知已发送")
+                
+        except subprocess.TimeoutExpired:
+            self.logger.error("macOS 通知超时")
+            self.logger.error(f"配置错误: {error_msg}")
+        except Exception as e:
+            self.logger.error(f"macOS 通知异常: {str(e)}")
+            self.logger.error(f"配置错误: {error_msg}")
+            
+    def _show_windows_dialog(self, error_msg: str):
+        """在 Windows 上显示 tkinter 弹窗"""
         try:
             # 检查是否在主线程中
             is_main_thread = threading.current_thread() is threading.main_thread()
             
-            if self._is_macos and not is_main_thread:
-                # macOS 非主线程情况：记录日志，不显示弹窗
+            if not is_main_thread:
+                # 非主线程情况：记录日志，不显示弹窗
                 self.logger.error(f"配置错误（非主线程，无法显示弹窗）: {error_msg}")
                 self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
                 return
@@ -47,11 +101,8 @@ class NetworkRequest:
             messagebox.showerror("配置错误", f"{error_msg}\n\n请前往'系统配置'页面检查Cookie和MallID设置")
             
         except Exception as e:
-            # 如果弹窗失败，至少记录日志
-            self.logger.error(f"显示配置错误弹窗失败: {str(e)}")
-            self.logger.error(f"原始错误信息: {error_msg}")
-            self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
-            
+            self.logger.error(f"Windows 弹窗失败: {str(e)}")
+            self.logger.error(f"配置错误: {error_msg}")
             # 清理根窗口引用
             if self._root_window:
                 try:
