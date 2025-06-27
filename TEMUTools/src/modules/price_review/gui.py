@@ -182,31 +182,12 @@ class PriceReviewTab(ttk.Frame):
         input_frame = ttk.Frame(parent)
         input_frame.grid(row=0, column=0, columnspan=2, pady=5, sticky=tk.W)
         
-        # 起始页输入
-        ttk.Label(input_frame, text="起始页:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
-        self.start_page_var = tk.StringVar(value="1")
-        self.start_page_entry = ttk.Entry(input_frame, textvariable=self.start_page_var, width=10)
-        self.start_page_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
-        
-        # 结束页输入
-        ttk.Label(input_frame, text="结束页:").grid(row=0, column=2, sticky=tk.W, padx=(0, 5))
-        self.end_page_var = tk.StringVar(value="1")
-        self.end_page_entry = ttk.Entry(input_frame, textvariable=self.end_page_var, width=10)
-        self.end_page_entry.grid(row=0, column=3, sticky=tk.W, padx=(0, 20))
-        
-        # 每页数量输入
-        ttk.Label(input_frame, text="每页数量:").grid(row=0, column=4, sticky=tk.W, padx=(0, 5))
-        self.page_size_var = tk.StringVar(value="100")
-        self.page_size_entry = ttk.Entry(input_frame, textvariable=self.page_size_var, width=10)
-        self.page_size_entry.grid(row=0, column=5, sticky=tk.W)
-        
-        # 配置输入框架的网格权重，使其左对齐
-        input_frame.columnconfigure(0, weight=0)
-        input_frame.columnconfigure(1, weight=0)
-        input_frame.columnconfigure(2, weight=0)
-        input_frame.columnconfigure(3, weight=0)
-        input_frame.columnconfigure(4, weight=0)
-        input_frame.columnconfigure(5, weight=0)
+        # 线程数设置
+        ttk.Label(input_frame, text="并发线程数:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
+        self.thread_var = tk.StringVar(value="5")
+        self.thread_entry = ttk.Entry(input_frame, textvariable=self.thread_var, width=10)
+        self.thread_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
+        ttk.Label(input_frame, text="(建议1-10)").grid(row=0, column=2, sticky=tk.W)
         
         # 配置父框架的网格权重
         parent.columnconfigure(0, weight=1)
@@ -221,6 +202,8 @@ class PriceReviewTab(ttk.Frame):
             maximum=100
         )
         self.progress_bar.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        self.progress_label = ttk.Label(parent, text="0/0")
+        self.progress_label.grid(row=1, column=2, sticky=tk.W, padx=5)
         
     def create_log_area(self, parent):
         """创建日志显示区域"""
@@ -243,17 +226,17 @@ class PriceReviewTab(ttk.Frame):
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
         
         # 开始爬取按钮
-        self.start_button = ttk.Button(
-            button_frame,
-            text="获取待核价商品",
-            command=self.start_crawling
-        )
-        self.start_button.grid(row=0, column=0, padx=5)
+        # self.start_button = ttk.Button(
+        #     button_frame,
+        #     text="获取待核价商品",
+        #     command=self.start_crawling
+        # )
+        # self.start_button.grid(row=0, column=0, padx=5)
         
         # 批量处理按钮
         self.batch_button = ttk.Button(
             button_frame,
-            text="批量核价",
+            text="开始批量核价",
             command=self.start_batch_processing
         )
         self.batch_button.grid(row=0, column=1, padx=5)
@@ -357,14 +340,6 @@ class PriceReviewTab(ttk.Frame):
     def start_crawling(self):
         """开始爬取数据"""
         try:
-            start_page = int(self.start_page_var.get())
-            end_page = int(self.end_page_var.get())
-            page_size = int(self.page_size_var.get())
-            
-            if start_page <= 0 or end_page <= 0 or page_size <= 0:
-                messagebox.showerror("错误", "页数和每页数量必须大于0")
-                return
-                
             # 获取系统配置
             cookie = self.config.get_seller_cookie()
             
@@ -389,20 +364,18 @@ class PriceReviewTab(ttk.Frame):
             # 在新线程中运行爬虫
             self.crawler_thread = threading.Thread(
                 target=self.run_crawler,
-                args=(start_page, end_page, page_size, cookie)
+                args=(cookie,)
             )
             self.crawler_thread.start()
             
-        except ValueError:
-            messagebox.showerror("错误", "请输入有效的数字")
         except Exception as e:
             self.logger.error(f"启动爬虫失败: {str(e)}")
             messagebox.showerror("错误", f"启动爬虫失败: {str(e)}")
             
-    def run_crawler(self, start_page, end_page, page_size, cookie):
+    def run_crawler(self, cookie):
         """运行爬虫"""
         try:
-            self.current_data = self.crawler.crawl(start_page, end_page, page_size)
+            self.current_data = self.crawler.crawl(cookie)
             
             # 更新商品列表
             self.update_product_list()
@@ -502,75 +475,80 @@ class PriceReviewTab(ttk.Frame):
     def start_batch_processing(self):
         """开始批量处理核价"""
         try:
-            start_page = int(self.start_page_var.get())
-            end_page = int(self.end_page_var.get())
-            page_size = int(self.page_size_var.get())
-            
-            if start_page <= 0 or end_page <= 0 or page_size <= 0:
-                messagebox.showerror("错误", "页数和每页数量必须大于0")
+            # 获取线程数
+            try:
+                thread_num = int(self.thread_var.get())
+                if thread_num <= 0 or thread_num > 20:
+                    messagebox.showerror("错误", "线程数必须在1-20之间")
+                    return
+            except ValueError:
+                messagebox.showerror("错误", "线程数必须是数字")
                 return
-                
+
             # 获取系统配置
             cookie = self.config.get_seller_cookie()
-            
             if not cookie:
                 messagebox.showerror("错误", "请先在系统配置中设置Cookie")
                 return
-                
+
             # 显示确认对话框
-            if not messagebox.askyesno("确认", f"确定要批量处理 {start_page} 到 {end_page} 页的待核价商品吗？"):
+            if not messagebox.askyesno("确认", f"确定要批量处理所有待核价商品吗？"):
                 return
-                
+
             # 禁用按钮
-            self.start_button.config(state='disabled')
             self.batch_button.config(state='disabled')
             self.stop_button.config(state='normal')
-            
+
             # 清空进度条
             self.progress_var.set(0)
-            
+            self.progress_label.config(text="0/0")
+
+            # 设置停止标志
+            self._stop_flag = False
+
             # 创建爬虫实例
             self.crawler = PriceReviewCrawler(
                 cookie=cookie,
                 logger=self.logger,
-                progress_callback=self.update_progress
+                progress_callback=self.update_progress_mt,
+                stop_flag_callback=lambda: self._stop_flag
             )
-            
+
             # 在新线程中运行批量处理
             self.crawler_thread = threading.Thread(
-                target=self.run_batch_processing,
-                args=(start_page, end_page, page_size)
+                target=self.run_batch_processing_mt,
+                args=(thread_num,)
             )
             self.crawler_thread.start()
-            
-        except ValueError:
-            messagebox.showerror("错误", "请输入有效的数字")
+
         except Exception as e:
             self.logger.error(f"启动批量处理失败: {str(e)}")
             messagebox.showerror("错误", f"启动批量处理失败: {str(e)}")
-            
-    def run_batch_processing(self, start_page, end_page, page_size):
-        """运行批量处理"""
+
+    def run_batch_processing_mt(self, thread_num):
+        """运行多线程批量处理"""
         try:
-            results = self.crawler.batch_process_price_reviews(start_page, end_page, page_size)
-            
+            results = self.crawler.batch_process_price_reviews_mt(thread_num)
             # 统计处理结果
             success_count = sum(1 for r in results if r['success'])
             fail_count = len(results) - success_count
-            
-            # 更新商品列表
-            self.update_product_list()
-            
             # 显示处理结果
             message = f"批量处理完成\n成功: {success_count} 个\n失败: {fail_count} 个"
             self.logger.info(message)
             messagebox.showinfo("完成", message)
-            
         except Exception as e:
             self.logger.error(f"批量处理失败: {str(e)}")
             messagebox.showerror("错误", f"批量处理失败: {str(e)}")
         finally:
-            # 恢复按钮状态
-            self.start_button.config(state='normal')
             self.batch_button.config(state='normal')
-            self.stop_button.config(state='disabled') 
+            self.stop_button.config(state='disabled')
+
+    def update_progress_mt(self, current, total):
+        if total > 0:
+            percentage = (current / total) * 100
+            self.progress_var.set(percentage)
+            self.progress_label.config(text=f"{current}/{total}")
+        else:
+            self.progress_var.set(0)
+            self.progress_label.config(text="0/0")
+        self.update_idletasks() 

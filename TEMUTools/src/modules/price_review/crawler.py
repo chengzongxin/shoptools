@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Any, Tuple
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from ..network.request import NetworkRequest
 from .config import get_price_threshold
 
@@ -164,10 +165,11 @@ class PriceReviewSuggestion:
     canAppealTime: Optional[int] = None
 
 class PriceReviewCrawler:
-    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None):
+    def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
         self.base_url = "https://seller.kuajingmaihuo.com"
         self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
+        self.count_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/querySupplierQuickFilterCount"
         self.price_review_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/reject-remark"
         self.accept_price_url = f"{self.base_url}/marvel-mms/cn/api/kiana/magneto/price/bargain-no-bom"
         self.reject_price_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/review"
@@ -179,20 +181,17 @@ class PriceReviewCrawler:
         self.cookie = cookie
         self.logger = logger
         self.progress_callback = progress_callback
+        self.stop_flag_callback = stop_flag_callback or (lambda: False)
         
         # 分页参数
-        self.page_size = 10
-        self.current_page = 1
-        
-        # 停止标志
-        self._stop_flag = False
+        self.page_size = 100  # 增加每页数量，提高效率
         
         # 延时配置（单位：秒）
         self.delay_config = {
-            'page_request': (1, 2),      # 翻页请求延时范围
-            'review_info': (1, 2),       # 获取核价信息延时范围
-            'action': (1, 2),            # 同意/拒绝操作延时范围
-            'between_items': (1, 2)      # 处理商品之间的延时范围
+            'page_request': (0.5, 1),      # 翻页请求延时范围
+            'review_info': (0.5, 1),       # 获取核价信息延时范围
+            'action': (0.5, 1),            # 同意/拒绝操作延时范围
+            'between_items': (0.3, 0.8)    # 处理商品之间的延时范围
         }
         
     def random_delay(self, delay_type: str):
@@ -210,6 +209,37 @@ class PriceReviewCrawler:
     def stop(self):
         """停止爬取"""
         self._stop_flag = True
+        
+    def get_pending_review_count(self) -> int:
+        """获取待核价商品数量
+        
+        Returns:
+            int: 待核价商品数量，获取失败返回0
+        """
+        try:
+            self.logger.info("正在获取待核价商品数量...")
+            
+            result = self.request.post(self.count_url, data={})
+            
+            if not result or not result.get('success'):
+                self.logger.error("获取待核价商品数量失败")
+                return 0
+                
+            count_list = result.get('result', {}).get('countList', [])
+            
+            # 查找type=1的待核价数量
+            for count_item in count_list:
+                if count_item.get('type') == 1:
+                    count = count_item.get('count', 0)
+                    self.logger.info(f"待核价商品数量: {count}")
+                    return count
+                    
+            self.logger.warning("未找到待核价商品数量")
+            return 0
+            
+        except Exception as e:
+            self.logger.error(f"获取待核价商品数量时发生错误: {str(e)}")
+            return 0
         
     def get_page_data(self, page: int, page_size: int) -> Dict:
         """获取指定页码的数据"""
@@ -239,26 +269,30 @@ class PriceReviewCrawler:
             self.logger.error(f"获取第 {page} 页数据时发生错误: {str(e)}")
             return None
             
-    def crawl(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
-        """爬取待核价商品列表数据
+    def crawl_all_pending_reviews(self) -> List[Dict]:
+        """获取所有待核价商品
         
-        Args:
-            start_page: 起始页码
-            end_page: 结束页码
-            page_size: 每页数量
-            
         Returns:
-            List[Dict]: 商品数据列表
+            List[Dict]: 所有待核价商品数据
         """
-        all_data = []
-        total_pages = end_page - start_page + 1
+        # 获取待核价商品总数
+        total_count = self.get_pending_review_count()
+        if total_count == 0:
+            self.logger.info("没有待核价的商品")
+            return []
+            
+        # 计算总页数
+        total_pages = (total_count + self.page_size - 1) // self.page_size
+        self.logger.info(f"总共需要获取 {total_pages} 页数据")
         
-        for page in range(start_page, end_page + 1):
-            if self._stop_flag:
-                self.logger.info("爬取已停止")
+        all_data = []
+        
+        for page in range(1, total_pages + 1):
+            if self.stop_flag_callback():
+                self.logger.info("用户手动停止获取商品列表")
                 break
                 
-            result = self.get_page_data(page, page_size)
+            result = self.get_page_data(page, self.page_size)
             
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
@@ -275,12 +309,9 @@ class PriceReviewCrawler:
             
             # 更新进度
             if self.progress_callback:
-                progress = ((page - start_page + 1) / total_pages) * 100
-                self.progress_callback(progress)
+                self.progress_callback(len(all_data), total_count)
             
-            # 添加翻页请求延时
-            self.random_delay('page_request')
-            
+        self.logger.info(f"商品列表获取完成，共 {len(all_data)} 条记录")
         return all_data
 
     def get_price_review_suggestion(self, order_id: int) -> Optional[PriceReviewSuggestion]:
@@ -293,7 +324,7 @@ class PriceReviewCrawler:
             PriceReviewSuggestion: 核价建议信息，如果获取失败则返回None
         """
         try:
-            self.logger.info(f"正在获取订单 {order_id} 的核价建议")
+            self.logger.debug(f"正在获取订单 {order_id} 的核价建议")
             
             payload = {
                 "orderId": order_id
@@ -337,7 +368,7 @@ class PriceReviewCrawler:
             bool: 是否成功
         """
         try:
-            self.logger.info(f"正在同意核价建议，订单ID: {price_order_id}, SKU ID: {product_sku_id}, 价格: {price}")
+            self.logger.debug(f"正在同意核价建议，订单ID: {price_order_id}, SKU ID: {product_sku_id}, 价格: {price}")
             
             payload = {
                 "supplierResult": 1,
@@ -360,7 +391,7 @@ class PriceReviewCrawler:
                 self.logger.error(f"同意核价建议失败: {result.get('errorMsg', '未知错误')}")
                 return False
                 
-            self.logger.info("同意核价建议成功")
+            self.logger.debug("同意核价建议成功")
             return True
             
         except Exception as e:
@@ -377,7 +408,7 @@ class PriceReviewCrawler:
             bool: 是否成功
         """
         try:
-            self.logger.info(f"正在拒绝核价建议，订单ID: {price_order_id}")
+            self.logger.debug(f"正在拒绝核价建议，订单ID: {price_order_id}")
             
             payload = {
                 "priceOrderId": price_order_id
@@ -392,15 +423,15 @@ class PriceReviewCrawler:
                 self.logger.error(f"拒绝核价建议失败: {result.get('errorMsg', '未知错误')}")
                 return False
                 
-            self.logger.info("拒绝核价建议成功")
+            self.logger.debug("拒绝核价建议成功")
             return True
             
         except Exception as e:
             self.logger.error(f"拒绝核价建议时发生错误: {str(e)}")
             return False 
 
-    def process_price_review(self, product_data: Dict) -> Tuple[bool, str]:
-        """处理单个商品的核价
+    def process_single_price_review(self, product_data: Dict) -> Tuple[bool, str]:
+        """处理单个商品的核价（用于多线程）
         
         Args:
             product_data: 商品数据
@@ -468,26 +499,132 @@ class PriceReviewCrawler:
             self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {error_message}")
             return False, error_message
             
-    def batch_process_price_reviews(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
-        """批量处理核价
+    def batch_process_price_reviews_mt(self, max_workers: int = 5) -> List[Dict]:
+        """多线程批量处理核价
         
         Args:
-            start_page: 起始页码
-            end_page: 结束页码
-            page_size: 每页数量
+            max_workers: 最大线程数
             
         Returns:
-            List[Dict]: 处理结果列表，每个结果包含商品ID、处理状态和说明
+            List[Dict]: 处理结果列表
         """
         results = []
         
         try:
-            # 获取待核价商品列表
+            # 获取所有待核价商品
+            self.logger.info("开始获取所有待核价商品...")
+            products = self.crawl_all_pending_reviews()
+            
+            if not products:
+                self.logger.info("没有待核价的商品")
+                return results
+                
+            total_products = len(products)
+            self.logger.info(f"开始批量处理 {total_products} 个商品的核价")
+            
+            success_count = 0
+            failed_count = 0
+            
+            # 使用线程池并发处理
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # 提交所有任务
+                future_to_product = {
+                    executor.submit(self.process_single_price_review, product): product 
+                    for product in products
+                }
+                
+                # 处理完成的任务
+                for idx, future in enumerate(as_completed(future_to_product), 1):
+                    product = future_to_product[future]
+                    
+                    # 检查是否被用户停止
+                    if self.stop_flag_callback():
+                        self.logger.info("用户手动停止批量处理核价")
+                        break
+                    
+                    try:
+                        success, message = future.result()
+                        
+                        results.append({
+                            'productId': product.get('productId'),
+                            'success': success,
+                            'message': message
+                        })
+                        
+                        if success:
+                            success_count += 1
+                        else:
+                            failed_count += 1
+                            
+                    except Exception as e:
+                        self.logger.error(f"处理商品 {product.get('productId')} 时发生异常: {str(e)}")
+                        results.append({
+                            'productId': product.get('productId'),
+                            'success': False,
+                            'message': f"处理异常: {str(e)}"
+                        })
+                        failed_count += 1
+                    
+                    # 更新进度
+                    if self.progress_callback:
+                        self.progress_callback(idx, total_products)
+                    
+                    # 添加商品之间的延时
+                    self.random_delay('between_items')
+            
+            self.logger.info(f"批量处理核价完成！成功: {success_count}, 失败: {failed_count}, 总计: {total_products}")
+            
+        except Exception as e:
+            self.logger.error(f"批量处理核价时发生错误: {str(e)}")
+            
+        return results
+
+    # 保留原有方法以兼容旧版本
+    def crawl(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
+        """爬取待核价商品列表数据（保留兼容性）"""
+        all_data = []
+        total_pages = end_page - start_page + 1
+        
+        for page in range(start_page, end_page + 1):
+            if self.stop_flag_callback():
+                self.logger.info("爬取已停止")
+                break
+                
+            result = self.get_page_data(page, page_size)
+            
+            if not result:
+                self.logger.error(f"第 {page} 页数据获取失败")
+                break
+                
+            items = result.get('result', {}).get('dataList', [])
+            if not items:
+                self.logger.info("没有更多数据")
+                break
+                
+            all_data.extend(items)
+            self.logger.info(f"已获取第 {page} 页数据，当前共 {len(all_data)} 条记录")
+            
+            if self.progress_callback:
+                progress = ((page - start_page + 1) / total_pages) * 100
+                self.progress_callback(progress)
+            
+            self.random_delay('page_request')
+            
+        return all_data
+
+    def process_price_review(self, product_data: Dict) -> Tuple[bool, str]:
+        """处理单个商品的核价（保留兼容性）"""
+        return self.process_single_price_review(product_data)
+
+    def batch_process_price_reviews(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
+        """批量处理核价（保留兼容性）"""
+        results = []
+        
+        try:
             products = self.crawl(start_page, end_page, page_size)
             
-            # 处理每个商品
             for product in products:
-                if self._stop_flag:
+                if self.stop_flag_callback():
                     self.logger.info("批量处理已停止")
                     break
                     
@@ -502,7 +639,6 @@ class PriceReviewCrawler:
                     'message': message
                 })
                 
-                # 添加商品之间的延时
                 self.random_delay('between_items')
                 
             return results
