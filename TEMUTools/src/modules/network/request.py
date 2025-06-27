@@ -75,15 +75,6 @@ class NetworkRequest:
     def _show_windows_dialog(self, error_msg: str):
         """在 Windows 上显示 tkinter 弹窗"""
         try:
-            # 检查是否在主线程中
-            is_main_thread = threading.current_thread() is threading.main_thread()
-            
-            if not is_main_thread:
-                # 非主线程情况：记录日志，不显示弹窗
-                self.logger.error(f"配置错误（非主线程，无法显示弹窗）: {error_msg}")
-                self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
-                return
-            
             # 创建隐藏的根窗口来显示弹窗
             if self._root_window is None:
                 self._root_window = tk.Tk()
