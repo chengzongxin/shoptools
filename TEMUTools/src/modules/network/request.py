@@ -1,4 +1,6 @@
 import requests
+import tkinter as tk
+from tkinter import messagebox
 from typing import Dict, Optional, Any
 from ..system_config.config import SystemConfig
 from ..logger.logger import Logger
@@ -10,6 +12,23 @@ class NetworkRequest:
         self.config = SystemConfig()
         self.logger = Logger()
         self.session = requests.Session()
+        
+    def _show_config_error_dialog(self, error_msg: str):
+        """显示配置错误弹窗"""
+        try:
+            # 创建隐藏的根窗口来显示弹窗
+            root = tk.Tk()
+            root.withdraw()  # 隐藏主窗口
+            root.attributes('-topmost', True)  # 置顶显示
+            
+            # 显示错误弹窗
+            messagebox.showerror("配置错误", f"{error_msg}\n\n请前往'系统配置'页面检查Cookie和MallID设置")
+            
+            # 销毁根窗口
+            root.destroy()
+        except Exception as e:
+            # 如果弹窗失败，至少记录日志
+            self.logger.error(f"显示配置错误弹窗失败: {str(e)}")
         
     def _get_headers(self, use_compliance: bool = False) -> Dict[str, str]:
         """获取请求头"""
@@ -43,6 +62,21 @@ class NetworkRequest:
             response.raise_for_status()
             self.logger.info(f"GET请求成功")
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                error_msg = f"GET请求失败: 403 Forbidden - 访问被拒绝\n"
+                error_msg += f"可能原因：\n"
+                error_msg += f"1. Cookie已过期或无效\n"
+                error_msg += f"2. MallID配置错误\n"
+                error_msg += f"3. 权限不足\n"
+                error_msg += f"请检查系统配置中的Cookie和MallID设置"
+                self.logger.error(error_msg)
+                # 直接显示弹窗
+                self._show_config_error_dialog(error_msg)
+                return None
+            else:
+                self.logger.error(f"GET请求失败: HTTP {e.response.status_code} - {str(e)}")
+                return None
         except requests.exceptions.RequestException as e:
             self.logger.error(f"GET请求失败: {str(e)}")
             return None
@@ -55,6 +89,21 @@ class NetworkRequest:
             response.raise_for_status()
             self.logger.info(f"POST请求成功")
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                error_msg = f"POST请求失败: 403 Forbidden - 访问被拒绝\n"
+                error_msg += f"可能原因：\n"
+                error_msg += f"1. Cookie已过期或无效\n"
+                error_msg += f"2. MallID配置错误\n"
+                error_msg += f"3. 权限不足\n"
+                error_msg += f"请检查系统配置中的Cookie和MallID设置"
+                self.logger.error(error_msg)
+                # 直接显示弹窗
+                self._show_config_error_dialog(error_msg)
+                return None
+            else:
+                self.logger.error(f"POST请求失败: HTTP {e.response.status_code} - {str(e)}")
+                return None
         except requests.exceptions.RequestException as e:
             self.logger.error(f"POST请求失败: {str(e)}")
             return None
@@ -67,6 +116,21 @@ class NetworkRequest:
             response.raise_for_status()
             self.logger.info(f"PUT请求成功")
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                error_msg = f"PUT请求失败: 403 Forbidden - 访问被拒绝\n"
+                error_msg += f"可能原因：\n"
+                error_msg += f"1. Cookie已过期或无效\n"
+                error_msg += f"2. MallID配置错误\n"
+                error_msg += f"3. 权限不足\n"
+                error_msg += f"请检查系统配置中的Cookie和MallID设置"
+                self.logger.error(error_msg)
+                # 直接显示弹窗
+                self._show_config_error_dialog(error_msg)
+                return None
+            else:
+                self.logger.error(f"PUT请求失败: HTTP {e.response.status_code} - {str(e)}")
+                return None
         except requests.exceptions.RequestException as e:
             self.logger.error(f"PUT请求失败: {str(e)}")
             return None
@@ -79,6 +143,21 @@ class NetworkRequest:
             response.raise_for_status()
             self.logger.info(f"DELETE请求成功")
             return response.json()
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                error_msg = f"DELETE请求失败: 403 Forbidden - 访问被拒绝\n"
+                error_msg += f"可能原因：\n"
+                error_msg += f"1. Cookie已过期或无效\n"
+                error_msg += f"2. MallID配置错误\n"
+                error_msg += f"3. 权限不足\n"
+                error_msg += f"请检查系统配置中的Cookie和MallID设置"
+                self.logger.error(error_msg)
+                # 直接显示弹窗
+                self._show_config_error_dialog(error_msg)
+                return None
+            else:
+                self.logger.error(f"DELETE请求失败: HTTP {e.response.status_code} - {str(e)}")
+                return None
         except requests.exceptions.RequestException as e:
             self.logger.error(f"DELETE请求失败: {str(e)}")
             return None
