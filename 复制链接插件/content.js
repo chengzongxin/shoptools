@@ -1,7 +1,11 @@
 /**
- * 图片链接复制工具 v1.4.0
+ * 图片链接复制工具 v1.4.1
  * 
  * 更新日志：
+ * v1.4.1 (2025-07-06)
+ * - 添加图片链接过滤功能
+ * - 图片自动滚动到最底部
+ * 
  * v1.4.0 (2025-05-22)
  * - 添加沉浸式按钮模式
  * 
@@ -28,7 +32,7 @@
 
 // 创建插件的命名空间
 window.ImageCopyPlugin = window.ImageCopyPlugin || {
-    version: '1.4.0',
+    version: '1.4.1',
     enabled: true, // 添加全局开关状态
     initialized: false,
     autoShowButton: false,
@@ -635,6 +639,20 @@ function showNotepadMessage(message, type = 'success') {
 // 修改 addToNotepad 函数，使用新的弹窗方法
 async function addToNotepad(link) {
     try {
+        // 检查链接后缀，过滤掉jpg格式的图片链接
+        const url = new URL(link);
+        const pathname = url.pathname.toLowerCase();
+        const isFilteredImage = pathname.endsWith('.jpg') || 
+                               pathname.endsWith('.jpeg') || 
+                               pathname.endsWith('.png') || 
+                               pathname.endsWith('.gif');
+        
+        if (isFilteredImage) {
+            log(`跳过图片链接: ${link}`);
+            showNotepadMessage('图片链接已跳过！', 'warn');
+            return; // 直接返回，不添加到记事本
+        }
+
         if (!window.ImageCopyPlugin.notepad) {
             window.ImageCopyPlugin.notepad = createNotepad();
         }
@@ -1240,7 +1258,12 @@ function updateNotepadContent(links) {
             content.appendChild(linkContainer);
         });
 
-        log(`记事本已更新，当前共有 ${links.length} 个链接`);
+        // 自动滚动到底部，显示最新添加的链接
+        requestAnimationFrame(() => {
+            content.scrollTop = content.scrollHeight;
+        });
+
+        log(`记事本已更新，当前共有 ${links.length} 个链接，已自动滚动到底部`);
     } catch (error) {
         log('更新记事本内容失败: ' + error.message, 'error');
     }
