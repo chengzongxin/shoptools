@@ -189,6 +189,25 @@ class PriceReviewTab(ttk.Frame):
         self.thread_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
         ttk.Label(input_frame, text="(建议1-10)").grid(row=0, column=2, sticky=tk.W)
         
+        # 价格低于底线时的处理方式
+        ttk.Label(input_frame, text="价格低于底线时:").grid(row=1, column=0, sticky=tk.W, padx=(0, 5), pady=(10, 0))
+        self.rebargain_var = tk.BooleanVar(value=True)  # 默认使用重新调价
+        self.rebargain_radio = ttk.Radiobutton(
+            input_frame, 
+            text="重新调价（当前价格-1元）", 
+            variable=self.rebargain_var, 
+            value=True
+        )
+        self.rebargain_radio.grid(row=1, column=1, sticky=tk.W, pady=(10, 0))
+        
+        self.reject_radio = ttk.Radiobutton(
+            input_frame, 
+            text="直接拒绝", 
+            variable=self.rebargain_var, 
+            value=False
+        )
+        self.reject_radio.grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pady=(10, 0))
+        
         # 配置父框架的网格权重
         parent.columnconfigure(0, weight=1)
         parent.columnconfigure(1, weight=1)
@@ -528,7 +547,10 @@ class PriceReviewTab(ttk.Frame):
     def run_batch_processing_mt(self, thread_num):
         """运行多线程批量处理"""
         try:
-            results = self.crawler.batch_process_price_reviews_mt(thread_num)
+            # 获取重新调价设置
+            use_rebargain = self.rebargain_var.get()
+            
+            results = self.crawler.batch_process_price_reviews_mt(thread_num, use_rebargain)
             # 统计处理结果
             success_count = sum(1 for r in results if r['success'])
             fail_count = len(results) - success_count

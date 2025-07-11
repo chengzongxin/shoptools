@@ -4,6 +4,7 @@ import random
 from typing import List, Dict
 from dataclasses import dataclass
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
 from ..network.request import NetworkRequest
 
 @dataclass
@@ -13,6 +14,7 @@ class StockProduct:
     productSkcId: int
     productName: str
     productSkuSummaries: list  # 包含skuId等
+    createdAt: int  # 创建时间戳（毫秒）
 
 class StockBatchSetter:
     """批量设置库存爬虫类"""
@@ -85,7 +87,8 @@ class StockBatchSetter:
                         productId=item["productId"],
                         productSkcId=item["productSkcId"],
                         productName=item["productName"],
-                        productSkuSummaries=item["productSkuSummaries"]
+                        productSkuSummaries=item["productSkuSummaries"],
+                        createdAt=item.get("createdAt", 0)  # 获取创建时间戳
                     ))
                 
                 self.logger.info(f"第 {page} 页获取到 {len(page_items)} 个商品")
@@ -131,18 +134,18 @@ class StockBatchSetter:
             }
             
             result = self.request.post(self.update_url, data=data)
-            return result
+            return result or {"success": False, "errorMsg": "无返回结果"}
             
         except Exception as e:
             self.logger.error(f"设置商品 {product.productName} 库存异常: {str(e)}")
             return {"success": False, "errorMsg": str(e)}
         
-    def batch_set_stock(self, stock_num: int, max_workers: int = 5) -> Dict:
+    def batch_set_stock(self, max_workers: int = 5, days: int = 5) -> Dict:
         """批量设置库存
         
         Args:
-            stock_num: 要设置的库存数量
             max_workers: 最大线程数
+            days: 只处理N天内创建的商品
             
         Returns:
             批量处理结果统计
@@ -151,10 +154,41 @@ class StockBatchSetter:
         products = self.get_all_products()
         if not products:
             self.logger.warning("没有找到需要设置库存的商品")
-            return {"success": 0, "failed": 0, "total": 0}
+            return {"success": 0, "failed": 0, "total": 0, "skipped": 0}
             
-        total = len(products)
-        self.logger.info(f"开始批量设置库存，共 {total} 个商品，每个商品设置 {stock_num} 库存")
+        # 按创建时间过滤商品
+        now = datetime.now()
+        filtered_products = []
+        skipped_count = 0
+        
+        for product in products:
+            try:
+                # createdAt 是毫秒时间戳，需要转换为秒
+                if product.createdAt > 0:
+                    created_time = datetime.fromtimestamp(product.createdAt / 1000)
+                    days_diff = (now - created_time).days
+                    
+                    if days_diff <= days:
+                        filtered_products.append(product)
+                    else:
+                        self.logger.info(f"跳过商品 {product.productName} (ID: {product.productId})，创建时间超过{days}天 ({days_diff}天前)")
+                        skipped_count += 1
+                else:
+                    # 如果没有创建时间，默认跳过
+                    self.logger.warning(f"商品 {product.productName} (ID: {product.productId}) 缺少创建时间，跳过")
+                    skipped_count += 1
+                    
+            except Exception as e:
+                self.logger.error(f"处理商品 {product.productName} 创建时间时出错: {str(e)}，跳过")
+                skipped_count += 1
+        
+        if not filtered_products:
+            self.logger.warning(f"过滤后没有符合条件的商品（{days}天内创建）")
+            return {"success": 0, "failed": 0, "total": 0, "skipped": skipped_count}
+            
+        total = len(filtered_products)
+        stock_num = 1000  # 写死库存数量为1000
+        self.logger.info(f"开始批量设置库存，共 {total} 个商品（跳过 {skipped_count} 个），每个商品设置 {stock_num} 库存")
         
         success_count = 0
         failed_count = 0
@@ -164,7 +198,7 @@ class StockBatchSetter:
             # 提交所有任务
             future_to_product = {
                 executor.submit(self.set_stock, product, stock_num): product 
-                for product in products
+                for product in filtered_products
             }
             
             # 处理完成的任务
@@ -198,10 +232,11 @@ class StockBatchSetter:
                 self.random_delay()
         
         # 最终统计
-        self.logger.info(f"批量设置库存完成！成功: {success_count}, 失败: {failed_count}, 总计: {total}")
+        self.logger.info(f"批量设置库存完成！成功: {success_count}, 失败: {failed_count}, 跳过: {skipped_count}, 总计: {total}")
         
         return {
             "success": success_count,
             "failed": failed_count,
-            "total": total
+            "total": total,
+            "skipped": skipped_count
         } 

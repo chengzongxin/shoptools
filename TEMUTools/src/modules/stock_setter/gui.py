@@ -18,6 +18,7 @@ class StockSetterTab(ttk.Frame):
         super().__init__(parent)
         self.config = SystemConfig()
         self.crawler: Optional[StockBatchSetter] = None
+        self._stop_flag = False
         self.setup_ui()
         self.setup_logging()
         
@@ -49,15 +50,15 @@ class StockSetterTab(ttk.Frame):
         Args:
             parent: 父容器
         """
-        # 库存数量设置
-        stock_frame = ttk.Frame(parent)
-        stock_frame.pack(fill="x", padx=5, pady=5)
+        # 天数设置
+        days_frame = ttk.Frame(parent)
+        days_frame.pack(fill="x", padx=5, pady=5)
         
-        ttk.Label(stock_frame, text="设置库存数量:").pack(side="left")
-        self.stock_var = tk.StringVar(value="1000")
-        self.stock_entry = ttk.Entry(stock_frame, textvariable=self.stock_var, width=10)
-        self.stock_entry.pack(side="left", padx=5)
-        ttk.Label(stock_frame, text="(个)").pack(side="left")
+        ttk.Label(days_frame, text="仅设置N天内创建的商品:").pack(side="left")
+        self.days_var = tk.StringVar(value="5")
+        self.days_entry = ttk.Entry(days_frame, textvariable=self.days_var, width=10)
+        self.days_entry.pack(side="left", padx=5)
+        ttk.Label(days_frame, text="(天)").pack(side="left")
         
         # 线程数设置
         thread_frame = ttk.Frame(parent)
@@ -167,12 +168,12 @@ class StockSetterTab(ttk.Frame):
             验证是否通过
         """
         try:
-            stock_num = int(self.stock_var.get())
-            if stock_num <= 0:
-                messagebox.showerror("错误", "库存数量必须大于0")
+            days = int(self.days_var.get())
+            if days <= 0:
+                messagebox.showerror("错误", "天数必须大于0")
                 return False
         except ValueError:
-            messagebox.showerror("错误", "库存数量必须是数字")
+            messagebox.showerror("错误", "天数必须是数字")
             return False
             
         try:
@@ -200,7 +201,7 @@ class StockSetterTab(ttk.Frame):
                 return
                 
             # 获取参数
-            stock_num = int(self.stock_var.get())
+            days = int(self.days_var.get())
             thread_num = int(self.thread_var.get())
                 
             # 更新按钮状态
@@ -221,7 +222,7 @@ class StockSetterTab(ttk.Frame):
             # 启动处理线程
             thread = threading.Thread(
                 target=self.run_setting,
-                args=(stock_num, thread_num)
+                args=(days, thread_num)
             )
             thread.daemon = True
             thread.start()
@@ -230,25 +231,32 @@ class StockSetterTab(ttk.Frame):
             self.logger.error(f"启动过程发生错误: {str(e)}")
             messagebox.showerror("错误", f"启动失败: {str(e)}")
             
-    def run_setting(self, stock_num: int, thread_num: int):
+    def run_setting(self, days: int, thread_num: int):
         """运行设置库存流程"""
         try:
-            self.logger.info(f"开始批量设置库存，库存数量: {stock_num}，线程数: {thread_num}")
+            self.logger.info(f"开始批量设置库存，天数: {days}，线程数: {thread_num}")
             self.update_progress(0, 0)
             
-            result = self.crawler.batch_set_stock(stock_num, thread_num)
+            if self.crawler:
+                result = self.crawler.batch_set_stock(max_workers=thread_num, days=days)
+            else:
+                self.logger.error("爬虫实例未初始化")
+                return
             
             # 显示结果
             if result:
                 success = result.get("success", 0)
                 failed = result.get("failed", 0)
                 total = result.get("total", 0)
-                self.logger.info(f"批量设置库存完成! 成功: {success}, 失败: {failed}, 总计: {total}")
+                skipped = result.get("skipped", 0)
+                self.logger.info(f"批量设置库存完成! 成功: {success}, 失败: {failed}, 跳过: {skipped}, 总计: {total}")
                 
-                if failed == 0:
-                    messagebox.showinfo("完成", f"批量设置库存成功完成！\n成功: {success} 个商品")
+                if failed == 0 and total > 0:
+                    messagebox.showinfo("完成", f"批量设置库存成功完成！\n成功: {success} 个商品\n跳过: {skipped} 个商品")
+                elif total == 0:
+                    messagebox.showwarning("完成", f"没有符合条件的商品（{days}天内创建）\n跳过: {skipped} 个商品")
                 else:
-                    messagebox.showwarning("完成", f"批量设置库存完成，但有部分失败！\n成功: {success}, 失败: {failed}")
+                    messagebox.showwarning("完成", f"批量设置库存完成，但有部分失败！\n成功: {success}, 失败: {failed}, 跳过: {skipped}")
             else:
                 self.logger.info("批量设置库存任务结束。")
             

@@ -173,6 +173,7 @@ class PriceReviewCrawler:
         self.price_review_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/reject-remark"
         self.accept_price_url = f"{self.base_url}/marvel-mms/cn/api/kiana/magneto/price/bargain-no-bom"
         self.reject_price_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/review"
+        self.rebargain_price_url = f"{self.base_url}/marvel-mms/cn/api/kiana/magneto/price/bargain-no-bom"  # 重新调价接口
         
         # 初始化网络请求对象
         self.request = NetworkRequest()
@@ -261,13 +262,13 @@ class PriceReviewCrawler:
             
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
-                return None
+                return {}
                 
             return result
             
         except Exception as e:
             self.logger.error(f"获取第 {page} 页数据时发生错误: {str(e)}")
-            return None
+            return {}
             
     def crawl_all_pending_reviews(self) -> List[Dict]:
         """获取所有待核价商品
@@ -388,7 +389,7 @@ class PriceReviewCrawler:
             result = self.request.post(self.accept_price_url, data=payload)
             
             if not result or not result.get('success'):
-                self.logger.error(f"同意核价建议失败: {result.get('errorMsg', '未知错误')}")
+                self.logger.error(f"同意核价建议失败: {result.get('errorMsg', '未知错误') if result else '无返回'}")
                 return False
                 
             self.logger.debug("同意核价建议成功")
@@ -420,7 +421,7 @@ class PriceReviewCrawler:
             result = self.request.post(self.reject_price_url, data=payload)
             
             if not result or not result.get('success'):
-                self.logger.error(f"拒绝核价建议失败: {result.get('errorMsg', '未知错误')}")
+                self.logger.error(f"拒绝核价建议失败: {result.get('errorMsg', '未知错误') if result else '无返回'}")
                 return False
                 
             self.logger.debug("拒绝核价建议成功")
@@ -430,11 +431,54 @@ class PriceReviewCrawler:
             self.logger.error(f"拒绝核价建议时发生错误: {str(e)}")
             return False 
 
-    def process_single_price_review(self, product_data: Dict) -> Tuple[bool, str]:
+    def rebargain_price_review(self, price_order_id: int, product_sku_id: int, new_price: int) -> bool:
+        """重新调价
+        
+        Args:
+            price_order_id: 核价订单ID
+            product_sku_id: 商品SKU ID
+            new_price: 新的价格（分）
+            
+        Returns:
+            bool: 是否成功
+        """
+        try:
+            self.logger.debug(f"正在重新调价，订单ID: {price_order_id}, SKU ID: {product_sku_id}, 新价格: {new_price}分")
+            
+            payload = {
+                "supplierResult": 2,  # 2表示重新调价
+                "priceOrderId": price_order_id,
+                "items": [
+                    {
+                        "productSkuId": product_sku_id,
+                        "price": new_price
+                    }
+                ],
+                "bargainReasonList": []
+            }
+            
+            # 添加操作延时
+            self.random_delay('action')
+            
+            result = self.request.post(self.rebargain_price_url, data=payload)
+            
+            if not result or not result.get('success'):
+                self.logger.error(f"重新调价失败: {result.get('errorMsg', '未知错误') if result else '无返回'}")
+                return False
+                
+            self.logger.debug("重新调价成功")
+            return True
+            
+        except Exception as e:
+            self.logger.error(f"重新调价时发生错误: {str(e)}")
+            return False
+
+    def process_single_price_review(self, product_data: Dict, use_rebargain: bool = True) -> Tuple[bool, str]:
         """处理单个商品的核价（用于多线程）
         
         Args:
             product_data: 商品数据
+            use_rebargain: 当价格低于底线时是否使用重新调价（True为重新调价，False为拒绝）
             
         Returns:
             Tuple[bool, str]: (是否成功, 处理结果说明)
@@ -465,6 +509,9 @@ class PriceReviewCrawler:
                 return False, "获取核价建议失败"
                 
             # 获取价格底线
+            if ext_code is None:
+                return False, "商品缺少货号信息"
+                
             threshold = get_price_threshold(ext_code)
             if threshold is None:
                 return False, f"未找到商品 {ext_code} 的价格底线规则"
@@ -474,15 +521,42 @@ class PriceReviewCrawler:
             
             # 比较价格
             if suggestion.suggestSupplyPrice < threshold_cents:
-                # 价格低于底线，拒绝
-                if self.reject_price_review(price_order_id):
-                    message = f"已拒绝核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 低于底线 {threshold}元"
-                    self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
-                    return True, message
+                # 价格低于底线
+                if use_rebargain:
+                    # 使用重新调价：当前价格减去1元
+                    current_price_cents = suggestion.supplyPrice
+                    new_price_cents = current_price_cents - 100  # 减去1元（100分）
+                    
+                    # 如果减去1元后仍低于底线，则拒绝
+                    if new_price_cents < threshold_cents:
+                        if self.reject_price_review(price_order_id):
+                            message = f"已拒绝核价建议，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元 仍低于底线 {threshold}元"
+                            self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            return True, message
+                        else:
+                            message = "拒绝核价建议失败"
+                            self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            return False, message
+                    else:
+                        # 减去1元后高于底线，发起重新调价
+                        if self.rebargain_price_review(price_order_id, product_sku_id, new_price_cents):
+                            message = f"已发起重新调价，当前价格 {current_price_cents/100}元 调整为 {new_price_cents/100}元（底线 {threshold}元）"
+                            self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            return True, message
+                        else:
+                            message = "发起重新调价失败"
+                            self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            return False, message
                 else:
-                    message = "拒绝核价建议失败"
-                    self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
-                    return False, message
+                    # 直接拒绝
+                    if self.reject_price_review(price_order_id):
+                        message = f"已拒绝核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 低于底线 {threshold}元"
+                        self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                        return True, message
+                    else:
+                        message = "拒绝核价建议失败"
+                        self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                        return False, message
             else:
                 # 价格高于底线，同意
                 if self.accept_price_review(price_order_id, product_sku_id, suggestion.suggestSupplyPrice):
@@ -499,11 +573,12 @@ class PriceReviewCrawler:
             self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {error_message}")
             return False, error_message
             
-    def batch_process_price_reviews_mt(self, max_workers: int = 5) -> List[Dict]:
+    def batch_process_price_reviews_mt(self, max_workers: int = 5, use_rebargain: bool = True) -> List[Dict]:
         """多线程批量处理核价
         
         Args:
             max_workers: 最大线程数
+            use_rebargain: 当价格低于底线时是否使用重新调价（True为重新调价，False为拒绝）
             
         Returns:
             List[Dict]: 处理结果列表
@@ -529,7 +604,7 @@ class PriceReviewCrawler:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 # 提交所有任务
                 future_to_product = {
-                    executor.submit(self.process_single_price_review, product): product 
+                    executor.submit(self.process_single_price_review, product, use_rebargain): product 
                     for product in products
                 }
                 
