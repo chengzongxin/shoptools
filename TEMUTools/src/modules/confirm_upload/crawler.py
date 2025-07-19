@@ -2,7 +2,7 @@ import json
 import time
 import random
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Any, Tuple
 from ..network.request import NetworkRequest
@@ -52,17 +52,35 @@ class ConfirmUploadCrawler:
             self.logger.debug(f"随机延时 {delay:.2f} 秒 ({delay_type})")
             time.sleep(delay)
         
-    def get_page_data(self, page: int, page_size: int) -> Dict:
-        """获取指定页码的数据"""
+    def get_page_data(self, page: int, page_size: int, days_filter: int = 5) -> Dict:
+        """获取指定页码的数据
+        
+        Args:
+            page: 页码
+            page_size: 每页数量
+            days_filter: 过滤天数，只获取最近N天内的商品
+        """
+        # 计算时间范围
+        end_time = datetime.now()
+        start_time = end_time - timedelta(days=days_filter)
+        
+        # 转换为毫秒时间戳
+        time_begin = int(start_time.timestamp() * 1000)
+        time_end = int(end_time.timestamp() * 1000)
+        
         payload = {
             "pageSize": page_size,
             "pageNum": page,
+            "timeType": 1,  # 时间类型
+            "timeBegin": time_begin,  # 开始时间戳
+            "timeEnd": time_end,  # 结束时间戳
             "supplierTodoTypeList": [6]  # 6表示待确认上新
         }
         
         try:
-            self.logger.info(f"正在获取第 {page} 页数据，每页 {page_size} 条")
+            self.logger.info(f"正在获取第 {page} 页数据，每页 {page_size} 条，过滤最近 {days_filter} 天")
             self.logger.debug(f"请求URL: {self.api_url}")
+            self.logger.debug(f"时间范围: {start_time.strftime('%Y-%m-%d %H:%M:%S')} 到 {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
             self.logger.debug(f"请求体: {json.dumps(payload, ensure_ascii=False)}")
             
             # 添加翻页请求延时
@@ -72,21 +90,22 @@ class ConfirmUploadCrawler:
             
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
-                return None
+                return {}
                 
             return result
             
         except Exception as e:
             self.logger.error(f"获取第 {page} 页数据时发生错误: {str(e)}")
-            return None
+            return {}
             
-    def crawl(self, start_page: int = 1, end_page: int = 1, page_size: int = 10) -> List[Dict]:
+    def crawl(self, start_page: int = 1, end_page: int = 1, page_size: int = 10, days_filter: int = 5) -> List[Dict]:
         """爬取待确认上新商品列表数据
         
         Args:
             start_page: 起始页码
             end_page: 结束页码
             page_size: 每页数量
+            days_filter: 过滤天数，只获取最近N天内的商品
             
         Returns:
             List[Dict]: 商品数据列表
@@ -99,7 +118,7 @@ class ConfirmUploadCrawler:
                 self.logger.info("爬取已停止")
                 break
                 
-            result = self.get_page_data(page, page_size)
+            result = self.get_page_data(page, page_size, days_filter)
             
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
@@ -230,8 +249,11 @@ class ConfirmUploadCrawler:
             
             return results
             
-    def batch_process(self) -> List[Dict]:
+    def batch_process(self, days_filter: int = 5) -> List[Dict]:
         """批量处理确认上新（循环处理第一页直到完成）
+        
+        Args:
+            days_filter: 过滤天数，只获取最近N天内的商品
             
         Returns:
             List[Dict]: 处理结果列表，每个结果包含商品ID、处理状态和说明
@@ -245,10 +267,10 @@ class ConfirmUploadCrawler:
                     self.logger.info("批量处理已停止")
                     break
                     
-                self.logger.info("正在获取第一页待确认上新商品...")
+                self.logger.info(f"正在获取第一页待确认上新商品（过滤最近 {days_filter} 天）...")
                 
                 # 获取第一页数据
-                result = self.get_page_data(1, 20)  # 固定获取第一页，每页20条, 注意如果设置多了会报错400，之前设置的是100，接口报错400，所以这里设置20
+                result = self.get_page_data(1, 20, days_filter)  # 固定获取第一页，每页20条, 注意如果设置多了会报错400，之前设置的是100，接口报错400，所以这里设置20
                 if not result:
                     self.logger.error("第一页数据获取失败")
                     break

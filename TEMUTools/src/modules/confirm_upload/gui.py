@@ -31,6 +31,9 @@ class ConfirmUploadTab(ttk.Frame):
         main_frame = ttk.Frame(self, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
+        # 创建输入字段
+        self.create_input_fields(main_frame)
+        
         # 创建进度条
         self.create_progress_bar(main_frame)
         
@@ -48,15 +51,41 @@ class ConfirmUploadTab(ttk.Frame):
         self.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         
+    def create_input_fields(self, parent):
+        """创建输入字段"""
+        # 创建一个子框架来容纳输入字段
+        input_frame = ttk.LabelFrame(parent, text="过滤设置", padding="5")
+        input_frame.grid(row=0, column=0, columnspan=2, pady=5, sticky=(tk.W, tk.E))
+        
+        # 过滤天数设置
+        ttk.Label(input_frame, text="过滤天数:").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
+        self.days_var = tk.StringVar(value="5")
+        self.days_entry = ttk.Entry(input_frame, textvariable=self.days_var, width=10)
+        self.days_entry.grid(row=0, column=1, sticky=tk.W, padx=(0, 20))
+        ttk.Label(input_frame, text="天（只处理最近N天内的商品）").grid(row=0, column=2, sticky=tk.W)
+        
+        # 配置输入框架的网格权重
+        input_frame.columnconfigure(2, weight=1)
+        
     def create_progress_bar(self, parent):
         """创建进度条"""
+        progress_frame = ttk.Frame(parent)
+        progress_frame.grid(row=1, column=0, columnspan=2, pady=5, sticky=(tk.W, tk.E))
+        
         self.progress_var = tk.DoubleVar()
         self.progress_bar = ttk.Progressbar(
-            parent,
+            progress_frame,
             variable=self.progress_var,
             maximum=100
         )
-        self.progress_bar.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
+        self.progress_bar.grid(row=0, column=0, sticky=(tk.W, tk.E), padx=(0, 10))
+        
+        # 添加进度标签
+        self.progress_label = ttk.Label(progress_frame, text="0%")
+        self.progress_label.grid(row=0, column=1, sticky=tk.W)
+        
+        # 配置进度框架的网格权重
+        progress_frame.columnconfigure(0, weight=1)
         
     def create_log_area(self, parent):
         """创建日志显示区域"""
@@ -157,6 +186,16 @@ class ConfirmUploadTab(ttk.Frame):
     def start_batch_processing(self):
         """开始批量处理确认上新"""
         try:
+            # 获取过滤天数
+            try:
+                days_filter = int(self.days_var.get())
+                if days_filter <= 0 or days_filter > 365:
+                    messagebox.showerror("错误", "过滤天数必须在1-365之间")
+                    return
+            except ValueError:
+                messagebox.showerror("错误", "过滤天数必须是数字")
+                return
+
             # 获取系统配置
             cookie = self.config.get_seller_cookie()
             
@@ -165,7 +204,7 @@ class ConfirmUploadTab(ttk.Frame):
                 return
                 
             # 显示确认对话框
-            if not messagebox.askyesno("确认", "确定要批量处理第一页的确认上新吗？"):
+            if not messagebox.askyesno("确认", f"确定要批量处理最近 {days_filter} 天内的确认上新吗？"):
                 return
                 
             # 禁用按钮
@@ -188,7 +227,8 @@ class ConfirmUploadTab(ttk.Frame):
             
             # 在新线程中运行批量处理
             self.crawler_thread = threading.Thread(
-                target=self.run_batch_processing
+                target=self.run_batch_processing,
+                args=(days_filter,)
             )
             self.crawler_thread.start()
             
@@ -196,17 +236,17 @@ class ConfirmUploadTab(ttk.Frame):
             self.logger.error(f"启动批量处理失败: {str(e)}")
             messagebox.showerror("错误", f"启动批量处理失败: {str(e)}")
             
-    def run_batch_processing(self):
+    def run_batch_processing(self, days_filter):
         """运行批量处理"""
         try:
-            results = self.crawler.batch_process()
+            results = self.crawler.batch_process(days_filter)
             
             # 统计处理结果
             success_count = sum(1 for r in results if r['success'])
             fail_count = len(results) - success_count
             
             # 显示处理结果
-            message = f"批量处理完成\n成功: {success_count} 个\n失败: {fail_count} 个"
+            message = f"批量处理完成\n成功: {success_count} 个\n失败: {fail_count} 个\n过滤天数: {days_filter} 天"
             self.logger.info(message)
             messagebox.showinfo("完成", message)
             
@@ -214,9 +254,8 @@ class ConfirmUploadTab(ttk.Frame):
             self.logger.error(f"批量处理失败: {str(e)}")
             messagebox.showerror("错误", f"批量处理失败: {str(e)}")
         finally:
-            # 恢复按钮状态
-            self.after(0, lambda: self.batch_button.config(state='normal'))
-            self.after(0, lambda: self.stop_button.config(state='disabled'))
+            self.batch_button.config(state='normal')
+            self.stop_button.config(state='disabled')
             
     def stop_processing(self):
         """停止处理"""
@@ -226,4 +265,5 @@ class ConfirmUploadTab(ttk.Frame):
         
     def update_progress(self, value):
         """更新进度条"""
-        self.progress_var.set(value) 
+        self.progress_var.set(value)
+        self.progress_label.config(text=f"{int(value)}%") 
