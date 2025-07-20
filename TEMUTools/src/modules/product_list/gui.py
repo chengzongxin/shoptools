@@ -273,22 +273,25 @@ class ProductListTab(ttk.Frame):
             # 定义映射字典
             code_mapping = {
                 "CUSHION": "CU-0608",
-                "Cushion": "CU-0608",
-                "SLEEVE": "BE-0608",
-                "Sleeve": "BE-0608",
+                "SLEEVE": "BE-0608", 
                 "SH": "SH-0608",
-                "sh": "SH-0608",
                 "CB": "CB-0608",
-                "cb": "CB-0608",
                 "Sock": "SO-0608",
-                "sock": "SO-0608",
                 "drawing": "CB-0608",
-                "Drawing": "CB-0608",
                 "Scarf": "BE-0608",
-                "scarf": "BE-0608",
-                "Apron": "AP-0608",
-                "apron": "AP-0608"
+                "Apron": "AP-0608"
             }
+            
+            def get_product_code(key):
+                """智能匹配商品码，忽略大小写和复数形式"""
+                # 转换为小写并移除末尾的's'
+                normalized_key = key.lower().rstrip('s')
+                
+                # 遍历映射字典进行匹配
+                for mapping_key, code in code_mapping.items():
+                    if normalized_key == mapping_key.lower():
+                        return code
+                return "未定义"
             
             for product in self.current_data:
                 product_id = product['productId']
@@ -299,8 +302,8 @@ class ProductListTab(ttk.Frame):
                     # 获取下划线前的部分
                     key = sku_code.split('_')[0] if '_' in sku_code else sku_code
                     
-                    # 查找对应的商品码
-                    product_code = code_mapping.get(key, "未定义")
+                    # 使用智能匹配函数查找对应的商品码
+                    product_code = get_product_code(key)
                     
                     excel_data.append({
                         'SPUID': product_id,
@@ -643,22 +646,25 @@ class ProductListTab(ttk.Frame):
             # 定义映射字典
             code_mapping = {
                 "CUSHION": "CU-0608",
-                "Cushion": "CU-0608",
                 "SLEEVE": "BE-0608",
-                "Sleeve": "BE-0608",
                 "SH": "SH-0608",
-                "sh": "SH-0608",
                 "CB": "CB-0608",
-                "cb": "CB-0608",
                 "Sock": "SO-0608",
-                "sock": "SO-0608",
                 "drawing": "CB-0608",
-                "Drawing": "CB-0608",
                 "Scarf": "BE-0608",
-                "scarf": "BE-0608",
-                "Apron": "AP-0608",
-                "apron": "AP-0608"
+                "Apron": "AP-0608"
             }
+            
+            def get_product_code(key):
+                """智能匹配商品码，忽略大小写和复数形式"""
+                # 转换为小写并移除末尾的's'
+                normalized_key = key.lower().rstrip('s')
+                
+                # 遍历映射字典进行匹配
+                for mapping_key, code in code_mapping.items():
+                    if normalized_key == mapping_key.lower():
+                        return code
+                return "未定义"
             
             for product in self.current_data:
                 product_id = product['productId']
@@ -669,8 +675,8 @@ class ProductListTab(ttk.Frame):
                     # 获取下划线前的部分
                     key = sku_code.split('_')[0] if '_' in sku_code else sku_code
                     
-                    # 查找对应的商品码
-                    product_code = code_mapping.get(key, "未定义")
+                    # 使用智能匹配函数查找对应的商品码
+                    product_code = get_product_code(key)
                     
                     excel_data.append({
                         'SPUID': product_id,
