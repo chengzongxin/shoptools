@@ -23,6 +23,11 @@ class JitSignTab(ttk.Frame):
         
     def setup_ui(self):
         """设置用户界面"""
+        # 创建输入区域
+        input_frame = ttk.LabelFrame(self, text="参数设置")
+        input_frame.pack(fill="x", padx=5, pady=5)
+        self.create_input_fields(input_frame)
+        
         # 创建进度条
         progress_frame = ttk.LabelFrame(self, text="处理进度")
         progress_frame.pack(fill="x", padx=5, pady=5)
@@ -38,6 +43,30 @@ class JitSignTab(ttk.Frame):
         button_frame.pack(fill="x", padx=5, pady=5)
         self.create_buttons(button_frame)
         
+    def create_input_fields(self, parent):
+        """创建输入字段
+        
+        Args:
+            parent: 父容器
+        """
+        # 起始页
+        ttk.Label(parent, text="起始页:").grid(row=0, column=0, padx=5, pady=5)
+        self.start_page = ttk.Entry(parent, width=10)
+        self.start_page.insert(0, "1")
+        self.start_page.grid(row=0, column=1, padx=5, pady=5)
+        
+        # 结束页
+        ttk.Label(parent, text="结束页:").grid(row=0, column=2, padx=5, pady=5)
+        self.end_page = ttk.Entry(parent, width=10)
+        self.end_page.insert(0, "1")
+        self.end_page.grid(row=0, column=3, padx=5, pady=5)
+        
+        # 每页数量
+        ttk.Label(parent, text="每页数量:").grid(row=0, column=4, padx=5, pady=5)
+        self.page_size = ttk.Entry(parent, width=10)
+        self.page_size.insert(0, "100")
+        self.page_size.grid(row=0, column=5, padx=5, pady=5)
+        
     def create_progress_bar(self, parent):
         """创建进度条
         
@@ -51,9 +80,6 @@ class JitSignTab(ttk.Frame):
             maximum=100
         )
         self.progress_bar.pack(fill="x", padx=5, pady=5)
-
-        self.progress_label = ttk.Label(parent, text="0/0")
-        self.progress_label.pack(fill="x", padx=5, pady=2)
         
     def create_log_area(self, parent):
         """创建日志区域
@@ -78,7 +104,7 @@ class JitSignTab(ttk.Frame):
         # 开始按钮
         self.start_button = ttk.Button(
             parent,
-            text="开始批量签署",
+            text="开始签署",
             command=self.start_signing
         )
         self.start_button.pack(side="left", padx=5)
@@ -124,82 +150,92 @@ class JitSignTab(ttk.Frame):
     def start_signing(self):
         """开始签署流程"""
         try:
+            # 获取输入参数
+            start_page = int(self.start_page.get())
+            end_page = int(self.end_page.get())
+            page_size = int(self.page_size.get())
+            
+            # 参数验证
+            if start_page < 1 or end_page < start_page:
+                messagebox.showerror("错误", "页码参数无效")
+                return
+                
+            if page_size < 1 or page_size > 200:
+                messagebox.showerror("错误", "每页数量必须在1-200之间")
+                return
+                
             # 获取系统配置
             cookie = self.config.get_seller_cookie()
             if not cookie:
-                messagebox.showerror("错误", "请先在系统配置中设置好卖家Cookie")
+                messagebox.showerror("错误", "请先配置卖家Cookie")
                 return
                 
             # 更新按钮状态
             self.start_button.configure(state="disabled")
             self.stop_button.configure(state="normal")
             
-            # 设置停止标志
-            self._stop_flag = False
-            
             # 创建爬虫实例
             self.crawler = JitSignCrawler(
                 cookie=cookie,
                 logger=self.logger,
-                progress_callback=self.update_progress,
-                stop_flag_callback=lambda: self._stop_flag
+                progress_callback=self.update_progress
             )
             
             # 启动处理线程
             thread = threading.Thread(
-                target=self.run_signing
+                target=self.run_signing,
+                args=(start_page, end_page, page_size)
             )
             thread.daemon = True
             thread.start()
             
-        except Exception as e:
-            self.logger.error(f"启动过程发生错误: {str(e)}")
-            messagebox.showerror("错误", f"启动失败: {str(e)}")
+        except ValueError:
+            messagebox.showerror("错误", "请输入有效的数字")
             
-    def run_signing(self):
-        """运行签署流程"""
+    def run_signing(self, start_page: int, end_page: int, page_size: int):
+        """运行签署流程
+        
+        Args:
+            start_page: 起始页码
+            end_page: 结束页码
+            page_size: 每页数量
+        """
         try:
             self.logger.info("开始批量签署JIT协议...")
-            self.update_progress(0, 0)
-            results = self.crawler.batch_process()
+            results = self.crawler.batch_process(
+                start_page=start_page,
+                end_page=end_page,
+                page_size=page_size
+            )
             
             # 统计结果
-            if results:
-                total_success = sum(r.get("successNum", 0) for r in results)
-                total_failed = sum(r.get("failedNum", 0) for r in results)
-                self.logger.info(
-                    f"批量签署完成! 成功: {total_success}, 失败: {total_failed}"
-                )
+            total_success = sum(r["successNum"] for r in results)
+            total_failed = sum(r["failedNum"] for r in results)
+
+            if total_failed > 0:
+                self.logger.error(f"批量签署失败! {results}")
             else:
-                self.logger.info("批量签署任务结束。")
+                self.logger.info(f"批量签署完成! 成功: {total_success}, 失败: {total_failed}")
+            
             
         except Exception as e:
             self.logger.error(f"处理过程发生错误: {str(e)}")
             
         finally:
             # 恢复按钮状态
-            self.after(0, lambda: self.start_button.configure(state="normal"))
-            self.after(0, lambda: self.stop_button.configure(state="disabled"))
+            self.start_button.configure(state="normal")
+            self.stop_button.configure(state="disabled")
             
     def stop_signing(self):
         """停止签署流程"""
-        self._stop_flag = True
-        self.logger.info("用户请求停止签署")
-        messagebox.showinfo("提示", "正在停止签署，请稍候...")
-        
-    def update_progress(self, current: int, total: int):
+        if self.crawler:
+            self.crawler.stop()
+            self.logger.info("正在停止处理...")
+            
+    def update_progress(self, value: int):
         """更新进度条
         
         Args:
-            current: 当前批次
-            total: 总批次（在循环处理中，这个值会动态变化）
+            value: 进度值
         """
-        if total > 0:
-            # 显示批次进度
-            percentage = (current / total) * 100
-            self.progress_var.set(percentage)
-            self.progress_label.config(text=f"第 {current} 批")
-        else:
-            self.progress_var.set(0)
-            self.progress_label.config(text="准备中...")
-        self.update_idletasks() 
+        self.progress_var.set(value) 
