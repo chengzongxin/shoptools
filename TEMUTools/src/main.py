@@ -16,6 +16,7 @@ from modules.compliance_uploader.gui import ComplianceUploaderTab
 from modules.jit_sign.gui import JitSignTab
 from modules.real_picture_uploader.gui import RealPictureUploaderTab
 from modules.stock_setter.gui import StockSetterTab
+from modules.jit_sign_bak.gui import JitSignTab as JitSignTabBak
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -317,6 +318,10 @@ class TEMUToolsApp:
 
         self.violation_list_tab = ViolationListTab(self.notebook)
         self.notebook.add(self.violation_list_tab, text="违规列表")
+
+        # 签署JIT(废弃)
+        self.jit_sign_tab_bak = JitSignTabBak(self.notebook)
+        self.notebook.add(self.jit_sign_tab_bak, text="JIT签署(废弃)")
         
         self.system_config_tab = SystemConfigTab(self.notebook)
         self.notebook.add(self.system_config_tab, text="系统配置")
