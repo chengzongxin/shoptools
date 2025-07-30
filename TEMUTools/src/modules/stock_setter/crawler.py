@@ -32,8 +32,8 @@ class StockBatchSetter:
         self.logger = logger
         self.progress_callback = progress_callback
         self.stop_flag_callback = stop_flag_callback or (lambda: False)
-        self.base_url = "https://agentseller.temu.com/visage-agent-seller"
-        self.update_url = "https://agentseller.temu.com/gmp/bg/startload/api/sales/stock/update"
+        self.query_url = "https://agentseller.temu.com/visage-agent-seller/product/skc/pageQuery"
+        self.update_url = "https://agentseller.temu.com/darwin-mms/api/kiana/foredawn/sales/stock/updateMmsSkuSalesStock"
         self.request = NetworkRequest()
         self.page_size = 100
         
@@ -68,7 +68,7 @@ class StockBatchSetter:
             }
             
             try:
-                result = self.request.post(f"{self.base_url}/product/skc/pageQuery", data=data)
+                result = self.request.post(self.query_url, data=data)
                 if not result or not result.get("success"):
                     error_msg = result.get('errorMsg', '未知错误') if result else '无返回'
                     self.logger.error(f"获取第 {page} 页商品列表失败: {error_msg}")

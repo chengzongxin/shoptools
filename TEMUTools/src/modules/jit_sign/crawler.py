@@ -27,7 +27,8 @@ class JitSignCrawler:
         """
         self.logger = logger
         self.progress_callback = progress_callback
-        self.base_url = "https://agentseller.temu.com/visage-agent-seller"
+        self.query_url = "https://agentseller.temu.com/visage-agent-seller/product/skc/pageQuery"
+        self.sign_url = "https://agentseller.temu.com/visage-agent-seller/product/agreement/batch/sign"
         self.request = NetworkRequest()
         self._stop_flag = False
         
@@ -49,14 +50,13 @@ class JitSignCrawler:
         Returns:
             商品列表数据
         """
-        url = f"{self.base_url}/product/skc/pageQuery"
         data = {
             "page": page,
             "pageSize": page_size
         }
         
         try:
-            result = self.request.post(url, data=data)
+            result = self.request.post(self.query_url, data=data)
             if result and result.get("success"):
                 return result["result"]
             else:
@@ -75,7 +75,6 @@ class JitSignCrawler:
         Returns:
             签署结果
         """
-        url = f"{self.base_url}/product/agreement/batch/sign"
         skc_list = [
             {
                 "productId": p.productId,
@@ -85,7 +84,7 @@ class JitSignCrawler:
         ]
         data = {"skcList": skc_list}
         try:
-            result = self.request.post(url, data=data)
+            result = self.request.post(self.sign_url, data=data)
             if result and result.get("success"):
                 return result["result"]
             else:

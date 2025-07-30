@@ -21,10 +21,9 @@ class JitProduct:
 class JitCrawler:
     def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
-        self.base_url = "https://agentseller.temu.com"
-        self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
-        self.open_jit_url = f"{self.base_url}/visage-agent-seller/product/skc/batchOpenJit"
-        
+        self.api_url = "https://agentseller.temu.com/api/kiana/mms/robin/searchForChainSupplier"
+        self.open_jit_url = "https://agentseller.temu.com/visage-agent-seller/product/skc/batchOpenJit"
+
         # 初始化网络请求对象
         self.request = NetworkRequest()
         
