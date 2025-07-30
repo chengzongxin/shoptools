@@ -24,25 +24,36 @@ class StockSetterTab(ttk.Frame):
         
     def setup_ui(self):
         """设置用户界面"""
+        main_frame = ttk.Frame(self, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
         # 创建参数设置区域
-        param_frame = ttk.LabelFrame(self, text="参数设置")
-        param_frame.pack(fill="x", padx=5, pady=5)
+        param_frame = ttk.LabelFrame(main_frame, text="参数设置")
+        param_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.create_param_area(param_frame)
         
         # 创建进度条
-        progress_frame = ttk.LabelFrame(self, text="处理进度")
-        progress_frame.pack(fill="x", padx=5, pady=5)
+        progress_frame = ttk.LabelFrame(main_frame, text="处理进度")
+        progress_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.create_progress_bar(progress_frame)
         
         # 创建日志区域
-        log_frame = ttk.LabelFrame(self, text="运行日志")
-        log_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        log_frame = ttk.LabelFrame(main_frame, text="操作日志")
+        log_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.create_log_area(log_frame)
         
         # 创建按钮区域
-        button_frame = ttk.Frame(self)
-        button_frame.pack(fill="x", padx=5, pady=5)
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0, columnspan=4, pady=10)
         self.create_buttons(button_frame)
+
+        # 设置权重让界面能够自适应调整
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        
+        # 设置main_frame的权重
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(2, weight=1)  # 让日志区域（第2行）可以扩展
         
     def create_param_area(self, parent):
         """创建参数设置区域
@@ -52,7 +63,7 @@ class StockSetterTab(ttk.Frame):
         """
         # 天数设置
         days_frame = ttk.Frame(parent)
-        days_frame.pack(fill="x", padx=5, pady=5)
+        days_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         
         ttk.Label(days_frame, text="仅设置N天内创建的商品:").pack(side="left")
         self.days_var = tk.StringVar(value="5")
@@ -62,7 +73,7 @@ class StockSetterTab(ttk.Frame):
         
         # 线程数设置
         thread_frame = ttk.Frame(parent)
-        thread_frame.pack(fill="x", padx=5, pady=5)
+        thread_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         
         ttk.Label(thread_frame, text="并发线程数:").pack(side="left")
         self.thread_var = tk.StringVar(value="5")
@@ -82,10 +93,12 @@ class StockSetterTab(ttk.Frame):
             variable=self.progress_var,
             maximum=100
         )
-        self.progress_bar.pack(fill="x", padx=5, pady=5)
+        self.progress_bar.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
 
         self.progress_label = ttk.Label(parent, text="0/0")
-        self.progress_label.pack(fill="x", padx=5, pady=2)
+        self.progress_label.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=2)
+
+        parent.columnconfigure(0, weight=1)
         
     def create_log_area(self, parent):
         """创建日志区域
@@ -93,12 +106,19 @@ class StockSetterTab(ttk.Frame):
         Args:
             parent: 父容器
         """
-        self.log_text = tk.Text(parent, height=10)
-        self.log_text.pack(fill="both", expand=True, padx=5, pady=5)
+        # 设置parent的grid权重，让子控件能够撑满
+        parent.columnconfigure(0, weight=1)
+        parent.rowconfigure(0, weight=1)
         
-        # 添加滚动条
-        scrollbar = ttk.Scrollbar(self.log_text, command=self.log_text.yview)
-        scrollbar.pack(side="right", fill="y")
+        # 创建文本框
+        self.log_text = tk.Text(parent)  # 移除固定的height=10限制
+        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5, padx=5)
+        
+        # 添加滚动条，作为parent的子控件
+        scrollbar = ttk.Scrollbar(parent, command=self.log_text.yview)
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S), pady=5)
+        
+        # 连接文本框和滚动条
         self.log_text.configure(yscrollcommand=scrollbar.set)
         
     def create_buttons(self, parent):
@@ -113,7 +133,7 @@ class StockSetterTab(ttk.Frame):
             text="开始批量设置库存",
             command=self.start_setting
         )
-        self.start_button.pack(side="left", padx=5)
+        self.start_button.grid(row=0, column=0, padx=5)
         
         # 停止按钮
         self.stop_button = ttk.Button(
@@ -122,7 +142,7 @@ class StockSetterTab(ttk.Frame):
             command=self.stop_setting,
             state="disabled"
         )
-        self.stop_button.pack(side="left", padx=5)
+        self.stop_button.grid(row=0, column=1, padx=5)
         
         # 清空日志按钮
         self.clear_button = ttk.Button(
@@ -130,7 +150,7 @@ class StockSetterTab(ttk.Frame):
             text="清空日志",
             command=self.clear_log
         )
-        self.clear_button.pack(side="left", padx=5)
+        self.clear_button.grid(row=0, column=2, padx=5)
         
     def setup_logging(self):
         """设置日志记录"""

@@ -169,12 +169,13 @@ class PriceReviewTab(ttk.Frame):
         self.create_buttons(main_frame)
         
         # 创建商品列表
-        self.create_product_list(main_frame)
+        # self.create_product_list(main_frame)
         
         # 配置网格权重
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
+        main_frame.rowconfigure(2, weight=1)
         
     def create_input_fields(self, parent):
         """创建输入字段"""
@@ -269,27 +270,27 @@ class PriceReviewTab(ttk.Frame):
         )
         self.stop_button.grid(row=0, column=2, padx=5)
         
-    def create_product_list(self, parent):
-        """创建商品列表"""
-        # 创建表格
-        columns = ("商品ID", "商品名称", "当前价格", "买家", "创建时间", "状态")
-        self.tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
+    # def create_product_list(self, parent):
+    #     """创建商品列表"""
+    #     # 创建表格
+    #     columns = ("商品ID", "商品名称", "当前价格", "买家", "创建时间", "状态")
+    #     self.tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
         
-        # 设置列标题
-        for col in columns:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=100)
+    #     # 设置列标题
+    #     for col in columns:
+    #         self.tree.heading(col, text=col)
+    #         self.tree.column(col, width=100)
             
-        # 添加滚动条
-        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+    #     # 添加滚动条
+    #     scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.tree.yview)
+    #     self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # 放置表格和滚动条
-        self.tree.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        scrollbar.grid(row=4, column=2, sticky=(tk.N, tk.S))
+    #     # 放置表格和滚动条
+    #     self.tree.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+    #     scrollbar.grid(row=4, column=2, sticky=(tk.N, tk.S))
         
-        # 绑定双击事件
-        self.tree.bind("<Double-1>", self.on_item_double_click)
+    #     # 绑定双击事件
+    #     self.tree.bind("<Double-1>", self.on_item_double_click)
         
     def setup_logging(self):
         """设置日志处理器"""

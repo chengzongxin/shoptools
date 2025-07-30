@@ -111,7 +111,7 @@ class RealPictureUploader:
         self.logger.info(f"查询 {category['name']} 未上传商品，第 {page} 页")
         self.logger.debug(f"请求参数: {payload}")
         
-        resp = self.request.post(self.list_url, payload, use_compliance=True)
+        resp = self.request.post(self.list_url, payload)
         
         if not resp or not resp.get("success"):
             self.logger.error(f"查询 {category['name']} 未上传商品失败: {resp}")
@@ -134,7 +134,7 @@ class RealPictureUploader:
         payload = {"tag": "flash-tag"}
         self.logger.info("获取上传签名")
         
-        resp = self.request.post(self.signature_url, payload, use_compliance=True)
+        resp = self.request.post(self.signature_url, payload)
         
         if not resp or not resp.get("success"):
             self.logger.error(f"获取上传签名失败: {resp}")
@@ -168,7 +168,7 @@ class RealPictureUploader:
         
         try:
             # 获取合规请求头
-            headers = self.request._get_headers(use_compliance=True)
+            headers = self.request._get_headers()
             
             # 移除content-type，让requests自动设置multipart的content-type
             if 'content-type' in headers:
@@ -223,7 +223,7 @@ class RealPictureUploader:
         self.logger.info(f"批量上传 {len(spu_ids)} 个商品的实拍图")
         self.logger.debug(f"上传参数: {payload}")
         
-        resp = self.request.post(self.batch_upload_url, payload, use_compliance=True)
+        resp = self.request.post(self.batch_upload_url, payload)
         
         if not resp or not resp.get("success"):
             self.logger.error(f"批量上传失败: {resp}")

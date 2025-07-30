@@ -19,18 +19,18 @@ class RealPictureUploaderTab(ttk.Frame):
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
         # 创建说明标签
-        info_frame = ttk.LabelFrame(main_frame, text="功能说明", padding="5")
-        info_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
+        # info_frame = ttk.LabelFrame(main_frame, text="功能说明", padding="5")
+        # info_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
         
-        info_text = """
-        实拍图批量上传功能说明：
-        1. 支持8个品类的商品实拍图批量上传
-        2. 自动查询未上传实拍图的商品
-        3. 按品类依次处理，每个品类处理完成后自动进入下一个
-        4. 包含随机延迟，模拟人工操作
-        5. 请确保assets/images目录下有对应的图片文件
-        """
-        ttk.Label(info_frame, text=info_text, justify=tk.LEFT).pack(anchor=tk.W)
+        # info_text = """
+        # 实拍图批量上传功能说明：
+        # 1. 支持8个品类的商品实拍图批量上传
+        # 2. 自动查询未上传实拍图的商品
+        # 3. 按品类依次处理，每个品类处理完成后自动进入下一个
+        # 4. 包含随机延迟，模拟人工操作
+        # 5. 请确保assets/images目录下有对应的图片文件
+        # """
+        # ttk.Label(info_frame, text=info_text, justify=tk.LEFT).pack(anchor=tk.W)
 
         # 创建品类选择框架
         category_frame = ttk.LabelFrame(main_frame, text="品类选择", padding="5")
@@ -65,9 +65,34 @@ class RealPictureUploaderTab(ttk.Frame):
             command=self.deselect_all_categories
         ).grid(row=len(self.categories)//4 + 1, column=1, pady=5)
 
-        # 按钮框架
+       
+
+        # 进度条
+        self.progress_var = tk.DoubleVar()
+        self.progress_bar = ttk.Progressbar(
+            main_frame, 
+            variable=self.progress_var, 
+            maximum=100
+        )
+        self.progress_bar.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
+
+        # 日志显示
+        log_frame = ttk.LabelFrame(main_frame, text="操作日志", padding="5")
+        log_frame.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        
+        self.log_text = tk.Text(log_frame, height=15, width=100, state='disabled')
+        scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
+        self.log_text.configure(yscrollcommand=scrollbar.set)
+        
+        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(0, weight=1)
+
+         # 按钮框架
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=2, column=0, columnspan=4, pady=10)
+        button_frame.grid(row=4, column=0, columnspan=4, pady=10)
         
         self.start_button = ttk.Button(
             button_frame, 
@@ -84,34 +109,11 @@ class RealPictureUploaderTab(ttk.Frame):
         )
         self.stop_button.grid(row=0, column=1, padx=5)
 
-        # 进度条
-        self.progress_var = tk.DoubleVar()
-        self.progress_bar = ttk.Progressbar(
-            main_frame, 
-            variable=self.progress_var, 
-            maximum=100
-        )
-        self.progress_bar.grid(row=3, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
-
-        # 日志显示
-        log_frame = ttk.LabelFrame(main_frame, text="操作日志", padding="5")
-        log_frame.grid(row=4, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        
-        self.log_text = tk.Text(log_frame, height=15, width=100, state='disabled')
-        scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
-        self.log_text.configure(yscrollcommand=scrollbar.set)
-        
-        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
-        
-        log_frame.columnconfigure(0, weight=1)
-        log_frame.rowconfigure(0, weight=1)
-
         # 配置网格权重
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(4, weight=1)
+        main_frame.rowconfigure(3, weight=1)
 
     def setup_logging(self):
         """设置日志处理器"""

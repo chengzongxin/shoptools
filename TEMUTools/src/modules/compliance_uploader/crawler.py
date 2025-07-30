@@ -41,7 +41,7 @@ class ComplianceUploader:
             "task_type_list": [task_type]
         }
         self.logger.info(f"请求未上传商品列表，task_type={task_type}，请求体: {data}")
-        resp = self.request.post(url, data, use_compliance=True)
+        resp = self.request.post(url, data)
         # self.logger.info(f"未上传商品接口返回: {resp}")
         if not resp or not resp.get("success"):
             self.logger.error(f"获取未上传商品失败: {resp}")
@@ -59,7 +59,7 @@ class ComplianceUploader:
         url = f"{self.base_url}/query_template"
         data = {"similar_batch_operate": True, "wait_task_list": [{"task_type": task_type}]}
         self.logger.info(f"请求模板，task_type={task_type}，请求体: {data}")
-        resp = self.request.post(url, data, use_compliance=True)
+        resp = self.request.post(url, data)
         # self.logger.info(f"模板接口返回: {resp}")
         if not resp or not resp.get("success"):
             # self.logger.error(f"获取合规模板失败: {resp}")
@@ -132,7 +132,7 @@ class ComplianceUploader:
             "good_info_list": good_info_list,
             "template_edit_request": template_edit_request
         }
-        resp = self.request.post(url, data, use_compliance=True)
+        resp = self.request.post(url, data)
         if not resp or not resp.get("success"):
             self.logger.error(f"上传合规信息失败: {resp}")
         else:

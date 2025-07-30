@@ -298,7 +298,7 @@ class ViolationListCrawler:
                 logger.error("Cookie未设置")
                 return None
             
-            result = self.request.post(self.api_url, data=payload, use_compliance=True)
+            result = self.request.post(self.api_url, data=payload)
             
             if not result:
                 logger.error(f"第 {page} 页数据获取失败")

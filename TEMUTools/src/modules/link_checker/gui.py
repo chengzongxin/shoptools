@@ -12,7 +12,7 @@ class LinkCheckerTab(ttk.Frame):
         self.current_folder = ""
         
         # 创建主框架
-        self.main_frame = ttk.Frame(self, padding="10")
+        self.main_frame = ttk.Frame(self, padding="2")  # 进一步减少padding
         self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # 创建选择文件夹按钮
@@ -21,11 +21,11 @@ class LinkCheckerTab(ttk.Frame):
             text="选择文件夹", 
             command=self.select_folder
         )
-        self.select_button.grid(row=0, column=0, pady=5)
+        self.select_button.grid(row=0, column=0, pady=2)  # 减少pady
         
         # 显示选中文件夹路径的标签
         self.folder_label = ttk.Label(self.main_frame, text="未选择文件夹")
-        self.folder_label.grid(row=0, column=1, pady=5)
+        self.folder_label.grid(row=0, column=1, pady=2, padx=5)  # 增加一点水平间距
         
         # 创建删除按钮
         self.delete_button = ttk.Button(
@@ -34,7 +34,7 @@ class LinkCheckerTab(ttk.Frame):
             command=self.delete_duplicates,
             state='disabled'  # 初始状态为禁用
         )
-        self.delete_button.grid(row=0, column=2, pady=5, padx=5)
+        self.delete_button.grid(row=0, column=2, pady=2, padx=2)  # 减少padding
         
         # 创建清空按钮
         self.clear_button = ttk.Button(
@@ -42,24 +42,31 @@ class LinkCheckerTab(ttk.Frame):
             text="清空",
             command=self.clear_all
         )
-        self.clear_button.grid(row=0, column=3, pady=5, padx=5)
+        self.clear_button.grid(row=0, column=3, pady=2, padx=2)  # 减少padding
         
         # 创建结果显示区域
-        self.result_frame = ttk.LabelFrame(self.main_frame, text="检测结果", padding="5")
-        self.result_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        self.result_frame = ttk.LabelFrame(self.main_frame, text="检测结果")  # 移除padding
+        self.result_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(2, 0))  # 最小化上方间距
         
         # 创建文本框和滚动条
-        self.text_area = tk.Text(self.result_frame, height=20, width=80)
+        self.text_area = tk.Text(self.result_frame, padx=5, pady=3)  # 添加内边距保持可读性
         self.scrollbar = ttk.Scrollbar(self.result_frame, orient="vertical", command=self.text_area.yview)
         self.text_area.configure(yscrollcommand=self.scrollbar.set)
         
-        self.text_area.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.text_area.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))  # 移除padx，让文本框完全贴合
         self.scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
         
         # 配置网格权重
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        self.main_frame.columnconfigure(1, weight=1)
+        # 设置主框架的权重
+        self.main_frame.columnconfigure(0, weight=0)  # 按钮列固定宽度
+        self.main_frame.columnconfigure(1, weight=1)  # 文件夹路径标签可扩展
+        self.main_frame.columnconfigure(2, weight=0)  # 按钮列固定宽度  
+        self.main_frame.columnconfigure(3, weight=0)  # 按钮列固定宽度
+        self.main_frame.rowconfigure(1, weight=1)     # 检测结果区域可扩展
+        
+        # 设置结果框架的权重
         self.result_frame.columnconfigure(0, weight=1)
         self.result_frame.rowconfigure(0, weight=1)
 

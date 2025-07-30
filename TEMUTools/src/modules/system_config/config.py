@@ -20,13 +20,11 @@ class SystemConfig:
         self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config', 'system_config.json')
         self.config: Dict = self._load_config()
         
-        # 定义网站URL
-        self.seller_url = "https://agentseller.temu.com"
-        self.compliance_url = "https://agentseller.temu.com"
+        # 统一使用agentseller.temu.com域名
+        self.base_url = "https://agentseller.temu.com"
         
         # 定义测试API
-        self.seller_test_api = "https://agentseller.temu.com/api/seller/auth/userInfo"
-        self.compliance_test_api = "https://agentseller.temu.com/api/flash/compliance/dashBoard/main_page"
+        self.test_api_url = "https://agentseller.temu.com/api/seller/auth/userInfo"
         
         # 延迟初始化网络请求实例，避免循环导入
         self._request = None
@@ -43,8 +41,7 @@ class SystemConfig:
         if not os.path.exists(self.config_file):
             # 如果配置文件不存在,创建默认配置
             default_config = {
-                "seller_cookie": "",
-                "compliance_cookie": "",
+                "cookie": "",
                 "mallid": "",
                 "last_update": ""
             }
@@ -53,7 +50,19 @@ class SystemConfig:
             
         try:
             with open(self.config_file, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                config = json.load(f)
+                # 兼容旧版本配置，迁移数据
+                if "seller_cookie" in config or "compliance_cookie" in config:
+                    # 优先使用seller_cookie，如果没有则使用compliance_cookie
+                    cookie = config.get("seller_cookie") or config.get("compliance_cookie", "")
+                    new_config = {
+                        "cookie": cookie,
+                        "mallid": config.get("mallid", ""),
+                        "last_update": config.get("last_update", "")
+                    }
+                    self._save_config(new_config)
+                    return new_config
+                return config
         except Exception as e:
             print(f"加载配置文件失败: {str(e)}")
             return {}
@@ -105,17 +114,13 @@ class SystemConfig:
         except Exception as e:
             return "", f"获取Cookie失败: {str(e)}"
     
-    def get_seller_cookie_from_browser(self) -> Tuple[str, str]:
-        """从浏览器获取商家中心Cookie"""
-        return self.get_website_cookies(self.seller_url)
+    def get_cookie_from_browser(self) -> Tuple[str, str]:
+        """从浏览器获取agentseller.temu.com的Cookie"""
+        return self.get_website_cookies(self.base_url)
     
-    def get_compliance_cookie_from_browser(self) -> Tuple[str, str]:
-        """从浏览器获取合规中心Cookie"""
-        return self.get_website_cookies(self.compliance_url)
-    
-    def test_seller_api(self, cookie: str = None) -> Tuple[bool, str, Dict]:
+    def test_api(self, cookie: str = None) -> Tuple[bool, str, Dict]:
         """
-        测试商家中心API
+        测试API连接
         
         参数:
             cookie: 要测试的cookie，如果为None则使用配置中的cookie
@@ -124,7 +129,7 @@ class SystemConfig:
             tuple: (success, message, result_data)
         """
         if cookie is None:
-            cookie = self.get_seller_cookie()
+            cookie = self.get_cookie()
         
         if not cookie:
             return False, "Cookie为空，请先获取或配置Cookie", {}
@@ -133,15 +138,15 @@ class SystemConfig:
             # 获取NetworkRequest实例
             request = self._get_request()
             
-            # 临时更新配置中的商家中心cookie以便使用NetworkRequest
-            original_cookie = self.config.get("seller_cookie", "")
-            self.config["seller_cookie"] = cookie
+            # 临时更新配置中的cookie以便使用NetworkRequest
+            original_cookie = self.config.get("cookie", "")
+            self.config["cookie"] = cookie
             
-            # 使用NetworkRequest发送GET请求
-            result = request.post(self.seller_test_api, data={}, use_compliance=False)
+            # 使用NetworkRequest发送POST请求
+            result = request.post(self.test_api_url, data={})
             
             # 恢复原始cookie
-            self.config["seller_cookie"] = original_cookie
+            self.config["cookie"] = original_cookie
             
             if not result:
                 return False, "API请求失败，请检查Cookie是否有效", {}
@@ -156,7 +161,7 @@ class SystemConfig:
                         managed_type = mall.get('managedType', 'N/A')
                         mall_info += f"店铺: {mall_name} (ID: {mall_id}, 管理类型: {managed_type})\n"
                 
-                message = f"✅ 商家中心API测试成功！\n"
+                message = f"✅ API测试成功！\n"
                 message += f"账户ID: {user_info.get('accountId', 'N/A')}\n"
                 message += f"手机号: {user_info.get('maskMobile', 'N/A')}\n"
                 message += f"账户类型: {user_info.get('accountType', 'N/A')}\n"
@@ -168,89 +173,33 @@ class SystemConfig:
                 
         except Exception as e:
             return False, f"测试失败: {str(e)}", {}
-    
-    def test_compliance_api(self, cookie: str = None) -> Tuple[bool, str, Dict]:
-        """
-        测试合规中心API
-        
-        参数:
-            cookie: 要测试的cookie，如果为None则使用配置中的cookie
             
-        返回:
-            tuple: (success, message, result_data)
-        """
-        if cookie is None:
-            cookie = self.get_compliance_cookie()
-        
-        if not cookie:
-            return False, "Cookie为空，请先获取或配置Cookie", {}
-        
-        try:
-            # 获取NetworkRequest实例
-            request = self._get_request()
-            
-            # 临时更新配置中的合规中心cookie以便使用NetworkRequest
-            original_cookie = self.config.get("compliance_cookie", "")
-            self.config["compliance_cookie"] = cookie
-            
-            # 使用NetworkRequest发送GET请求
-            result = request.post(self.compliance_test_api,data={}, use_compliance=True)
-            
-            # 恢复原始cookie
-            self.config["compliance_cookie"] = original_cookie
-            
-            if not result:
-                return False, "API请求失败，请检查Cookie是否有效", {}
-            
-            if result.get('success'):
-                compliance_data = result.get('result', {})
-                
-                # 统计合规信息
-                addition_count = len(compliance_data.get('addition_compliance_board_list', []))
-                accused_count = len(compliance_data.get('accused_violate_policy_board_list', []))
-                
-                # 计算总问题数
-                total_issues = 0
-                for item in compliance_data.get('addition_compliance_board_list', []):
-                    total_issues += item.get('main_show_num', 0)
-                for item in compliance_data.get('accused_violate_policy_board_list', []):
-                    total_issues += item.get('main_show_num', 0)
-                
-                message = f"✅ 合规中心API测试成功！\n"
-                message += f"合规补充项目: {addition_count} 个\n"
-                message += f"违规指控项目: {accused_count} 个\n"
-                message += f"待处理问题总数: {total_issues} 个\n"
-                
-                return True, message, result
-            else:
-                return False, f"API返回失败: {result.get('error_msg', '未知错误')}", result
-                
-        except Exception as e:
-            return False, f"测试失败: {str(e)}", {}
-            
-    def get_seller_cookie(self) -> str:
-        """获取商家中心cookie"""
-        return self.config.get("seller_cookie", "")
-        
-    def get_compliance_cookie(self) -> str:
-        """获取合规cookie"""
-        return self.config.get("compliance_cookie", "")
+    def get_cookie(self) -> str:
+        """获取cookie"""
+        return self.config.get("cookie", "")
         
     def get_mallid(self) -> str:
         """获取mallid"""
         return self.config.get("mallid", "")
         
-    def update_config(self, seller_cookie: str = "", compliance_cookie: str = "", mallid: str = "") -> None:
+    def update_config(self, cookie: str = "", mallid: str = "") -> None:
         """更新配置"""
-        if seller_cookie:
-            self.config["seller_cookie"] = seller_cookie
-        if compliance_cookie:
-            self.config["compliance_cookie"] = compliance_cookie
+        if cookie:
+            self.config["cookie"] = cookie
         if mallid:
             self.config["mallid"] = mallid
             
         self.config["last_update"] = self._get_current_time()
         self._save_config(self.config)
+        
+    # 保留兼容性方法，避免其他模块调用报错
+    def get_seller_cookie(self) -> str:
+        """获取cookie（兼容性方法）"""
+        return self.get_cookie()
+        
+    def get_compliance_cookie(self) -> str:
+        """获取cookie（兼容性方法）"""
+        return self.get_cookie()
         
     def _get_current_time(self) -> str:
         """获取当前时间字符串"""

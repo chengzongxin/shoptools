@@ -23,25 +23,32 @@ class JitSignTab(ttk.Frame):
         
     def setup_ui(self):
         """设置用户界面"""
+        main_frame = ttk.Frame(self, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         # 创建输入区域
-        input_frame = ttk.LabelFrame(self, text="参数设置")
-        input_frame.pack(fill="x", padx=5, pady=5)
+        input_frame = ttk.LabelFrame(main_frame, text="参数设置")
+        input_frame.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.create_input_fields(input_frame)
         
         # 创建进度条
-        progress_frame = ttk.LabelFrame(self, text="处理进度")
-        progress_frame.pack(fill="x", padx=5, pady=5)
+        progress_frame = ttk.LabelFrame(main_frame, text="处理进度")
+        progress_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.create_progress_bar(progress_frame)
         
         # 创建日志区域
-        log_frame = ttk.LabelFrame(self, text="运行日志")
-        log_frame.pack(fill="both", expand=True, padx=5, pady=5)
+        log_frame = ttk.LabelFrame(main_frame, text="操作日志")
+        log_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.create_log_area(log_frame)
         
         # 创建按钮区域
-        button_frame = ttk.Frame(self)
-        button_frame.pack(fill="x", padx=5, pady=5)
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0, columnspan=4, pady=10)
         self.create_buttons(button_frame)
+
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(2, weight=1)
         
     def create_input_fields(self, parent):
         """创建输入字段
@@ -107,7 +114,7 @@ class JitSignTab(ttk.Frame):
             text="开始签署",
             command=self.start_signing
         )
-        self.start_button.pack(side="left", padx=5)
+        self.start_button.grid(row=0, column=0, padx=5)
         
         # 停止按钮
         self.stop_button = ttk.Button(
@@ -116,7 +123,7 @@ class JitSignTab(ttk.Frame):
             command=self.stop_signing,
             state="disabled"
         )
-        self.stop_button.pack(side="left", padx=5)
+        self.stop_button.grid(row=0, column=1, padx=5)
         
     def setup_logging(self):
         """设置日志记录"""

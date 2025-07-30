@@ -18,22 +18,15 @@ class ComplianceUploaderTab(ttk.Frame):
         main_frame = ttk.Frame(self, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # 按钮
-        button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=0, column=0, columnspan=4, pady=10)
-        self.start_button = ttk.Button(button_frame, text="开始批量上传", command=self.start_upload)
-        self.start_button.grid(row=0, column=0, padx=5)
-        self.stop_button = ttk.Button(button_frame, text="停止", command=self.stop_upload, state='disabled')
-        self.stop_button.grid(row=0, column=1, padx=5)
 
         # 进度条
         self.progress_var = tk.DoubleVar()
         self.progress_bar = ttk.Progressbar(main_frame, variable=self.progress_var, maximum=100)
-        self.progress_bar.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
+        self.progress_bar.grid(row=0, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
 
         # 日志显示
         log_frame = ttk.LabelFrame(main_frame, text="操作日志", padding="5")
-        log_frame.grid(row=2, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        log_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.log_text = tk.Text(log_frame, height=15, width=100, state='disabled')
         scrollbar = ttk.Scrollbar(log_frame, orient="vertical", command=self.log_text.yview)
         self.log_text.configure(yscrollcommand=scrollbar.set)
@@ -42,9 +35,19 @@ class ComplianceUploaderTab(ttk.Frame):
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
 
+        
+        # 按钮
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=2, column=0, columnspan=4, pady=10)
+        self.start_button = ttk.Button(button_frame, text="开始批量上传", command=self.start_upload)
+        self.start_button.grid(row=0, column=0, padx=5)
+        self.stop_button = ttk.Button(button_frame, text="停止", command=self.stop_upload, state='disabled')
+        self.stop_button.grid(row=0, column=1, padx=5)
+
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(1, weight=1)
 
     def setup_logging(self):
         class TextHandler(logging.Handler):

@@ -44,12 +44,13 @@ class JitOpenTab(ttk.Frame):
         self.create_buttons(main_frame)
         
         # 创建商品列表
-        self.create_product_list(main_frame)
+        # self.create_product_list(main_frame)
         
         # 配置网格权重
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
+        main_frame.rowconfigure(2, weight=1)
         
     def create_input_fields(self, parent):
         """创建输入字段"""
@@ -118,12 +119,12 @@ class JitOpenTab(ttk.Frame):
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
         
         # 开始爬取按钮
-        self.start_button = ttk.Button(
-            button_frame,
-            text="获取商品列表",
-            command=self.start_crawling
-        )
-        self.start_button.grid(row=0, column=0, padx=5)
+        # self.start_button = ttk.Button(
+        #     button_frame,
+        #     text="获取商品列表",
+        #     command=self.start_crawling
+        # )
+        # self.start_button.grid(row=0, column=0, padx=5)
         
         # 批量处理按钮
         self.batch_button = ttk.Button(
@@ -142,24 +143,24 @@ class JitOpenTab(ttk.Frame):
         )
         self.stop_button.grid(row=0, column=2, padx=5)
         
-    def create_product_list(self, parent):
-        """创建商品列表"""
-        # 创建表格
-        columns = ("商品ID", "商品名称", "SKC ID", "货号", "价格", "买家", "创建时间", "JIT状态")
-        self.tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
+    # def create_product_list(self, parent):
+    #     """创建商品列表"""
+    #     # 创建表格
+    #     columns = ("商品ID", "商品名称", "SKC ID", "货号", "价格", "买家", "创建时间", "JIT状态")
+    #     self.tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
         
-        # 设置列标题
-        for col in columns:
-            self.tree.heading(col, text=col)
-            self.tree.column(col, width=100)
+    #     # 设置列标题
+    #     for col in columns:
+    #         self.tree.heading(col, text=col)
+    #         self.tree.column(col, width=100)
             
-        # 添加滚动条
-        scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscrollcommand=scrollbar.set)
+    #     # 添加滚动条
+    #     scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.tree.yview)
+    #     self.tree.configure(yscrollcommand=scrollbar.set)
         
-        # 放置表格和滚动条
-        self.tree.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        scrollbar.grid(row=4, column=2, sticky=(tk.N, tk.S))
+    #     # 放置表格和滚动条
+    #     self.tree.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+    #     scrollbar.grid(row=4, column=2, sticky=(tk.N, tk.S))
         
     def setup_logging(self):
         """设置日志处理器"""
@@ -226,7 +227,7 @@ class JitOpenTab(ttk.Frame):
                 return
                 
             # 禁用开始按钮,启用停止按钮
-            self.start_button.config(state='disabled')
+            # self.start_button.config(state='disabled')
             self.batch_button.config(state='disabled')
             self.stop_button.config(state='normal')
             
@@ -274,7 +275,7 @@ class JitOpenTab(ttk.Frame):
             messagebox.showerror("错误", f"爬取数据失败: {str(e)}")
         finally:
             # 恢复按钮状态
-            self.start_button.config(state='normal')
+            # self.start_button.config(state='normal')
             self.batch_button.config(state='normal')
             self.stop_button.config(state='disabled')
             
@@ -291,8 +292,8 @@ class JitOpenTab(ttk.Frame):
     def update_product_list(self):
         """更新商品列表"""
         # 清空现有数据
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        # for item in self.tree.get_children():
+        #     self.tree.delete(item)
             
         self.logger.info(f"开始更新商品列表，当前数据条数: {len(self.current_data)}")
             
@@ -311,16 +312,16 @@ class JitOpenTab(ttk.Frame):
                 
                 self.logger.debug(f"添加商品到列表: ID={product['productId']}, 名称={product['productName']}")
                 
-                self.tree.insert('', 'end', values=(
-                    product['productId'],
-                    product['productName'],
-                    skc['skcId'],
-                    skc.get('extCode', ''),
-                    skc.get('supplierPrice', ''),
-                    product.get('buyerName', ''),
-                    created_at,
-                    jit_status_text
-                ))
+                # self.tree.insert('', 'end', values=(
+                #     product['productId'],
+                #     product['productName'],
+                #     skc['skcId'],
+                #     skc.get('extCode', ''),
+                #     skc.get('supplierPrice', ''),
+                #     product.get('buyerName', ''),
+                #     created_at,
+                #     jit_status_text
+                # ))
                 break  # 只显示第一个SKC的数据
             
     def start_batch_processing(self):
@@ -350,7 +351,7 @@ class JitOpenTab(ttk.Frame):
                 return
                 
             # 禁用按钮
-            self.start_button.config(state='disabled')
+            # self.start_button.config(state='disabled')
             self.batch_button.config(state='disabled')
             self.stop_button.config(state='normal')
             
@@ -404,6 +405,6 @@ class JitOpenTab(ttk.Frame):
             messagebox.showerror("错误", f"批量处理失败: {str(e)}")
         finally:
             # 恢复按钮状态
-            self.start_button.config(state='normal')
+            # self.start_button.config(state='normal')
             self.batch_button.config(state='normal')
             self.stop_button.config(state='disabled') 

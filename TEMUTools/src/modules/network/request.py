@@ -102,9 +102,9 @@ class NetworkRequest:
                     pass
                 self._root_window = None
         
-    def _get_headers(self, use_compliance: bool = False) -> Dict[str, str]:
+    def _get_headers(self) -> Dict[str, str]:
         """获取请求头"""
-        cookie = self.config.get_compliance_cookie() if use_compliance else self.config.get_seller_cookie()
+        cookie = self.config.get_cookie()
         mallid = self.config.get_mallid()
         return {
             "accept": "*/*",
@@ -126,10 +126,10 @@ class NetworkRequest:
             "user-agent": "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Mobile Safari/537.36"
         }
         
-    def get(self, url: str, params: Optional[Dict] = None, use_compliance: bool = False) -> Optional[Dict]:
+    def get(self, url: str, params: Optional[Dict] = None) -> Optional[Dict]:
         """发送GET请求"""
         try:
-            headers = self._get_headers(use_compliance)
+            headers = self._get_headers()
             response = self.session.get(url, params=params, headers=headers)
             response.raise_for_status()
             self.logger.info(f"GET请求成功")
@@ -153,10 +153,10 @@ class NetworkRequest:
             self.logger.error(f"GET请求失败: {str(e)}")
             return None
             
-    def post(self, url: str, data: Dict[str, Any], use_compliance: bool = False) -> Optional[Dict]:
+    def post(self, url: str, data: Dict[str, Any]) -> Optional[Dict]:
         """发送POST请求"""
         try:
-            headers = self._get_headers(use_compliance)
+            headers = self._get_headers()
             response = self.session.post(url, json=data, headers=headers)
             response.raise_for_status()
             self.logger.info(f"POST请求成功, url: {url}, 参数: {data} ,状态码: {response.status_code}, 响应内容: {response.text[:200]}")
@@ -180,10 +180,10 @@ class NetworkRequest:
             self.logger.error(f"POST请求失败: {str(e)}")
             return None
             
-    def put(self, url: str, data: Dict[str, Any], use_compliance: bool = False) -> Optional[Dict]:
+    def put(self, url: str, data: Dict[str, Any]) -> Optional[Dict]:
         """发送PUT请求"""
         try:
-            headers = self._get_headers(use_compliance)
+            headers = self._get_headers()
             response = self.session.put(url, json=data, headers=headers)
             response.raise_for_status()
             self.logger.info(f"PUT请求成功")
@@ -207,10 +207,10 @@ class NetworkRequest:
             self.logger.error(f"PUT请求失败: {str(e)}")
             return None
             
-    def delete(self, url: str, use_compliance: bool = False) -> Optional[Dict]:
+    def delete(self, url: str) -> Optional[Dict]:
         """发送DELETE请求"""
         try:
-            headers = self._get_headers(use_compliance)
+            headers = self._get_headers()
             response = self.session.delete(url, headers=headers)
             response.raise_for_status()
             self.logger.info(f"DELETE请求成功")
@@ -234,10 +234,10 @@ class NetworkRequest:
             self.logger.error(f"DELETE请求失败: {str(e)}")
             return None
             
-    def download_file(self, url: str, save_path: str, use_compliance: bool = False) -> bool:
+    def download_file(self, url: str, save_path: str) -> bool:
         """下载文件"""
         try:
-            headers = self._get_headers(use_compliance)
+            headers = self._get_headers()
             response = self.session.get(url, headers=headers, stream=True)
             response.raise_for_status()
             
