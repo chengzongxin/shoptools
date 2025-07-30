@@ -1,0 +1,985 @@
+2025-07-30 15:13:43,866 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:13:43,866 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:13:45,151 - INFO - ✅ API连接测试成功
+2025-07-30 15:13:45,151 - INFO - 
+==================================================
+2025-07-30 15:13:45,151 - INFO - 📄 测试第 1 页
+2025-07-30 15:13:45,151 - INFO - ==================================================
+2025-07-30 15:13:45,151 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:13:46,848 - INFO - 📊 响应状态码: 200
+2025-07-30 15:13:46,849 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:13:46 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859625382-13560338664eff205192c10dee022857-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859625382|1220', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:13:46,850 - INFO - ✅ 数据查询成功
+2025-07-30 15:13:46,850 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:13:46,850 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:13:46,851 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:13:46,851 - INFO - ✅ 成功标识: True
+2025-07-30 15:13:46,860 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:13:46,860 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:13:48,865 - INFO - 
+==================================================
+2025-07-30 15:13:48,866 - INFO - 📄 测试第 2 页
+2025-07-30 15:13:48,866 - INFO - ==================================================
+2025-07-30 15:13:48,866 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:13:50,413 - INFO - 📊 响应状态码: 200
+2025-07-30 15:13:50,413 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:13:50 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859629090-45704dd3ea54b01fa0295e3168854990-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859629090|1182', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:13:50,416 - INFO - ✅ 数据查询成功
+2025-07-30 15:13:50,416 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:13:50,416 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:13:50,416 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:13:50,416 - INFO - ✅ 成功标识: True
+2025-07-30 15:13:50,422 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:13:50,423 - INFO - 
+🎉 测试完成！
+2025-07-30 15:14:18,166 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:14:18,166 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:14:20,229 - INFO - ✅ API连接测试成功
+2025-07-30 15:14:20,229 - INFO - 
+==================================================
+2025-07-30 15:14:20,230 - INFO - 📄 测试第 1 页
+2025-07-30 15:14:20,230 - INFO - ==================================================
+2025-07-30 15:14:20,230 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:14:23,908 - INFO - 📊 响应状态码: 200
+2025-07-30 15:14:23,908 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:14:21 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859660471-c961e303c064441c64a20bf53d8f145f-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859660471|1066', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:14:23,909 - INFO - ✅ 数据查询成功
+2025-07-30 15:14:23,909 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:14:23,909 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:14:23,909 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:14:23,909 - INFO - ✅ 成功标识: True
+2025-07-30 15:14:23,914 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:14:23,915 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:14:25,920 - INFO - 
+==================================================
+2025-07-30 15:14:25,920 - INFO - 📄 测试第 2 页
+2025-07-30 15:14:25,920 - INFO - ==================================================
+2025-07-30 15:14:25,920 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:14:27,555 - INFO - 📊 响应状态码: 200
+2025-07-30 15:14:27,555 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:14:27 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859666162-8fb54d32ce0ea70ec382459f752cb3df-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859666162|1004', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:14:27,556 - INFO - ✅ 数据查询成功
+2025-07-30 15:14:27,556 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:14:27,556 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:14:27,556 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:14:27,557 - INFO - ✅ 成功标识: True
+2025-07-30 15:14:27,562 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:14:27,562 - INFO - 
+🎉 测试完成！
+2025-07-30 15:16:33,909 - INFO - 📁 创建输出目录: data
+2025-07-30 15:16:33,909 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:16:33,909 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:16:33,909 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:16:33,909 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:16:35,647 - INFO - ✅ API连接测试成功
+2025-07-30 15:16:35,648 - INFO - 
+==================================================
+2025-07-30 15:16:35,648 - INFO - 📄 测试第 1 页
+2025-07-30 15:16:35,648 - INFO - ==================================================
+2025-07-30 15:16:35,648 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:16:35,929 - INFO - ✅ API连接测试成功
+2025-07-30 15:16:35,929 - INFO - 
+==================================================
+2025-07-30 15:16:35,929 - INFO - 📄 测试第 1 页
+2025-07-30 15:16:35,929 - INFO - ==================================================
+2025-07-30 15:16:35,929 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:16:37,241 - INFO - 📊 响应状态码: 200
+2025-07-30 15:16:37,241 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:16:36 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859795883-d04e3fc5f8d0e7d641f567af89aaead6-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859795883|1105', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:16:37,242 - INFO - ✅ 数据查询成功
+2025-07-30 15:16:37,242 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:16:37,250 - INFO - 💾 数据已保存到: data/temu_products_page_1_20250730_151637.json
+2025-07-30 15:16:37,250 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:16:37,250 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:16:37,250 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:16:37,250 - INFO - ✅ 成功标识: True
+2025-07-30 15:16:37,250 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:16:37,250 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:16:37,250 - INFO - 📦 产品数量: 20
+2025-07-30 15:16:37,250 - INFO - 📦 前3个产品信息:
+2025-07-30 15:16:37,250 - INFO -    产品 1: ID=1971839188, 名称=Day Of The Dead ugar kull Pattern Dia De Lo Muerto...
+2025-07-30 15:16:37,250 - INFO -    产品 2: ID=8826202509, 名称=Imagining utton Hoo Apron for Cooking Kitchen Dail...
+2025-07-30 15:16:37,250 - INFO -    产品 3: ID=9592220775, 名称=Imagining utton Hoo Tote Bag Lightweight Large Cap...
+2025-07-30 15:16:37,250 - INFO - 📄 总记录数: 66231
+2025-07-30 15:16:37,256 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:16:37,256 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:16:37,804 - INFO - 📊 响应状态码: 200
+2025-07-30 15:16:37,804 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:16:37 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859796230-777bc232356d2c877f0fb2f0fe1a29d7-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859796230|1106', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:16:37,806 - INFO - ✅ 数据查询成功
+2025-07-30 15:16:37,806 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:16:37,814 - INFO - 💾 数据已保存到: data/temu_products_page_1_20250730_151637.json
+2025-07-30 15:16:37,814 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:16:37,814 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:16:37,814 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:16:37,814 - INFO - ✅ 成功标识: True
+2025-07-30 15:16:37,814 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:16:37,814 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:16:37,814 - INFO - 📦 产品数量: 20
+2025-07-30 15:16:37,814 - INFO - 📦 前3个产品信息:
+2025-07-30 15:16:37,814 - INFO -    产品 1: ID=1971839188, 名称=Day Of The Dead ugar kull Pattern Dia De Lo Muerto...
+2025-07-30 15:16:37,814 - INFO -    产品 2: ID=8826202509, 名称=Imagining utton Hoo Apron for Cooking Kitchen Dail...
+2025-07-30 15:16:37,815 - INFO -    产品 3: ID=9592220775, 名称=Imagining utton Hoo Tote Bag Lightweight Large Cap...
+2025-07-30 15:16:37,815 - INFO - 📄 总记录数: 66231
+2025-07-30 15:16:37,821 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:16:37,821 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:16:39,260 - INFO - 
+==================================================
+2025-07-30 15:16:39,260 - INFO - 📄 测试第 2 页
+2025-07-30 15:16:39,260 - INFO - ==================================================
+2025-07-30 15:16:39,260 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:16:39,825 - INFO - 
+==================================================
+2025-07-30 15:16:39,825 - INFO - 📄 测试第 2 页
+2025-07-30 15:16:39,825 - INFO - ==================================================
+2025-07-30 15:16:39,825 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:16:40,629 - INFO - 📊 响应状态码: 200
+2025-07-30 15:16:40,629 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:16:40 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859799491-d012a4d9dfe88931b7e8b788dbaf27c3-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859799491|929', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:16:40,630 - INFO - ✅ 数据查询成功
+2025-07-30 15:16:40,630 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:16:40,639 - INFO - 💾 数据已保存到: data/temu_products_page_2_20250730_151640.json
+2025-07-30 15:16:40,639 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:16:40,639 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:16:40,639 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:16:40,639 - INFO - ✅ 成功标识: True
+2025-07-30 15:16:40,639 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:16:40,639 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:16:40,639 - INFO - 📦 产品数量: 20
+2025-07-30 15:16:40,639 - INFO - 📦 前3个产品信息:
+2025-07-30 15:16:40,639 - INFO -    产品 1: ID=1556316466, 名称=Girl DAD For Father Tote Bag Lightweight Large Cap...
+2025-07-30 15:16:40,639 - INFO -    产品 2: ID=5776519192, 名称=Grey Warden Textile Dragon Age Geometric Tote Bag ...
+2025-07-30 15:16:40,639 - INFO -    产品 3: ID=3298413857, 名称=Acoutic Guitar eamle Pattern Theme Tote Bag Lightw...
+2025-07-30 15:16:40,639 - INFO - 📄 总记录数: 66231
+2025-07-30 15:16:40,645 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:16:40,645 - INFO - 
+📊 总共获取到 40 个产品
+2025-07-30 15:16:40,658 - INFO - 📊 产品摘要已保存到: data/temu_products_summary_20250730_151640.json
+2025-07-30 15:16:40,659 - INFO - 📊 CSV摘要已保存到: data/temu_products_summary_20250730_151640.csv
+2025-07-30 15:16:40,659 - INFO - 
+🎉 测试完成！
+2025-07-30 15:16:41,587 - INFO - 📊 响应状态码: 200
+2025-07-30 15:16:41,588 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:16:41 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859800057-097b38e9576ef78dc1235c2f847ebc67-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859800057|1087', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:16:41,589 - INFO - ✅ 数据查询成功
+2025-07-30 15:16:41,589 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:16:41,596 - INFO - 💾 数据已保存到: data/temu_products_page_2_20250730_151641.json
+2025-07-30 15:16:41,596 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:16:41,596 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:16:41,596 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:16:41,596 - INFO - ✅ 成功标识: True
+2025-07-30 15:16:41,596 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:16:41,596 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:16:41,596 - INFO - 📦 产品数量: 20
+2025-07-30 15:16:41,596 - INFO - 📦 前3个产品信息:
+2025-07-30 15:16:41,596 - INFO -    产品 1: ID=1556316466, 名称=Girl DAD For Father Tote Bag Lightweight Large Cap...
+2025-07-30 15:16:41,596 - INFO -    产品 2: ID=5776519192, 名称=Grey Warden Textile Dragon Age Geometric Tote Bag ...
+2025-07-30 15:16:41,596 - INFO -    产品 3: ID=3298413857, 名称=Acoutic Guitar eamle Pattern Theme Tote Bag Lightw...
+2025-07-30 15:16:41,596 - INFO - 📄 总记录数: 66231
+2025-07-30 15:16:41,601 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:16:41,602 - INFO - 
+📊 总共获取到 40 个产品
+2025-07-30 15:16:41,659 - INFO - 📊 产品摘要已保存到: data/temu_products_summary_20250730_151641.json
+2025-07-30 15:16:41,660 - INFO - 📊 CSV摘要已保存到: data/temu_products_summary_20250730_151641.csv
+2025-07-30 15:16:41,660 - INFO - 
+🎉 测试完成！
+2025-07-30 15:18:26,163 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:18:26,163 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:18:27,465 - INFO - ✅ API连接测试成功
+2025-07-30 15:18:27,465 - INFO - 
+==================================================
+2025-07-30 15:18:27,465 - INFO - 📄 测试第 1 页
+2025-07-30 15:18:27,465 - INFO - ==================================================
+2025-07-30 15:18:27,465 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:18:28,811 - INFO - 📊 响应状态码: 200
+2025-07-30 15:18:28,811 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:18:28 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859907700-5ad433af63a568474c8849122be43115-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859907700|984', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:18:28,814 - INFO - ✅ 数据查询成功
+2025-07-30 15:18:28,814 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:18:28,833 - INFO - 💾 数据已保存到: data/temu_products_page_1_20250730_151828.json
+2025-07-30 15:18:28,833 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:18:28,833 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:18:28,833 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:18:28,833 - INFO - ✅ 成功标识: True
+2025-07-30 15:18:28,833 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:18:28,833 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:18:28,833 - INFO - 📦 产品数量: 20
+2025-07-30 15:18:28,834 - INFO - 📦 前3个产品信息:
+2025-07-30 15:18:28,834 - INFO -    产品 1: ID=1971839188, 名称=Day Of The Dead ugar kull Pattern Dia De Lo Muerto...
+2025-07-30 15:18:28,834 - INFO -    产品 2: ID=8826202509, 名称=Imagining utton Hoo Apron for Cooking Kitchen Dail...
+2025-07-30 15:18:28,834 - INFO -    产品 3: ID=9592220775, 名称=Imagining utton Hoo Tote Bag Lightweight Large Cap...
+2025-07-30 15:18:28,834 - INFO - 📄 总记录数: 66231
+2025-07-30 15:18:28,842 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:18:28,842 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:18:30,845 - INFO - 
+==================================================
+2025-07-30 15:18:30,845 - INFO - 📄 测试第 2 页
+2025-07-30 15:18:30,845 - INFO - ==================================================
+2025-07-30 15:18:30,845 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:18:32,307 - INFO - 📊 响应状态码: 200
+2025-07-30 15:18:32,307 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:18:32 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859911079-2f7a8415b4d52500265543d2dbb96bd9-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859911079|1105', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:18:32,310 - INFO - ✅ 数据查询成功
+2025-07-30 15:18:32,310 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:18:32,329 - INFO - 💾 数据已保存到: data/temu_products_page_2_20250730_151832.json
+2025-07-30 15:18:32,329 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:18:32,329 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:18:32,329 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:18:32,329 - INFO - ✅ 成功标识: True
+2025-07-30 15:18:32,329 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:18:32,329 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:18:32,329 - INFO - 📦 产品数量: 20
+2025-07-30 15:18:32,329 - INFO - 📦 前3个产品信息:
+2025-07-30 15:18:32,329 - INFO -    产品 1: ID=1556316466, 名称=Girl DAD For Father Tote Bag Lightweight Large Cap...
+2025-07-30 15:18:32,329 - INFO -    产品 2: ID=5776519192, 名称=Grey Warden Textile Dragon Age Geometric Tote Bag ...
+2025-07-30 15:18:32,329 - INFO -    产品 3: ID=3298413857, 名称=Acoutic Guitar eamle Pattern Theme Tote Bag Lightw...
+2025-07-30 15:18:32,329 - INFO - 📄 总记录数: 66231
+2025-07-30 15:18:32,339 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:18:32,340 - INFO - 
+📊 总共获取到 40 个产品
+2025-07-30 15:18:32,357 - INFO - 📊 产品摘要已保存到: data/temu_products_summary_20250730_151832.json
+2025-07-30 15:18:32,358 - INFO - 📊 CSV摘要已保存到: data/temu_products_summary_20250730_151832.csv
+2025-07-30 15:18:32,358 - INFO - 
+🎉 测试完成！
+2025-07-30 15:18:44,931 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:18:44,931 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:18:46,433 - INFO - ✅ API连接测试成功
+2025-07-30 15:18:46,434 - INFO - 
+==================================================
+2025-07-30 15:18:46,434 - INFO - 📄 测试第 1 页
+2025-07-30 15:18:46,434 - INFO - ==================================================
+2025-07-30 15:18:46,434 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:18:47,965 - INFO - 📊 响应状态码: 200
+2025-07-30 15:18:47,965 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:18:47 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859926653-e3ca640769713a5233358e9399766d68-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859926653|1113', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:18:47,968 - INFO - ✅ 数据查询成功
+2025-07-30 15:18:47,968 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:18:47,981 - INFO - 💾 数据已保存到: data/temu_products_page_1_20250730_151847.json
+2025-07-30 15:18:47,981 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:18:47,981 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:18:47,981 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:18:47,981 - INFO - ✅ 成功标识: True
+2025-07-30 15:18:47,981 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:18:47,981 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:18:47,981 - INFO - 📦 产品数量: 20
+2025-07-30 15:18:47,981 - INFO - 📦 前3个产品信息:
+2025-07-30 15:18:47,981 - INFO -    产品 1: ID=1971839188, 名称=Day Of The Dead ugar kull Pattern Dia De Lo Muerto...
+2025-07-30 15:18:47,981 - INFO -    产品 2: ID=8826202509, 名称=Imagining utton Hoo Apron for Cooking Kitchen Dail...
+2025-07-30 15:18:47,981 - INFO -    产品 3: ID=9592220775, 名称=Imagining utton Hoo Tote Bag Lightweight Large Cap...
+2025-07-30 15:18:47,981 - INFO - 📄 总记录数: 66231
+2025-07-30 15:18:47,986 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:18:47,986 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:18:49,991 - INFO - 
+==================================================
+2025-07-30 15:18:49,991 - INFO - 📄 测试第 2 页
+2025-07-30 15:18:49,991 - INFO - ==================================================
+2025-07-30 15:18:49,991 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:18:51,887 - INFO - 📊 响应状态码: 200
+2025-07-30 15:18:51,887 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:18:51 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859930222-8957f6add6dc392d6f6ef37a71ab140f-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859930222|1124', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:18:51,890 - INFO - ✅ 数据查询成功
+2025-07-30 15:18:51,890 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:18:51,909 - INFO - 💾 数据已保存到: data/temu_products_page_2_20250730_151851.json
+2025-07-30 15:18:51,909 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:18:51,909 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:18:51,909 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:18:51,909 - INFO - ✅ 成功标识: True
+2025-07-30 15:18:51,909 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:18:51,909 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:18:51,909 - INFO - 📦 产品数量: 20
+2025-07-30 15:18:51,909 - INFO - 📦 前3个产品信息:
+2025-07-30 15:18:51,909 - INFO -    产品 1: ID=1556316466, 名称=Girl DAD For Father Tote Bag Lightweight Large Cap...
+2025-07-30 15:18:51,909 - INFO -    产品 2: ID=5776519192, 名称=Grey Warden Textile Dragon Age Geometric Tote Bag ...
+2025-07-30 15:18:51,909 - INFO -    产品 3: ID=3298413857, 名称=Acoutic Guitar eamle Pattern Theme Tote Bag Lightw...
+2025-07-30 15:18:51,909 - INFO - 📄 总记录数: 66231
+2025-07-30 15:18:51,919 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:18:51,920 - INFO - 
+📊 总共获取到 40 个产品
+2025-07-30 15:18:51,936 - INFO - 📊 产品摘要已保存到: data/temu_products_summary_20250730_151851.json
+2025-07-30 15:18:51,937 - INFO - 📊 CSV摘要已保存到: data/temu_products_summary_20250730_151851.csv
+2025-07-30 15:18:51,937 - INFO - 
+🎉 测试完成！
+2025-07-30 15:19:19,034 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:19:19,034 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:19:20,397 - INFO - ✅ API连接测试成功
+2025-07-30 15:19:20,397 - INFO - 
+==================================================
+2025-07-30 15:19:20,397 - INFO - 📄 测试第 1 页
+2025-07-30 15:19:20,397 - INFO - ==================================================
+2025-07-30 15:19:20,397 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:19:22,142 - INFO - 📊 响应状态码: 200
+2025-07-30 15:19:22,143 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:19:21 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859960630-a648da2358631420967be0451bf8094d-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859960630|1309', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:19:22,146 - INFO - ✅ 数据查询成功
+2025-07-30 15:19:22,146 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:19:22,164 - INFO - 💾 数据已保存到: data/temu_products_page_1_20250730_151922.json
+2025-07-30 15:19:22,164 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:19:22,164 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:19:22,165 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:19:22,165 - INFO - ✅ 成功标识: True
+2025-07-30 15:19:22,167 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:19:22,167 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:19:22,167 - INFO - 📦 产品数量: 20
+2025-07-30 15:19:22,167 - INFO - 📦 前3个产品信息:
+2025-07-30 15:19:22,167 - INFO -    产品 1: ID=1971839188, 名称=Day Of The Dead ugar kull Pattern Dia De Lo Muerto...
+2025-07-30 15:19:22,167 - INFO -    产品 2: ID=8826202509, 名称=Imagining utton Hoo Apron for Cooking Kitchen Dail...
+2025-07-30 15:19:22,167 - INFO -    产品 3: ID=9592220775, 名称=Imagining utton Hoo Tote Bag Lightweight Large Cap...
+2025-07-30 15:19:22,167 - INFO - 📄 总记录数: 66231
+2025-07-30 15:19:22,177 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:19:22,177 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:19:24,180 - INFO - 
+==================================================
+2025-07-30 15:19:24,180 - INFO - 📄 测试第 2 页
+2025-07-30 15:19:24,181 - INFO - ==================================================
+2025-07-30 15:19:24,181 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:19:27,494 - INFO - 📊 响应状态码: 200
+2025-07-30 15:19:27,494 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:19:25 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753859964414-c20016ef87248b566b1ae13b19aa7ce9-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753859964414|1046', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:19:27,495 - INFO - ✅ 数据查询成功
+2025-07-30 15:19:27,496 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:19:27,503 - INFO - 💾 数据已保存到: data/temu_products_page_2_20250730_151927.json
+2025-07-30 15:19:27,503 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:19:27,503 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:19:27,503 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:19:27,503 - INFO - ✅ 成功标识: True
+2025-07-30 15:19:27,503 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:19:27,503 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:19:27,503 - INFO - 📦 产品数量: 20
+2025-07-30 15:19:27,503 - INFO - 📦 前3个产品信息:
+2025-07-30 15:19:27,503 - INFO -    产品 1: ID=1556316466, 名称=Girl DAD For Father Tote Bag Lightweight Large Cap...
+2025-07-30 15:19:27,503 - INFO -    产品 2: ID=5776519192, 名称=Grey Warden Textile Dragon Age Geometric Tote Bag ...
+2025-07-30 15:19:27,504 - INFO -    产品 3: ID=3298413857, 名称=Acoutic Guitar eamle Pattern Theme Tote Bag Lightw...
+2025-07-30 15:19:27,504 - INFO - 📄 总记录数: 66231
+2025-07-30 15:19:27,509 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:19:27,509 - INFO - 
+📊 总共获取到 40 个产品
+2025-07-30 15:19:27,523 - INFO - 📊 产品摘要已保存到: data/temu_products_summary_20250730_151927.json
+2025-07-30 15:19:27,523 - INFO - 📊 CSV摘要已保存到: data/temu_products_summary_20250730_151927.csv
+2025-07-30 15:19:27,523 - INFO - 
+🎉 测试完成！
+2025-07-30 15:20:10,864 - INFO - Temu API 测试器初始化完成
+2025-07-30 15:20:10,864 - INFO - 🚀 开始运行Temu API测试...
+2025-07-30 15:20:13,001 - INFO - ✅ API连接测试成功
+2025-07-30 15:20:13,002 - INFO - 
+==================================================
+2025-07-30 15:20:13,002 - INFO - 📄 测试第 1 页
+2025-07-30 15:20:13,002 - INFO - ==================================================
+2025-07-30 15:20:13,002 - INFO - 🔄 正在查询第 1 页，每页 20 条数据...
+2025-07-30 15:20:14,602 - INFO - 📊 响应状态码: 200
+2025-07-30 15:20:14,602 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:20:14 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753860013234-7c97c8d13f0c5cb0b326b4c63422ab6f-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753860013234|1164', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:20:14,605 - INFO - ✅ 数据查询成功
+2025-07-30 15:20:14,605 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:20:14,618 - INFO - 💾 数据已保存到: data/temu_products_page_1_20250730_152014.json
+2025-07-30 15:20:14,618 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:20:14,618 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:20:14,618 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:20:14,618 - INFO - ✅ 成功标识: True
+2025-07-30 15:20:14,618 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:20:14,618 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:20:14,618 - INFO - 📦 产品数量: 20
+2025-07-30 15:20:14,618 - INFO - 📦 前3个产品信息:
+2025-07-30 15:20:14,618 - INFO -    产品 1: ID=1971839188, 名称=Day Of The Dead ugar kull Pattern Dia De Lo Muerto...
+2025-07-30 15:20:14,618 - INFO -    产品 2: ID=8826202509, 名称=Imagining utton Hoo Apron for Cooking Kitchen Dail...
+2025-07-30 15:20:14,618 - INFO -    产品 3: ID=9592220775, 名称=Imagining utton Hoo Tote Bag Lightweight Large Cap...
+2025-07-30 15:20:14,618 - INFO - 📄 总记录数: 66231
+2025-07-30 15:20:14,623 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1971839188,
+        "productSkcId": 90683709443,
+        "productName": "Day Of The Dead ugar kull Pattern Dia De Lo Muerto Halloween De Lo Muerto Apron for Cooking Kitchen Daily Use Unisex Gift Idea for Home Cooks",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607319122,
+        "leafCat": {
+          "catId": 28769,
+          "catName": "厨师围裙",
+          "catEnName": null,
+          "catType": 1
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28765,
+            "catName": "制服、工作服和防护服",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 28766,
+            "catName": "...
+2025-07-30 15:20:14,623 - INFO - ⏳ 等待2秒后继续...
+2025-07-30 15:20:16,628 - INFO - 
+==================================================
+2025-07-30 15:20:16,628 - INFO - 📄 测试第 2 页
+2025-07-30 15:20:16,628 - INFO - ==================================================
+2025-07-30 15:20:16,628 - INFO - 🔄 正在查询第 2 页，每页 20 条数据...
+2025-07-30 15:20:18,076 - INFO - 📊 响应状态码: 200
+2025-07-30 15:20:18,076 - INFO - 📊 响应头: {'Server': 'nginx', 'Date': 'Wed, 30 Jul 2025 07:20:17 GMT', 'Content-Type': 'application/json;charset=UTF-8', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'vary': 'accept-encoding', 'Content-Encoding': 'gzip', 'x-gateway-request-id': '1753860016854-d004cb3a78c66380006a094dba424fdd-20', 'strict-transport-security': 'max-age=31536000', 'Content-Security-Policy-Report-Only': "default-src 'unsafe-eval' 'unsafe-inline' blob: data: *.kwcdn.com *.temucdn.com *.pftk.temu.com *.thtk.temu.com *.temu.com pfs-eu.logisticsmngmt.com pfs-us.logisticsmngmt.com pfs.logisticsmngmt.com file-us.logisticsmngmt.com kjpfs-cn.kuajingmaihuo.com img.cdnfe.com; report-uri /api/sec-csp/110000928/report", 'yak-timeinfo': '1753860016854|1055', 'cip': '60.249.21.30', 'Alt-Svc': 'h3=":443"; ma=604800'}
+2025-07-30 15:20:18,079 - INFO - ✅ 数据查询成功
+2025-07-30 15:20:18,079 - INFO - 🔍 开始分析响应数据...
+2025-07-30 15:20:18,093 - INFO - 💾 数据已保存到: data/temu_products_page_2_20250730_152018.json
+2025-07-30 15:20:18,093 - INFO - 📦 提取到 20 个产品
+2025-07-30 15:20:18,093 - INFO - 📋 响应数据类型: <class 'dict'>
+2025-07-30 15:20:18,093 - INFO - 📋 响应数据键: ['success', 'errorCode', 'errorMsg', 'result']
+2025-07-30 15:20:18,093 - INFO - ✅ 成功标识: True
+2025-07-30 15:20:18,094 - INFO - 📊 结果字段类型: <class 'dict'>
+2025-07-30 15:20:18,094 - INFO - 📊 结果字段键: ['total', 'pageItems']
+2025-07-30 15:20:18,094 - INFO - 📦 产品数量: 20
+2025-07-30 15:20:18,094 - INFO - 📦 前3个产品信息:
+2025-07-30 15:20:18,094 - INFO -    产品 1: ID=1556316466, 名称=Girl DAD For Father Tote Bag Lightweight Large Cap...
+2025-07-30 15:20:18,094 - INFO -    产品 2: ID=5776519192, 名称=Grey Warden Textile Dragon Age Geometric Tote Bag ...
+2025-07-30 15:20:18,094 - INFO -    产品 3: ID=3298413857, 名称=Acoutic Guitar eamle Pattern Theme Tote Bag Lightw...
+2025-07-30 15:20:18,094 - INFO - 📄 总记录数: 66231
+2025-07-30 15:20:18,103 - INFO - 📄 完整响应（前1000字符）:
+{
+  "success": true,
+  "errorCode": 1000000,
+  "errorMsg": null,
+  "result": {
+    "total": 66231,
+    "pageItems": [
+      {
+        "productId": 1556316466,
+        "productSkcId": 99556548156,
+        "productName": "Girl DAD For Father Tote Bag Lightweight Large Capacity Shopping Bag with Handle for Daily Travel Gift Use",
+        "productType": 1,
+        "sourceType": 1,
+        "goodsId": 601102607283258,
+        "leafCat": {
+          "catId": 29157,
+          "catName": "女士手拎包",
+          "catEnName": null,
+          "catType": 0
+        },
+        "categories": {
+          "cat1": {
+            "catId": 27011,
+            "catName": "服装、鞋靴和珠宝饰品",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat2": {
+            "catId": 28946,
+            "catName": "女士时尚",
+            "catEnName": null,
+            "catType": null
+          },
+          "cat3": {
+            "catId": 29152,
+            "catName": "女士手提包和钱包",
+            "catEnName": null...
+2025-07-30 15:20:18,104 - INFO - 
+📊 总共获取到 40 个产品
+2025-07-30 15:20:18,121 - INFO - 📊 产品摘要已保存到: data/temu_products_summary_20250730_152018.json
+2025-07-30 15:20:18,121 - INFO - 📊 CSV摘要已保存到: data/temu_products_summary_20250730_152018.csv
+2025-07-30 15:20:18,121 - INFO - 
+🎉 测试完成！

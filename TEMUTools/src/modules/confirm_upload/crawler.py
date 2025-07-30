@@ -20,7 +20,7 @@ class UploadProduct:
 class ConfirmUploadCrawler:
     def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
-        self.base_url = "https://seller.kuajingmaihuo.com"
+        self.base_url = "https://agentseller.temu.com"
         self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
         self.confirm_url = f"{self.base_url}/bg-brando-mms/goods/batchSupplierConfirm"
         

@@ -149,20 +149,23 @@ class SystemConfigTab(ttk.Frame):
             if success:
                 self._log(message)
                 # 如果API测试成功且返回了mallId，自动填入
-                if result and result.get('result', {}).get('companyList'):
-                    for company in result['result']['companyList']:
-                        if company.get('malInfoList'):
-                            for mall in company['malInfoList']:
-                                mall_id = str(mall.get('mallId', ''))
-                                if mall_id and mall_id != 'None':
-                                    self.mallid_entry.delete(0, tk.END)
-                                    self.mallid_entry.insert(0, mall_id)
-                                    self._log(f"✅ 自动获取到MallID: {mall_id}")
-                                    break
-                messagebox.showinfo("测试成功", message)
+                if result and result.get('result', {}).get('mallList'):
+                    for mall in result['result']['mallList']:
+                        mall_id = str(mall.get('mallId', ''))
+                        if mall_id and mall_id != 'None':
+                            # 使用 self.after() 在主线程中操作GUI组件
+                            def update_mall_id():
+                                self.mallid_entry.delete(0, tk.END)
+                                self.mallid_entry.insert(0, mall_id)
+                            self.after(0, update_mall_id)
+                            self._log(f"✅ 自动获取到MallID: {mall_id}")
+                            break
+                # 使用 self.after() 在主线程中显示消息框
+                self.after(0, lambda: messagebox.showinfo("测试成功", message))
             else:
                 self._log(f"❌ {message}")
-                messagebox.showerror("测试失败", message)
+                # 使用 self.after() 在主线程中显示错误消息框
+                self.after(0, lambda: messagebox.showerror("测试失败", message))
         
         # 在后台线程中执行，避免界面卡顿
         threading.Thread(target=test_api, daemon=True).start()
@@ -177,10 +180,12 @@ class SystemConfigTab(ttk.Frame):
             
             if success:
                 self._log(message)
-                messagebox.showinfo("测试成功", message)
+                # 使用 self.after() 在主线程中显示消息框
+                self.after(0, lambda: messagebox.showinfo("测试成功", message))
             else:
                 self._log(f"❌ {message}")
-                messagebox.showerror("测试失败", message)
+                # 使用 self.after() 在主线程中显示错误消息框
+                self.after(0, lambda: messagebox.showerror("测试失败", message))
         
         # 在后台线程中执行，避免界面卡顿
         threading.Thread(target=test_api, daemon=True).start()

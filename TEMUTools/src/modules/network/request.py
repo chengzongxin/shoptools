@@ -115,8 +115,8 @@ class NetworkRequest:
             "content-type": "application/json",
             "cookie": cookie,
             "mallid": mallid,
-            "origin": "https://seller.kuajingmaihuo.com",
-            "referer": "https://seller.kuajingmaihuo.com/goods/product/list",
+            "origin": "https://agentseller.temu.com",
+            "referer": "https://agentseller.temu.com/goods/list",
             "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
             "sec-ch-ua-mobile": "?1",
             "sec-ch-ua-platform": '"Android"',
@@ -159,7 +159,7 @@ class NetworkRequest:
             headers = self._get_headers(use_compliance)
             response = self.session.post(url, json=data, headers=headers)
             response.raise_for_status()
-            self.logger.info(f"POST请求成功")
+            self.logger.info(f"POST请求成功,状态码: {response.status_code}, 响应内容: {response.text[:200]}")
             return response.json()
         except requests.exceptions.HTTPError as e:
             if e.response.status_code == 403:

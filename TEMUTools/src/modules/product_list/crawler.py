@@ -63,8 +63,8 @@ class Product:
 
 class ProductListCrawler:
     def __init__(self, logger=None):
-        self.base_url = "https://seller.kuajingmaihuo.com"
-        self.api_url = f"{self.base_url}/bg-visage-mms/product/skc/pageQuery"
+        self.base_url = "https://agentseller.temu.com"
+        self.api_url = f"{self.base_url}/visage-agent-seller/product/skc/pageQuery"
         self.page_size = 20
         self.current_page = 1
         self.request = NetworkRequest()

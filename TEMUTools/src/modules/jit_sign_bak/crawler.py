@@ -29,7 +29,7 @@ class JitSignCrawler:
         self.logger = logger
         self.progress_callback = progress_callback
         self.stop_flag_callback = stop_flag_callback or (lambda: False)
-        self.base_url = "https://seller.kuajingmaihuo.com/bg-visage-mms"
+        self.base_url = "https://agentseller.temu.com/visage-agent-seller"
         self.request = NetworkRequest()
         # 每次签署的最大数量限制
         self.max_batch_size = 20

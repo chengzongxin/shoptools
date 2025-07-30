@@ -27,7 +27,7 @@ class JitSignCrawler:
         """
         self.logger = logger
         self.progress_callback = progress_callback
-        self.base_url = "https://seller.kuajingmaihuo.com/bg-visage-mms"
+        self.base_url = "https://agentseller.temu.com/visage-agent-seller"
         self.request = NetworkRequest()
         self._stop_flag = False
         

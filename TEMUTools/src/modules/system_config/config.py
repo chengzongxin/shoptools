@@ -21,11 +21,11 @@ class SystemConfig:
         self.config: Dict = self._load_config()
         
         # 定义网站URL
-        self.seller_url = "https://seller.kuajingmaihuo.com"
+        self.seller_url = "https://agentseller.temu.com"
         self.compliance_url = "https://agentseller.temu.com"
         
         # 定义测试API
-        self.seller_test_api = "https://seller.kuajingmaihuo.com/bg/quiet/api/mms/userInfo"
+        self.seller_test_api = "https://agentseller.temu.com/api/seller/auth/userInfo"
         self.compliance_test_api = "https://agentseller.temu.com/api/flash/compliance/dashBoard/main_page"
         
         # 延迟初始化网络请求实例，避免循环导入
@@ -149,16 +149,17 @@ class SystemConfig:
             if result.get('success'):
                 user_info = result.get('result', {})
                 mall_info = ""
-                if user_info.get('companyList'):
-                    for company in user_info['companyList']:
-                        if company.get('malInfoList'):
-                            for mall in company['malInfoList']:
-                                mall_info += f"店铺: {mall.get('mallName', 'N/A')} (ID: {mall.get('mallId', 'N/A')})\n"
+                if user_info.get('mallList'):
+                    for mall in user_info['mallList']:
+                        mall_name = mall.get('mallName', 'N/A')
+                        mall_id = mall.get('mallId', 'N/A')
+                        managed_type = mall.get('managedType', 'N/A')
+                        mall_info += f"店铺: {mall_name} (ID: {mall_id}, 管理类型: {managed_type})\n"
                 
                 message = f"✅ 商家中心API测试成功！\n"
-                message += f"用户ID: {user_info.get('userId', 'N/A')}\n"
+                message += f"账户ID: {user_info.get('accountId', 'N/A')}\n"
                 message += f"手机号: {user_info.get('maskMobile', 'N/A')}\n"
-                message += f"角色: {', '.join(user_info.get('roleNameList', []))}\n"
+                message += f"账户类型: {user_info.get('accountType', 'N/A')}\n"
                 message += f"{mall_info}"
                 
                 return True, message, result

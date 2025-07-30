@@ -2,7 +2,7 @@
 首先获取商品列表，取出列表中所有productId和productSkcId，然后批量签署协议，20个一组，分批执行，直到所有产品都签署协议，然后再请求下一页，直到所有产品都签署协议
 
 # 获取商品列表
-https://seller.kuajingmaihuo.com/bg-visage-mms/product/skc/pageQuery
+https://agentseller.temu.com/visage-agent-seller/product/skc/pageQuery
 ## 请求参数 
 {"page":1,"pageSize":200}
 ## 返回结构是这样的
@@ -404,7 +404,7 @@ https://seller.kuajingmaihuo.com/bg-visage-mms/product/skc/pageQuery
 # 批量签署协议
 ## 请求
 ### 请求地址
-https://seller.kuajingmaihuo.com/bg-visage-mms/product/agreement/batch/sign
+https://agentseller.temu.com/visage-agent-seller/product/agreement/batch/sign
 ### 请求参数
 {"skcList":[{"productId":2814039484,"productSkcId":24247148994},{"productId":9743874592,"productSkcId":67772594382},{"productId":5513338646,"productSkcId":91396794869},{"productId":8367939978,"productSkcId":89733512131},{"productId":2132346469,"productSkcId":84516410360},{"productId":9508685084,"productSkcId":20413575915},{"productId":7996867778,"productSkcId":78939106962},{"productId":7596746291,"productSkcId":79600281432},{"productId":7508749264,"productSkcId":34621979075},{"productId":2918004650,"productSkcId":42474207955},{"productId":5711151325,"productSkcId":94532226854},{"productId":1338372860,"productSkcId":46168329550},{"productId":2535068596,"productSkcId":79349424570},{"productId":7590767999,"productSkcId":46643836912},{"productId":8725920720,"productSkcId":99746444634},{"productId":3702333630,"productSkcId":96214489215},{"productId":1935430103,"productSkcId":27531567012},{"productId":3140333040,"productSkcId":71293098682},{"productId":1518842128,"productSkcId":35972087928},{"productId":3667065541,"productSkcId":38989542023}]}
 ### 返回结构

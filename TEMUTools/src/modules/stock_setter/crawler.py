@@ -32,8 +32,8 @@ class StockBatchSetter:
         self.logger = logger
         self.progress_callback = progress_callback
         self.stop_flag_callback = stop_flag_callback or (lambda: False)
-        self.base_url = "https://seller.kuajingmaihuo.com/bg-visage-mms"
-        self.update_url = "https://seller.kuajingmaihuo.com/gmp/bg/startload/api/sales/stock/update"
+        self.base_url = "https://agentseller.temu.com/visage-agent-seller"
+        self.update_url = "https://agentseller.temu.com/gmp/bg/startload/api/sales/stock/update"
         self.request = NetworkRequest()
         self.page_size = 100
         

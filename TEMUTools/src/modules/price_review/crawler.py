@@ -167,7 +167,7 @@ class PriceReviewSuggestion:
 class PriceReviewCrawler:
     def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
-        self.base_url = "https://seller.kuajingmaihuo.com"
+        self.base_url = "https://agentseller.temu.com"
         self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
         self.count_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/querySupplierQuickFilterCount"
         self.price_review_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/reject-remark"

@@ -80,8 +80,7 @@ class Product:
 class ProductListCrawler:
     def __init__(self):
         # 基础URL
-        self.base_url = "https://seller.kuajingmaihuo.com"
-        self.api_url = f"{self.base_url}/bg-visage-mms/product/skc/pageQuery"
+        self.api_url = "https://agentseller.temu.com/visage-agent-seller/product/skc/pageQuery"
         
         # 请求头
         self.headers = {
@@ -91,10 +90,10 @@ class ProductListCrawler:
             "anti-content": "0aqAfa5e-wCEsoC8XfJClMLV9eBVKXCy5dT_a6gcCFZqzqwzz3VFFs_dF2HKkiWMf1pUy1UFy8k-fzeF3LD-fFw-1R7MfRI08p-LwmM31p13ZD-fkkMCCdEu2EGfpSYNgjCNf9qO0TonqPxXTmZ_JXp_JnuTJXp4anpTYOq_YHqxb9Bao5eAuFmZezeFEdXsW-RRvzelp-fR1eL2CSkbeF3tWMFaTKRPT1B2MSByCK99pXpkbdtXann2mA4CKqdNnTUrNo_Wvn5mqy5XodnDbNT7aNuVeqXrsTsiipUr6an2AAXShqmv6y0EoHi9a2d4g3X_xqtVBKKYPCSxPJXXTVPx5gPHmCqpdMX4EUJt4UG1ocSGQg1imcKxMDQNotLyDo0I0GQnXPZo5_YXtPCfpjQlDrXxpHOY5BaX0rGQulZXtTUJGh_az-4PHs9zx0V0lTF3ke6ePkL2E_7lodblJhIlLDD813Z1OMBlsyNiLHjsaC9-k8finzuJvNj",
             "cache-control": "max-age=0",
             "content-type": "application/json",
-            "cookie": "api_uid=CmaibmgXiUFPWwBPCCK/Ag==; _f77=fe503ea0-51c9-41ad-aa57-a17e3b9ed899; _a42=55668fc2-6221-4e03-92ce-da00c700b90d; ru1k=fe503ea0-51c9-41ad-aa57-a17e3b9ed899; ru2k=55668fc2-6221-4e03-92ce-da00c700b90d; _nano_fp=XpmYl0Pbl0T8n5dalT_0tvV~PytJuNlzkGnJ1977; _bee=tfHT7LYhzCfWucOkWxZ5icxiBsAQXamH; rckk=tfHT7LYhzCfWucOkWxZ5icxiBsAQXamH; SUB_PASS_ID=eyJ0IjoiYS9tY2xtZ3Byem9pUE1qWHNEYkh3UERZSGdZRERackExZ1B6WEkvenBoSU5SSlRRNnFDRzV4bXFBdlExT05WRCIsInYiOjEsInMiOjEwMDAwLCJ1IjoyNDE1MTU0NjgxNzcwMX0=; user_id=DB000-0ae91471-f434-431c-8f2e-e82bca45da22; user_session=uDebcMfnWN6dpu4T9kxfFJibCHHtmBOp0FABKe5g7PK13nAoV6e2jE3uznm2GBqsmavqzyY7oFPdytI7JFfxZtR00ZvzzVjug2jR; fingerprint=None; lingfeng_backend=backend-pro-0",
+            "cookie": "api_uid=CmysKGgbCAqdegBhOAazAg==; _bee=nHN7phQkttiBUQZxm5dBMijzREKBSanV; njrpl=nHN7phQkttiBUQZxm5dBMijzREKBSanV; dilx=jWhDSdH9veu-pFQDJUjXI; hfsc=L3yOfo8w6Dfx2pPNeg==; user_uin=BBIABSJYQPS3VPJMRV4D2IW42BNXULBVJ2N4OVEB; _nano_fp=XpmYnqCaX0TJnqdoXT_ojTDNzKAZ~jgQfrU52AVm; mallid=634418223796259; AccessToken=ES4GERIQF4ZTB3KUGHPNK3I55J3IAHDIOVUSJ33JR6SO73PGCMWQ01102531f251; isLogin=1751620498159; seller_temp=N_eyJ0IjoidE1RS0FUQVQ4TEptRkdpK2pneGc0b3gwZkJvRk1TS0RUUWRTZUtvNGVuZVRoTkxZSEgyeFBCZ1ZTNEZEWDRLUXh3M1BBdmkydm9lTkswZEdiS0V3akE9PSIsInYiOjEsInMiOjEwMDAxLCJ1IjoyNDE1MTU0NjgxNzcwMX0=",
             "mallid": "634418223796259",
-            "origin": "https://seller.kuajingmaihuo.com",
-            "referer": "https://seller.kuajingmaihuo.com/goods/product/list",
+            "origin": "https://agentseller.temu.com",
+            "referer": "https://agentseller.temu.com/goods/list",
             "sec-ch-ua": '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
             "sec-ch-ua-mobile": "?1",
             "sec-ch-ua-platform": '"Android"',
