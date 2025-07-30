@@ -169,14 +169,12 @@ class PriceReviewCrawler:
         # 基础URL
 
 
-        # https://agentseller.temu.com/api/kiana/mms/robin/searchForChainSupplier 查询待核价商品
-        self.base_url = "https://agentseller.temu.com"
-        self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
-        self.count_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/querySupplierQuickFilterCount"
-        self.price_review_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/reject-remark"
-        self.accept_price_url = f"{self.base_url}/marvel-mms/cn/api/kiana/magneto/price/bargain-no-bom"
-        self.reject_price_url = f"{self.base_url}/gmp/bg/magneto/api/price-review-order/no-bom/review"
-        self.rebargain_price_url = f"{self.base_url}/marvel-mms/cn/api/kiana/magneto/price/bargain-no-bom"  # 重新调价接口
+        self.api_url = "https://agentseller.temu.com/api/kiana/mms/robin/searchForChainSupplier"
+        self.count_url = "https://agentseller.temu.com/api/kiana/mms/robin/querySupplierQuickFilterCount"
+        self.price_review_url = "https://agentseller.temu.com/api/kiana/mms/magneto/api/price-review-order/no-bom/reject-remark"
+        self.accept_price_url = "https://agentseller.temu.com/api/kiana/mms/magneto/price/bargain-no-bom"
+        self.reject_price_url = "https://agentseller.temu.com/api/kiana/mms/magneto/api/price-review-order/no-bom/review"
+        self.rebargain_price_url = "https://agentseller.temu.com/api/kiana/mms/magneto/price/bargain-no-bom"  # 重新调价接口
         
         # 初始化网络请求对象
         self.request = NetworkRequest()

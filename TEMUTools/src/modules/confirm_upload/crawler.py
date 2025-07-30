@@ -20,10 +20,9 @@ class UploadProduct:
 class ConfirmUploadCrawler:
     def __init__(self, cookie: str, logger: logging.Logger, progress_callback=None, stop_flag_callback=None):
         # 基础URL
-        self.base_url = "https://agentseller.temu.com"
-        self.api_url = f"{self.base_url}/marvel-mms/cn/api/kiana/xmen/select/searchForChainSupplier"
-        self.confirm_url = f"{self.base_url}/bg-brando-mms/goods/batchSupplierConfirm"
-        
+        self.query_url = "https://agentseller.temu.com/api/kiana/mms/robin/searchForChainSupplier"
+        self.confirm_url = "https://agentseller.temu.com/bg-brando-mms/goods/batchSupplierConfirm"
+
         # 初始化网络请求对象
         self.request = NetworkRequest()
         
@@ -79,14 +78,14 @@ class ConfirmUploadCrawler:
         
         try:
             self.logger.info(f"正在获取第 {page} 页数据，每页 {page_size} 条，过滤最近 {days_filter} 天")
-            self.logger.debug(f"请求URL: {self.api_url}")
+            self.logger.debug(f"请求URL: {self.query_url}")
             self.logger.debug(f"时间范围: {start_time.strftime('%Y-%m-%d %H:%M:%S')} 到 {end_time.strftime('%Y-%m-%d %H:%M:%S')}")
             self.logger.debug(f"请求体: {json.dumps(payload, ensure_ascii=False)}")
             
             # 添加翻页请求延时
             self.random_delay('page_request')
             
-            result = self.request.post(self.api_url, data=payload)
+            result = self.request.post(self.query_url, data=payload)
             
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
