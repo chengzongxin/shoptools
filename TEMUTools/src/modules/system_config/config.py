@@ -118,6 +118,17 @@ class SystemConfig:
         """从浏览器获取agentseller.temu.com的Cookie"""
         return self.get_website_cookies(self.base_url)
     
+    def get_cookie_from_websocket(self) -> Tuple[str, str]:
+        """通过WebSocket从Chrome插件获取Cookie"""
+        try:
+            from .websocket_cookie import get_websocket_manager
+            manager = get_websocket_manager()
+            return manager.get_domain_cookies(self.base_url)
+        except ImportError:
+            return "", "WebSocket模块未安装，请安装websockets依赖"
+        except Exception as e:
+            return "", f"WebSocket获取Cookie失败: {str(e)}"
+    
     def test_api(self, cookie: str = None) -> Tuple[bool, str, Dict]:
         """
         测试API连接

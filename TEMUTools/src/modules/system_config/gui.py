@@ -23,16 +23,18 @@ class SystemConfigTab(ttk.Frame):
         
         ttk.Label(cookie_frame, text="TEMU Cookie (agentseller.temu.com):").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.cookie_text = tk.Text(cookie_frame, height=3, width=60)
-        self.cookie_text.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=2)
+        self.cookie_text.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=2)
         self.cookie_text.insert('1.0', self.config.get_cookie())
         
         # Cookie操作按钮
-        ttk.Button(cookie_frame, text="获取Cookie", 
+        ttk.Button(cookie_frame, text="获取Cookie(浏览器)", 
                   command=self._get_cookie).grid(row=2, column=0, pady=5, padx=2, sticky=tk.W)
+        ttk.Button(cookie_frame, text="获取Cookie(插件)", 
+                  command=self._get_cookie_websocket).grid(row=2, column=1, pady=5, padx=2, sticky=tk.W)
         ttk.Button(cookie_frame, text="测试API", 
-                  command=self._test_api).grid(row=2, column=1, pady=5, padx=2, sticky=tk.W)
+                  command=self._test_api).grid(row=2, column=2, pady=5, padx=2, sticky=tk.W)
         ttk.Button(cookie_frame, text="清空", 
-                  command=lambda: self._clear_text(self.cookie_text)).grid(row=2, column=2, pady=5, padx=2, sticky=tk.W)
+                  command=lambda: self._clear_text(self.cookie_text)).grid(row=2, column=3, pady=5, padx=2, sticky=tk.W)
         
         # MallID配置区域
         mallid_frame = ttk.LabelFrame(main_frame, text="MallID配置", padding="10")
@@ -101,6 +103,29 @@ class SystemConfigTab(ttk.Frame):
         
         # 在后台线程中执行，避免界面卡顿
         threading.Thread(target=get_cookie, daemon=True).start()
+    
+    def _get_cookie_websocket(self):
+        """通过WebSocket从Chrome插件获取Cookie"""
+        def get_cookie_ws():
+            self._log("正在通过Chrome插件获取TEMU Cookie...")
+            cookie_string, error_msg = self.config.get_cookie_from_websocket()
+            
+            if error_msg:
+                self._log(f"❌ 获取失败: {error_msg}")
+                # 使用 self.after() 在主线程中显示错误消息框
+                self.after(0, lambda: messagebox.showerror("获取失败", error_msg))
+            else:
+                # 使用 self.after() 在主线程中更新GUI
+                def update_cookie():
+                    self.cookie_text.delete('1.0', tk.END)
+                    self.cookie_text.insert('1.0', cookie_string)
+                self.after(0, update_cookie)
+                self._log(f"✅ Chrome插件Cookie获取成功，长度: {len(cookie_string)} 字符")
+                # 使用 self.after() 在主线程中显示成功消息框
+                self.after(0, lambda: messagebox.showinfo("获取成功", "Chrome插件Cookie已自动填入，请点击保存配置"))
+        
+        # 在后台线程中执行，避免界面卡顿
+        threading.Thread(target=get_cookie_ws, daemon=True).start()
     
     def _test_api(self):
         """测试API连接"""

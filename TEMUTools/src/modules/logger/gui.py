@@ -13,12 +13,24 @@ class LogHandler(logging.Handler):
     def emit(self, record):
         msg = self.format(record)
         def append():
-            self.text_widget.configure(state='normal')
-            self.text_widget.insert(tk.END, msg + '\n')
-            self.text_widget.see(tk.END)
-            self.text_widget.configure(state='disabled')
-        # 在主线程中更新GUI
-        self.text_widget.after(0, append)
+            try:
+                self.text_widget.configure(state='normal')
+                self.text_widget.insert(tk.END, msg + '\n')
+                self.text_widget.see(tk.END)
+                self.text_widget.configure(state='disabled')
+            except tk.TclError:
+                # GUI组件已销毁，忽略错误
+                pass
+        
+        # 在主线程中更新GUI，添加异常处理
+        try:
+            self.text_widget.after(0, append)
+        except RuntimeError:
+            # 主线程还未进入主循环或已退出，直接输出到控制台
+            print(f"[GUI未就绪] {msg}")
+        except tk.TclError:
+            # GUI组件已销毁，忽略错误
+            pass
 
 class LogFrame(ttk.LabelFrame):
     """日志显示框架"""

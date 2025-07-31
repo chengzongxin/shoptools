@@ -17,6 +17,7 @@ from modules.jit_sign.gui import JitSignTab
 from modules.real_picture_uploader.gui import RealPictureUploaderTab
 from modules.stock_setter.gui import StockSetterTab
 from modules.jit_sign_bak.gui import JitSignTab as JitSignTabBak
+from modules.system_config.websocket_cookie import start_websocket_server
 
 class LinkCheckerTab(ttk.Frame):
     def __init__(self, parent):
@@ -333,8 +334,24 @@ class TEMUToolsApp:
         # 设置窗口大小和位置
         self.setup_window()
         
+        # 在后台线程中启动WebSocket服务器，不阻塞主线程
+        import threading
+        threading.Thread(target=self._start_websocket_server_background, daemon=True).start()
+        
         # 记录启动日志
         self.logger.info("TEMU工具集已启动")
+    
+    def _start_websocket_server_background(self):
+        """在后台线程中启动WebSocket服务器"""
+        import time
+        # 稍微延迟一下，确保GUI完全初始化
+        time.sleep(0.5)
+        try:
+            start_websocket_server()
+            # 注意：这里不能直接调用self.logger，因为这是在后台线程中
+            print("✅ WebSocket服务器启动请求已发送 (ws://localhost:8765)")
+        except Exception as e:
+            print(f"❌ WebSocket服务器启动失败: {e}")
 
     def setup_window(self):
         """设置窗口大小和位置"""
