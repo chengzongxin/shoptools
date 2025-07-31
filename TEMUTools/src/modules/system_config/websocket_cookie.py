@@ -52,7 +52,7 @@ def setup_logger():
     
     return logger
 
-async def handle_client(websocket, path):
+async def handle_client(websocket):
     """处理客户端连接"""
     global connected_clients, logger
     
