@@ -69,17 +69,46 @@ async def handle_client(websocket, path):
                 data = json.loads(message)
                 logger.info(f"收到消息: {data.get('type', 'unknown')}")
                 
-                if data.get('type') == 'response':
-                    # 处理插件响应
+                if data.get('type') == 'command_response':
+                    # 处理来自插件的命令响应
+                    logger.info(f"收到插件响应: {data.get('data', {})}")
                     response_queue.put(data)
-                elif data.get('type') == 'cookies':
-                    # 处理Cookie数据
-                    response_queue.put(data)
+                    # 不需要回复，只记录响应
+                    continue
+                elif data.get('type') == 'greeting':
+                    # 回应问候消息
+                    response = {
+                        'type': 'response',
+                        'message': f"你好！我收到了你的消息: {data.get('content', '')}"
+                    }
+                elif data.get('type') == 'text':
+                    # 处理自定义文本消息
+                    text_content = data.get('content', '')
+                    response = {
+                        'type': 'response',
+                        'message': f"收到文本消息: {text_content}",
+                        'echo': text_content
+                    }
                 else:
-                    logger.info(f"未知消息类型: {data}")
+                    # 默认回应
+                    response = {
+                        'type': 'echo',
+                        'original_message': data,
+                        'timestamp': str(asyncio.get_event_loop().time())
+                    }
+                
+                # 发送回应消息
+                await websocket.send(json.dumps(response, ensure_ascii=False))
+                logger.info(f"已发送回应: {response}")
                     
             except json.JSONDecodeError:
                 logger.error(f"无效的JSON消息: {message}")
+                # 发送错误响应
+                error_response = {
+                    'type': 'error',
+                    'message': '无效的JSON格式'
+                }
+                await websocket.send(json.dumps(error_response, ensure_ascii=False))
                 
     except websockets.exceptions.ConnectionClosed:
         logger.info(f"客户端断开连接: {client_id}")
@@ -126,7 +155,14 @@ async def send_command_to_plugin(command):
         return False
     
     try:
-        await broadcast_message(command)
+        # 按照websocket_server.py的格式发送命令
+        message = {
+            'type': 'backend_command',
+            'command': command.get('action'),
+            'params': command.get('params', {}),
+            'command_id': command.get('command_id', f"cmd_{int(time.time())}")
+        }
+        await broadcast_message(message)
         logger.info(f"命令已发送: {command.get('action', 'unknown')}")
         return True
     except Exception as e:
@@ -208,6 +244,7 @@ def wait_for_response(timeout=10):
     """等待插件响应"""
     try:
         response = response_queue.get(timeout=timeout)
+        # 按照websocket_server.py的格式，响应数据在'data'字段中
         return response.get('data', {})
     except queue.Empty:
         return None
@@ -287,6 +324,68 @@ def get_domain_cookies(domain: str) -> Tuple[str, str]:
         logger.error(error_msg)
         return "", error_msg
 
+def get_domain_requests(domain: str) -> Tuple[List, str]:
+    """
+    获取指定域名的拦截请求
+    
+    Returns:
+        tuple: (requests_list, error_message)
+    """
+    global logger
+    
+    if logger is None:
+        logger = setup_logger()
+    
+    try:
+        logger.info(f"获取域名 '{domain}' 的拦截请求...")
+        response = send_command('get_requests_by_domain', {'domain': domain})
+        
+        if response and response.get('success'):
+            requests = response.get('requests', [])
+            logger.info(f"找到 {len(requests)} 个请求")
+            return requests, ""
+        else:
+            error_msg = response.get('error', '未知错误') if response else '响应超时'
+            return [], f"获取请求失败: {error_msg}"
+            
+    except Exception as e:
+        error_msg = f"获取请求时发生异常: {str(e)}"
+        logger.error(error_msg)
+        return [], error_msg
+
+def get_requests_by_header(header_name: str, header_value: str = None) -> Tuple[List, str]:
+    """
+    根据请求头查询拦截的请求
+    
+    Returns:
+        tuple: (requests_list, error_message)
+    """
+    global logger
+    
+    if logger is None:
+        logger = setup_logger()
+    
+    try:
+        logger.info(f"查询包含请求头 '{header_name}' 的请求...")
+        params = {'headerName': header_name}
+        if header_value:
+            params['headerValue'] = header_value
+        
+        response = send_command('find_requests_by_header', params)
+        
+        if response and response.get('success'):
+            requests = response.get('requests', [])
+            logger.info(f"找到 {len(requests)} 个匹配的请求")
+            return requests, ""
+        else:
+            error_msg = response.get('error', '未知错误') if response else '响应超时'
+            return [], f"查询请求失败: {error_msg}"
+            
+    except Exception as e:
+        error_msg = f"查询请求时发生异常: {str(e)}"
+        logger.error(error_msg)
+        return [], error_msg
+
 def is_connected() -> bool:
     """检查是否有连接的客户端"""
     return len(connected_clients) > 0
@@ -306,6 +405,12 @@ class WebSocketCookieManager:
     
     def get_domain_cookies(self, domain: str) -> Tuple[str, str]:
         return get_domain_cookies(domain)
+    
+    def get_domain_requests(self, domain: str) -> Tuple[List, str]:
+        return get_domain_requests(domain)
+    
+    def get_requests_by_header(self, header_name: str, header_value: str = None) -> Tuple[List, str]:
+        return get_requests_by_header(header_name, header_value)
     
     def is_connected(self) -> bool:
         return is_connected()
