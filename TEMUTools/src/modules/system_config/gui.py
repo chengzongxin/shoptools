@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import threading
+import time
 from .config import SystemConfig
 
 class SystemConfigTab(ttk.Frame):
@@ -9,7 +10,10 @@ class SystemConfigTab(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.config = SystemConfig()
+        self.status_update_thread = None
+        self.status_update_running = True
         self._init_ui()
+        self._start_status_update()
         
     def _init_ui(self):
         """初始化UI"""
@@ -55,25 +59,127 @@ class SystemConfigTab(ttk.Frame):
                   command=self._clear_all_config).grid(row=0, column=1, padx=5)
         ttk.Button(button_frame, text="测试API连接", 
                   command=self._test_api).grid(row=0, column=2, padx=5)
+
+         # WebSocket连接状态区域
+        status_frame = ttk.LabelFrame(main_frame, text="WebSocket连接状态", padding="10")
+        status_frame.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+        
+        # 状态指示器
+        self.status_label = ttk.Label(status_frame, text="正在检查连接状态...", font=("Arial", 10))
+        self.status_label.grid(row=0, column=0, sticky=tk.W, pady=2)
+        
+        # 状态图标（使用文本符号作为简单的状态指示器）
+        self.status_icon = ttk.Label(status_frame, text="⏳", font=("Arial", 12))
+        self.status_icon.grid(row=0, column=1, padx=(10, 0), pady=2)
+        
+        # 连接信息
+        self.connection_info = ttk.Label(status_frame, text="", font=("Arial", 9))
+        self.connection_info.grid(row=0, column=2, pady=2)
+        
+        # WebSocket控制按钮
+        # ttk.Button(status_frame, text="启动WebSocket服务器", 
+        #           command=self._start_websocket_server).grid(row=2, column=0, pady=5, padx=2, sticky=tk.W)
+        # ttk.Button(status_frame, text="停止WebSocket服务器", 
+        #           command=self._stop_websocket_server).grid(row=2, column=2, pady=5, padx=2, sticky=tk.W)
         
         # 日志显示区域
         log_frame = ttk.LabelFrame(main_frame, text="操作日志", padding="10")
-        log_frame.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        log_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         
         self.log_text = scrolledtext.ScrolledText(log_frame, height=10, width=80, state='disabled')
         self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         # 配置网格权重
+        status_frame.columnconfigure(0, weight=1)
         cookie_frame.columnconfigure(0, weight=1)
         mallid_frame.columnconfigure(1, weight=1)
         log_frame.columnconfigure(0, weight=1)
         log_frame.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(3, weight=1)
+        main_frame.rowconfigure(4, weight=1)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         
         self._log("系统配置页面已初始化")
+    
+    def _start_status_update(self):
+        """启动状态更新线程"""
+        def update_status():
+            while self.status_update_running:
+                try:
+                    # 在主线程中更新UI
+                    self.after(0, self._update_websocket_status)
+                    time.sleep(2)  # 每2秒更新一次状态
+                except Exception as e:
+                    print(f"状态更新错误: {e}")
+                    time.sleep(5)  # 出错时等待更长时间
+        
+        self.status_update_thread = threading.Thread(target=update_status, daemon=True)
+        self.status_update_thread.start()
+    
+    def _update_websocket_status(self):
+        """更新WebSocket连接状态显示"""
+        try:
+            from .websocket_cookie import is_connected, is_running, connected_clients
+            
+            # 检查服务器是否运行
+            if not is_running:
+                self.status_label.config(text="WebSocket服务器未运行", foreground="red")
+                self.status_icon.config(text="❌", foreground="red")
+                self.connection_info.config(text="服务器状态: 已停止")
+                return
+            
+            # 检查是否有连接的客户端
+            if is_connected():
+                client_count = len(connected_clients)
+                self.status_label.config(text=f"WebSocket已连接 ({client_count} 个客户端)", foreground="green")
+                self.status_icon.config(text="✅", foreground="green")
+                self.connection_info.config(text=f"服务器状态: 运行中 | 连接数: {client_count}")
+            else:
+                self.status_label.config(text="WebSocket服务器运行中，等待连接...", foreground="orange")
+                self.status_icon.config(text="⏳", foreground="orange")
+                self.connection_info.config(text="服务器状态: 运行中 | 连接数: 0")
+                
+        except ImportError:
+            self.status_label.config(text="WebSocket模块未安装", foreground="red")
+            self.status_icon.config(text="❌", foreground="red")
+            self.connection_info.config(text="请安装websockets依赖")
+        except Exception as e:
+            self.status_label.config(text="状态检查失败", foreground="red")
+            self.status_icon.config(text="❌", foreground="red")
+            self.connection_info.config(text=f"错误: {str(e)}")
+    
+    def _start_websocket_server(self):
+        """启动WebSocket服务器"""
+        try:
+            from .websocket_cookie import start_websocket_server
+            start_websocket_server()
+            self._log("✅ WebSocket服务器已启动")
+            messagebox.showinfo("成功", "WebSocket服务器已启动，请确保Chrome插件已连接")
+        except ImportError:
+            error_msg = "WebSocket模块未安装，请安装websockets依赖"
+            self._log(f"❌ {error_msg}")
+            messagebox.showerror("错误", error_msg)
+        except Exception as e:
+            error_msg = f"启动WebSocket服务器失败: {str(e)}"
+            self._log(f"❌ {error_msg}")
+            messagebox.showerror("错误", error_msg)
+    
+    def _stop_websocket_server(self):
+        """停止WebSocket服务器"""
+        try:
+            from .websocket_cookie import stop_websocket_server
+            stop_websocket_server()
+            self._log("✅ WebSocket服务器已停止")
+            messagebox.showinfo("成功", "WebSocket服务器已停止")
+        except ImportError:
+            error_msg = "WebSocket模块未安装"
+            self._log(f"❌ {error_msg}")
+            messagebox.showerror("错误", error_msg)
+        except Exception as e:
+            error_msg = f"停止WebSocket服务器失败: {str(e)}"
+            self._log(f"❌ {error_msg}")
+            messagebox.showerror("错误", error_msg)
     
     def _log(self, message: str):
         """添加日志消息"""
@@ -184,4 +290,15 @@ class SystemConfigTab(ttk.Frame):
             self.mallid_entry.delete(0, tk.END)
             self.config.update_config("", "")
             self._log("✅ 所有配置已清空")
-            messagebox.showinfo("成功", "所有配置已清空") 
+            messagebox.showinfo("成功", "所有配置已清空")
+    
+    def destroy(self):
+        """销毁组件时清理资源"""
+        # 停止状态更新线程
+        self.status_update_running = False
+        if hasattr(self, 'status_update_thread') and self.status_update_thread:
+            # 等待线程结束（最多等待1秒）
+            self.status_update_thread.join(timeout=1.0)
+        
+        # 调用父类的销毁方法
+        super().destroy() 
