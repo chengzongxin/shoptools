@@ -4,3 +4,27 @@
 /链接检测工具/链接检测工具.spec
 
 /logs/
+
+**/node_modules
+**/dist
+**/build
+**/dist.zip
+**/dist.tar.gz
+**/dist.tar.bz2
+**/dist.tar.xz
+**/dist.tar.lzma
+**/dist.tar.lz
+
+**/venv
+**/*_env
+**/*-env
+**/*.pt
+**/*.h5
+**/*.pth
+**/*.npy
+**/__pycache__
+**/data/images
+
+
+testGPTGenerateMask
+remove_water_mark_plus
