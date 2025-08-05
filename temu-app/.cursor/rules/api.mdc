@@ -1,0 +1,7 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+使用playwright MCP分析下面这个接口, 分析完并对我展示结果，得到我的确认后，再执行修改代码
+

@@ -11,9 +11,7 @@ router = APIRouter()
 def set_config(
     seller_cookie: str = Body(...),
     compliance_cookie: str = Body(...),
-    blue_cookie: str = Body(...),
-    mallid: str = Body(...),
-    blue_token: str = Body(...)
+    mallid: str = Body(...)
 ):
     # 读取现有配置
     existing_config = {}
@@ -25,17 +23,13 @@ def set_config(
     config_changed = (
         existing_config.get("seller_cookie") != seller_cookie or
         existing_config.get("compliance_cookie") != compliance_cookie or
-        existing_config.get("blue_cookie") != blue_cookie or
-        existing_config.get("mallid") != mallid or
-        existing_config.get("blue_token") != blue_token
+        existing_config.get("mallid") != mallid
     )
     
     config: Dict[str, Any] = {
         "seller_cookie": seller_cookie,
         "compliance_cookie": compliance_cookie,
-        "blue_cookie": blue_cookie,
         "mallid": mallid,
-        "blue_token": blue_token
     }
     
     # 如果配置没有变化，保留现有的缓存数据

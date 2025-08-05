@@ -63,8 +63,8 @@ const ConfigPage: React.FC = () => {
       <Form form={form} labelCol={{ span: 4 }} wrapperCol={{ span: 8 }} onFinish={onFinish}>
         <Form.Item label="商家中心Cookie" name="seller_cookie"><Input /></Form.Item>
         <Form.Item label="合规中心Cookie" name="compliance_cookie"><Input /></Form.Item>
-        <Form.Item label="蓝站Cookie" name="blue_cookie"><Input /></Form.Item>
-        <Form.Item label="蓝站Token" name="blue_token"><Input /></Form.Item>
+        {/* <Form.Item label="蓝站Cookie" name="blue_cookie"><Input /></Form.Item>
+        <Form.Item label="蓝站Token" name="blue_token"><Input /></Form.Item> */}
         <Form.Item label="MallId" name="mallid"><Input /></Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" style={{ marginRight: 8 }}>保存配置</Button>
