@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ========================================
-echo           Temu Violent 项目启动器
+echo           Temu app 项目启动器
 echo ========================================
 echo.
 

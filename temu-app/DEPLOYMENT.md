@@ -48,10 +48,10 @@ sudo ufw enable
 ```bash
 # 方法1：使用 Git
 git clone <your-repo-url>
-cd temu-violent
+cd temu-app
 
 # 方法2：使用 SCP
-scp -r ./temu-violent user@your-server:/home/user/
+scp -r ./temu-app user@your-server:/home/user/
 ```
 
 ### 2.2 配置环境变量（可选）
