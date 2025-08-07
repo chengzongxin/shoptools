@@ -1,4 +1,4 @@
-import { FileRecord, FileListResponse, UploadResponse } from './types/file';
+import type { FileRecord, FileListResponse, UploadResponse } from './types/file';
 
 // API 基础配置
 const API_BASE_URL = '/api';

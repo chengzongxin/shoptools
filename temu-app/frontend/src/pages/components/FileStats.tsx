@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Row, Col, Statistic } from 'antd';
 import { FileOutlined, FileImageOutlined, FilePdfOutlined } from '@ant-design/icons';
-import { FileRecord } from '../types/file';
+import type { FileRecord } from '../types/file';
 
 interface FileStatsProps {
   files: FileRecord[];

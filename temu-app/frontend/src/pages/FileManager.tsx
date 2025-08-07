@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { 
   Card, 
@@ -29,16 +29,35 @@ import type { UploadProps } from 'antd/es/upload/interface';
 const { Title, Text } = Typography;
 
 // 文件管理页面组件
+// 创建全局 Store 实例
+const fileManagerStore = new FileManagerStore();
+
 const FileManager: React.FC = observer(() => {
   const { token } = useAuth();
-  const store = new FileManagerStore();
 
   // 组件挂载时获取文件列表
   useEffect(() => {
     if (token) {
-      store.fetchFileList(token);
+      fileManagerStore.fetchFileList(token);
     }
   }, [token]);
+
+  // 获取文件图标
+  const getFileIcon = (fileType: string) => {
+    const iconType = fileManagerStore.getFileIconType(fileType);
+    switch (iconType) {
+      case 'image':
+        return <FileImageOutlined style={{ color: '#52c41a' }} />;
+      case 'pdf':
+        return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
+      case 'word':
+        return <FileWordOutlined style={{ color: '#1890ff' }} />;
+      case 'excel':
+        return <FileExcelOutlined style={{ color: '#52c41a' }} />;
+      default:
+        return <FileOutlined style={{ color: '#8c8c8c' }} />;
+    }
+  };
 
   // 文件上传配置
   const uploadProps: UploadProps = {
@@ -47,7 +66,7 @@ const FileManager: React.FC = observer(() => {
     showUploadList: false,
     customRequest: async ({ file, onSuccess, onError }) => {
       if (token) {
-        await store.uploadFile(file as File, token, onSuccess, onError);
+        await fileManagerStore.uploadFile(file as File, token, onSuccess, onError);
       }
     },
   };
@@ -60,7 +79,7 @@ const FileManager: React.FC = observer(() => {
       key: 'original_name',
       render: (text: string, record: FileRecord) => (
         <Space>
-          {store.getFileIcon(record.file_type)}
+          {getFileIcon(record.file_type)}
           <Tooltip title={text}>
             <Text ellipsis style={{ maxWidth: 200 }}>
               {text}
@@ -73,7 +92,7 @@ const FileManager: React.FC = observer(() => {
       title: '大小',
       dataIndex: 'file_size',
       key: 'file_size',
-      render: (size: number) => store.formatFileSize(size),
+      render: (size: number) => fileManagerStore.formatFileSize(size),
       width: 100,
     },
     {
@@ -107,7 +126,7 @@ const FileManager: React.FC = observer(() => {
             <Button
               type="text"
               icon={<DownloadOutlined />}
-              onClick={() => token && store.handleDownload(record, token)}
+              onClick={() => token && fileManagerStore.handleDownload(record, token)}
               size="small"
             />
           </Tooltip>
@@ -116,7 +135,7 @@ const FileManager: React.FC = observer(() => {
               type="text"
               danger
               icon={<DeleteOutlined />}
-              onClick={() => token && store.handleDelete(record, token)}
+              onClick={() => token && fileManagerStore.handleDelete(record, token)}
               size="small"
             />
           </Tooltip>
@@ -129,7 +148,7 @@ const FileManager: React.FC = observer(() => {
   return (
     <div style={{ padding: 20 }}>
       {/* 文件统计信息 */}
-      <FileStats files={store.fileList} />
+      <FileStats files={fileManagerStore.fileList} />
       
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
@@ -141,12 +160,12 @@ const FileManager: React.FC = observer(() => {
               <Button 
                 type="primary" 
                 icon={<UploadOutlined />} 
-                loading={store.uploadLoading}
+                loading={fileManagerStore.uploadLoading}
               >
                 上传文件
               </Button>
             </Upload>
-            <Button onClick={() => token && store.fetchFileList(token)} loading={store.loading}>
+            <Button onClick={() => token && fileManagerStore.fetchFileList(token)} loading={fileManagerStore.loading}>
               刷新
             </Button>
           </Space>
@@ -154,9 +173,9 @@ const FileManager: React.FC = observer(() => {
 
         <Table
           columns={columns}
-          dataSource={store.fileList}
+          dataSource={fileManagerStore.fileList}
           rowKey="id"
-          loading={store.loading}
+          loading={fileManagerStore.loading}
           pagination={{
             showSizeChanger: true,
             showQuickJumper: true,

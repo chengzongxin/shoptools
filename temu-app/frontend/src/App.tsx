@@ -27,6 +27,7 @@ import ProductPage from './pages/ProductPage';
 import GalleryPage from './pages/GalleryPage';
 import UnpublishedRecordsPage from './pages/UnpublishedRecordsPage';
 import FileManager from './pages/FileManager';
+import SimpleFileTest from './pages/components/SimpleFileTest';
 import Login from './pages/Login';
 import TestPage from './pages/TestPage';
 import ProtectedRoute from './components/ProtectedRoute';

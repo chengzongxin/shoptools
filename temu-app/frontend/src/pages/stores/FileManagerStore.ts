@@ -7,7 +7,7 @@ import {
   FileWordOutlined,
   FileExcelOutlined
 } from '@ant-design/icons';
-import { FileRecord, UploadCallback, UploadErrorCallback } from '../types/file';
+import type { FileRecord, UploadCallback, UploadErrorCallback } from '../types/file';
 import { getFileList, uploadFile, deleteFile, downloadFile } from '../api';
 
 export class FileManagerStore {
@@ -90,18 +90,18 @@ export class FileManagerStore {
     });
   }
 
-  // 获取文件图标
-  getFileIcon(fileType: string) {
+  // 获取文件图标类型
+  getFileIconType(fileType: string): string {
     if (fileType.startsWith('image/')) {
-      return <FileImageOutlined style={{ color: '#52c41a' }} />;
+      return 'image';
     } else if (fileType.includes('pdf')) {
-      return <FilePdfOutlined style={{ color: '#ff4d4f' }} />;
+      return 'pdf';
     } else if (fileType.includes('word') || fileType.includes('document')) {
-      return <FileWordOutlined style={{ color: '#1890ff' }} />;
+      return 'word';
     } else if (fileType.includes('excel') || fileType.includes('spreadsheet')) {
-      return <FileExcelOutlined style={{ color: '#52c41a' }} />;
+      return 'excel';
     } else {
-      return <FileOutlined style={{ color: '#8c8c8c' }} />;
+      return 'file';
     }
   }
 
