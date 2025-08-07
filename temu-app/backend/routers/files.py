@@ -36,6 +36,19 @@ async def upload_file(
 ):
     """上传文件"""
     try:
+        # 检查文件大小
+        max_file_size = int(os.getenv("MAX_FILE_SIZE", "4294967296"))  # 默认4GB
+        
+        # 读取文件内容并检查大小
+        file_content = await file.read()
+        file_size = len(file_content)
+        
+        if file_size > max_file_size:
+            raise HTTPException(
+                status_code=413, 
+                detail=f"文件大小超过限制，最大允许 {max_file_size / (1024**3):.1f}GB"
+            )
+        
         # 生成唯一文件名
         file_extension = Path(file.filename).suffix
         unique_filename = f"{uuid.uuid4()}{file_extension}"
@@ -43,7 +56,7 @@ async def upload_file(
         
         # 保存文件
         with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+            buffer.write(file_content)
         
         # 保存文件记录到数据库
         file_record = FileRecord(
