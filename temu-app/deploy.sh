@@ -6,15 +6,32 @@ set -e
 echo "🚀 开始部署 Temu 项目..."
 
 # 检查 Docker 是否安装
-if ! command -v docker &> /dev/null; then
+if ! command -v docker &> /dev/null && ! [ -f /usr/bin/docker ]; then
     echo "❌ Docker 未安装，请先安装 Docker"
     exit 1
 fi
 
 # 检查 Docker Compose 是否安装
-if ! command -v docker-compose &> /dev/null; then
+if ! command -v docker-compose &> /dev/null && ! [ -f /usr/local/bin/docker-compose ]; then
     echo "❌ Docker Compose 未安装，请先安装 Docker Compose"
     exit 1
+fi
+
+# 检查是否有 Docker 权限
+if ! docker ps &> /dev/null; then
+    echo "⚠️  Docker 权限不足，尝试使用 sudo..."
+    # 如果当前用户不在 docker 组中，尝试使用 sudo
+    if ! sudo docker ps &> /dev/null; then
+        echo "❌ 无法访问 Docker，请确保用户有 Docker 权限或使用 sudo"
+        echo "💡 解决方案："
+        echo "   1. 将用户添加到 docker 组：sudo usermod -aG docker \$USER"
+        echo "   2. 重新登录或重启系统"
+        echo "   3. 或者使用 sudo 运行此脚本"
+        exit 1
+    fi
+    # 如果 sudo docker 可用，设置别名
+    alias docker="sudo docker"
+    alias docker-compose="sudo docker-compose"
 fi
 
 # 创建必要的目录
