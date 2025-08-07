@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Optional
 from datetime import timedelta
+import os
 
 from database.connection import get_db
 from models.user import User
@@ -124,7 +125,7 @@ def login(user_data: UserLogin, db: Session = Depends(get_db)):
         )
     
     # 创建访问令牌
-    access_token_expires = timedelta(minutes=30)
+    access_token_expires = timedelta(minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "43200")))  # 默认30天
     access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
