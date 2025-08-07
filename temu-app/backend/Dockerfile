@@ -12,6 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
     gcc \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖文件
@@ -26,6 +27,9 @@ RUN pip install gunicorn
 # 复制应用代码
 COPY . .
 
+# 创建上传目录
+RUN mkdir -p /app/uploads && chmod 755 /app/uploads
+
 # 创建非 root 用户
 RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
 USER appuser
@@ -35,5 +39,3 @@ EXPOSE 8000
 
 # 启动命令
 CMD ["gunicorn", "main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "4"]
-
-# /root/shoptools/temu-app/backend/ Dockfile

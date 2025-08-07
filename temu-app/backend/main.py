@@ -3,10 +3,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import temu, blue, config, auth, files
 from database.connection import engine
 from models import user, file_model
+import os
 
-# 创建数据库表
-user.Base.metadata.create_all(bind=engine)
-file_model.Base.metadata.create_all(bind=engine)
+# 根据环境决定是否自动创建表
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+if ENVIRONMENT == "development":
+    # 开发环境：自动创建表
+    print("🔧 开发环境：自动创建数据库表...")
+    user.Base.metadata.create_all(bind=engine)
+    file_model.Base.metadata.create_all(bind=engine)
+    print("✅ 数据库表创建完成")
+else:
+    # 生产环境：依赖 init.sql 初始化
+    print("🚀 生产环境：使用 SQL 脚本初始化数据库")
 
 app = FastAPI(title="TEMU工具箱", description="TEMU卖家定制化功能平台", version="1.0.0")
 

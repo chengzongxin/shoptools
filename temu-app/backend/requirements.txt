@@ -16,5 +16,9 @@ passlib[bcrypt]  # 密码加密
 bcrypt==4.0.1  # 指定兼容版本
 python-multipart  # 表单数据处理
 
+# 文件处理相关
+python-multipart  # 文件上传处理
+aiofiles  # 异步文件操作
+
 # 其他工具
 python-dotenv  # 环境变量管理 

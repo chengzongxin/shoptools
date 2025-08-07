@@ -18,10 +18,25 @@ CREATE TABLE IF NOT EXISTS users (
     INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
+-- 创建文件记录表
+CREATE TABLE IF NOT EXISTS file_records (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    original_name VARCHAR(255) NOT NULL COMMENT '原始文件名',
+    stored_name VARCHAR(255) NOT NULL COMMENT '存储文件名',
+    file_path VARCHAR(500) NOT NULL COMMENT '文件路径',
+    file_size BIGINT NOT NULL COMMENT '文件大小(字节)',
+    file_type VARCHAR(100) COMMENT '文件类型',
+    uploaded_by VARCHAR(50) NOT NULL COMMENT '上传用户',
+    upload_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
+    INDEX idx_uploaded_by (uploaded_by),
+    INDEX idx_upload_time (upload_time),
+    INDEX idx_file_type (file_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件记录表';
+
 -- 插入默认管理员用户（密码：admin123）
 -- 使用bcrypt生成的哈希值
 INSERT IGNORE INTO users (username, email, password_hash, is_admin) VALUES 
-('admin', 'admin@temu-app.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5uO.G', TRUE);
+('admin', 'admin@temu-app.com', '$2b$12$PyBp2icYlJs2xasCZOcM3OYktGz7uAEIAOaYNE6EZ3SZjUFKCyfcC', TRUE);
 
 -- 显示创建结果
 SELECT 'Database and tables created successfully!' as message; 

@@ -75,18 +75,6 @@ const TestPage: React.FC = () => {
               </Button>
             </Space>
           </div>
-
-          <div>
-            <h3>使用方式说明</h3>
-            <p>✅ 当前使用官方推荐的方式：</p>
-            <pre style={{ background: '#f5f5f5', padding: 10, borderRadius: 4 }}>
-{`import { message, notification } from 'antd';
-
-// 直接调用
-message.success('成功消息');
-notification.success({ message: '通知' });`}
-            </pre>
-          </div>
         </Space>
       </Card>
     </div>
