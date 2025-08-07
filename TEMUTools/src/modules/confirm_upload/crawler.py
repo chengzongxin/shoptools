@@ -73,8 +73,8 @@ class ConfirmUploadCrawler:
             "timeType": 1,  # 时间类型
             "timeBegin": time_begin,  # 开始时间戳
             "timeEnd": time_end,  # 结束时间戳
-            "supplierTodoTypeList": [6],  # 6表示待确认上新
-            "secondarySelectStatusList": [10]  # 10表示待创建首单
+            "supplierTodoTypeList": [6]  # 6表示待确认上新
+            # "secondarySelectStatusList": [10]  # 10表示待创建首单
         }
         
         try:

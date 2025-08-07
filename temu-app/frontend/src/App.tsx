@@ -15,7 +15,8 @@ import {
   DatabaseOutlined,
   UserOutlined,
   LogoutOutlined,
-  BugOutlined
+  BugOutlined,
+  FileOutlined
 } from '@ant-design/icons';
 import './App.css';
 import ProductList from './pages/ProductList';
@@ -25,6 +26,7 @@ import ConfigPage from './pages/ConfigPage';
 import ProductPage from './pages/ProductPage';
 import GalleryPage from './pages/GalleryPage';
 import UnpublishedRecordsPage from './pages/UnpublishedRecordsPage';
+import FileManager from './pages/FileManager';
 import Login from './pages/Login';
 import TestPage from './pages/TestPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -45,6 +47,7 @@ const menuItems = [
   { key: 'compliance', icon: <TableOutlined />, label: <Link to="/compliance">违规商品</Link> },
   { key: 'product', icon: <SearchOutlined />, label: <Link to="/product">商品搜索</Link> },
   { key: 'gallery', icon: <PictureOutlined />, label: <Link to="/gallery">图库管理</Link> },
+  { key: 'files', icon: <FileOutlined />, label: <Link to="/files">文件管理</Link> },
   { key: 'unpublished', icon: <DatabaseOutlined />, label: <Link to="/unpublished">未发布记录</Link> },
   { key: 'test', icon: <BugOutlined />, label: <Link to="/test">测试页面</Link> },
 ];
@@ -145,6 +148,11 @@ function AppLayout() {
             <Route path="/gallery" element={
               <ProtectedRoute>
                 <GalleryPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/files" element={
+              <ProtectedRoute>
+                <FileManager />
               </ProtectedRoute>
             } />
             <Route path="/unpublished" element={
