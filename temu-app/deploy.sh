@@ -53,8 +53,8 @@ docker system prune -f
 
 # 构建镜像
 echo "🔨 构建 Docker 镜像..."
-# docker-compose build --no-cache
-docker-compose build
+docker-compose build --no-cache
+# docker-compose build
 
 # 启动服务
 echo "🚀 启动服务..."
