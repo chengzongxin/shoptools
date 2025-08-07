@@ -1,4 +1,27 @@
 services:
+  # MySQL数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: temu-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456789
+      MYSQL_DATABASE: temu_app
+      MYSQL_USER: temu_user
+      MYSQL_PASSWORD: temu_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - temu-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # 后端服务
   backend:
     build: 
@@ -6,16 +29,19 @@ services:
       dockerfile: Dockerfile
     container_name: temu-backend
     restart: unless-stopped
-    # 不暴露外部端口，只通过 nginx-proxy 访问
-    # 不暴露外部端口，只通过 nginx-proxy 访问
-    # 不暴露外部端口，只通过 nginx-proxy 访问
-    # ports:
-    #   - "${BACKEND_PORT:-9000}:8000"
     environment:
       - PYTHONPATH=/app
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=123456789
+      - DB_NAME=temu_app
+      - SECRET_KEY=your-super-secret-key-change-in-production
     volumes:
       # 如果需要持久化数据，可以挂载日志目录
       - ./logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - temu-network
     healthcheck:
@@ -31,9 +57,6 @@ services:
       dockerfile: Dockerfile
     container_name: temu-frontend
     restart: unless-stopped
-    # 不暴露外部端口，只通过 nginx-proxy 访问
-    # ports:
-    #   - "${FRONTEND_PORT:-9000}:80"
     depends_on:
       - backend
     networks:
@@ -64,4 +87,5 @@ networks:
     driver: bridge
 
 volumes:
+  mysql_data:
   logs: 
