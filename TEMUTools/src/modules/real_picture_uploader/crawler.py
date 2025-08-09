@@ -24,7 +24,7 @@ class RealPictureUploader:
         self.upload_url = f"{self.base_url}/api/galerie/v3/store_image"
         self.batch_upload_url = f"{self.base_url}/api/flash/real_picture/batch_upload"
         
-        # 8个品类的配置
+        # 品类配置
         self.categories = [
             {
                 "name": "抽绳健身包",
@@ -39,17 +39,17 @@ class RealPictureUploader:
             {
                 "name": "冰袖",
                 "cate_id": 34959,
-                "image_file": "头巾-骑行手套.jpg"
+                "image_file": "头巾、冰袖、套头帽.jpg"
             },
             {
                 "name": "头带",
                 "cate_id": 27618,
-                "image_file": "头带.jpg"
+                "image_file": "头带、厨师帽.jpg"
             },
             {
                 "name": "头巾",
                 "cate_id": 31087,
-                "image_file": "头巾-骑行手套.jpg"
+                "image_file": "头巾、冰袖、套头帽.jpg"
             },
             {
                 "name": "袜子",
@@ -65,6 +65,22 @@ class RealPictureUploader:
                 "name": "抱枕",
                 "cate_id": 12044,
                 "image_file": "抱枕套、窗帘.jpg"
+            },
+            # 新增品类
+            {
+                "name": "双肩包",
+                "cate_id": 40414,
+                "image_file": "双肩背包、男包套装.jpg"
+            },
+            {
+                "name": "套头帽",
+                "cate_id": 30259,
+                "image_file": "头巾、冰袖、套头帽.jpg"
+            },
+            {
+                "name": "工作帽",
+                "cate_id": 28768,
+                "image_file": "头带、厨师帽.jpg"
             }
         ]
         
@@ -307,7 +323,7 @@ class RealPictureUploader:
         
     def batch_upload_all(self):
         """
-        主流程：依次处理8个品类
+        主流程：依次处理所选品类
         """
         total_categories = len(self.categories)
         

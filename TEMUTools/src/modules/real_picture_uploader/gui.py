@@ -36,10 +36,11 @@ class RealPictureUploaderTab(ttk.Frame):
         category_frame = ttk.LabelFrame(main_frame, text="品类选择", padding="5")
         category_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
         
-        # 品类列表
+        # 品类列表（与crawler保持一致，可勾选）
         self.categories = [
-            "抽绳健身包", "帆布袋", "冰袖", "头带", 
-            "头巾", "袜子", "围裙", "抱枕"
+            "抽绳健身包", "帆布袋", "冰袖", "头带",
+            "头巾", "袜子", "围裙", "抱枕",
+            "双肩包", "套头帽", "工作帽"
         ]
         
         self.category_vars = {}

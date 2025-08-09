@@ -2,13 +2,17 @@
 
 # 价格底线配置（单位：元）
 PRICE_THRESHOLDS = {
+    "CUSHION": 9,
     "drawing": 12.7,
     "CB": 10.7,
     "SLEEVE": 11.4,
     "SH": 8.7,
     "Scarf": 7.4,
     "Sock": 10.7,
-    "Apron": 10.0
+    "Apron": 10.0,
+    "bag": 33.0,
+    "beanies": 11.4,
+    "workcap": 13.5,
 }
 
 def get_price_threshold(ext_code: str) -> float:
