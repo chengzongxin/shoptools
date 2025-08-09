@@ -6,6 +6,7 @@ import logging
 import os
 from datetime import datetime
 from .crawler import PriceReviewCrawler, PriceReviewSuggestion
+from .config import PRICE_THRESHOLDS
 from ..system_config.config import SystemConfig
 
 class PriceReviewSuggestionDialog(tk.Toplevel):
@@ -209,6 +210,16 @@ class PriceReviewTab(ttk.Frame):
         )
         self.reject_radio.grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pady=(10, 0))
         
+        
+        # 价格底线设置按钮
+        self.thresholds_button = ttk.Button(
+            input_frame,
+            text="价格底线设置",
+            command=self.open_thresholds_editor
+        )
+        self.thresholds_button.grid(row=1, column=4, sticky=tk.W, padx=(20, 0))
+
+        
         # 配置父框架的网格权重
         parent.columnconfigure(0, weight=1)
         parent.columnconfigure(1, weight=1)
@@ -244,6 +255,7 @@ class PriceReviewTab(ttk.Frame):
         """创建按钮"""
         button_frame = ttk.Frame(parent)
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
+        
         
         # 开始爬取按钮
         # self.start_button = ttk.Button(
@@ -331,6 +343,13 @@ class PriceReviewTab(ttk.Frame):
         # 添加一个初始日志
         self.logger.info("核价管理工具已初始化")
         self.logger.info(f"日志文件保存在: {log_file}")
+        
+        # 初始化时尝试加载外部价格底线配置
+        try:
+            self.load_price_thresholds()
+            self.logger.info("已加载外部价格底线配置（如存在）")
+        except Exception as e:
+            self.logger.warning(f"加载外部价格底线配置失败：{str(e)}")
         
     def log_price_review(self, product_id: int, ext_code: str, suggestion: PriceReviewSuggestion, action: str, success: bool, message: str):
         """记录核价操作
@@ -575,3 +594,123 @@ class PriceReviewTab(ttk.Frame):
             self.progress_var.set(0)
             self.progress_label.config(text="0/0")
         self.update_idletasks() 
+
+    # ============== 价格底线配置 ==============
+    def _get_thresholds_path(self) -> str:
+        """获取价格底线配置文件路径 (src/config/price_thresholds.json)"""
+        src_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        config_dir = os.path.join(src_dir, 'config')
+        os.makedirs(config_dir, exist_ok=True)
+        return os.path.join(config_dir, 'price_thresholds.json')
+
+    def load_price_thresholds(self):
+        """从JSON文件加载价格底线，合并覆盖到内存中的 PRICE_THRESHOLDS"""
+        path = self._get_thresholds_path()
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                try:
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        PRICE_THRESHOLDS.clear()
+                        # 只接受数值类型
+                        for k, v in data.items():
+                            try:
+                                PRICE_THRESHOLDS[k] = float(v)
+                            except Exception:
+                                pass
+                except json.JSONDecodeError:
+                    # 忽略格式错误，保持默认
+                    pass
+
+    def save_price_thresholds(self, thresholds: dict):
+        """保存价格底线到JSON文件，同时更新内存中的 PRICE_THRESHOLDS"""
+        path = self._get_thresholds_path()
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(thresholds, f, ensure_ascii=False, indent=2)
+        PRICE_THRESHOLDS.clear()
+        PRICE_THRESHOLDS.update(thresholds)
+
+    def open_thresholds_editor(self):
+        """打开价格底线编辑器对话框"""
+        top = tk.Toplevel(self)
+        top.title("价格底线设置")
+        top.geometry("420x480")
+
+        container = ttk.Frame(top, padding=10)
+        container.pack(fill=tk.BOTH, expand=True)
+
+        # 标题
+        ttk.Label(container, text="前缀 → 底线价格(元)").grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 8))
+
+        # 现有规则区
+        existing_rows = []  # (key:str, value_var:StringVar)
+        row_index = 1
+        for key in sorted(PRICE_THRESHOLDS.keys()):
+            ttk.Label(container, text=key, width=16).grid(row=row_index, column=0, sticky=tk.W, padx=(0, 6), pady=2)
+            val_var = tk.StringVar(value=str(PRICE_THRESHOLDS[key]))
+            ttk.Entry(container, textvariable=val_var, width=18).grid(row=row_index, column=1, sticky=tk.W, pady=2)
+            existing_rows.append((key, val_var))
+            row_index += 1
+
+        # 分隔
+        ttk.Separator(container, orient=tk.HORIZONTAL).grid(row=row_index, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=8)
+        row_index += 1
+
+        # 新增规则区
+        ttk.Label(container, text="新增规则：").grid(row=row_index, column=0, sticky=tk.W)
+        row_index += 1
+        new_key_var = tk.StringVar()
+        new_val_var = tk.StringVar()
+        ttk.Entry(container, textvariable=new_key_var, width=16).grid(row=row_index, column=0, sticky=tk.W, padx=(0, 6))
+        ttk.Entry(container, textvariable=new_val_var, width=18).grid(row=row_index, column=1, sticky=tk.W)
+
+        def add_rule():
+            key = (new_key_var.get() or '').strip()
+            val_str = (new_val_var.get() or '').strip()
+            if not key:
+                messagebox.showerror("错误", "前缀不能为空")
+                return
+            try:
+                float(val_str)
+            except ValueError:
+                messagebox.showerror("错误", "价格必须是数字")
+                return
+            # 在界面上追加一行（作为现有规则处理）
+            nonlocal row_index
+            row_index += 1
+            ttk.Label(container, text=key, width=16).grid(row=row_index, column=0, sticky=tk.W, padx=(0, 6), pady=2)
+            val_var = tk.StringVar(value=val_str)
+            ttk.Entry(container, textvariable=val_var, width=18).grid(row=row_index, column=1, sticky=tk.W, pady=2)
+            existing_rows.append((key, val_var))
+            new_key_var.set("")
+            new_val_var.set("")
+
+        ttk.Button(container, text="新增", command=add_rule).grid(row=row_index, column=2, padx=6)
+
+        # 分隔
+        row_index += 1
+        ttk.Separator(container, orient=tk.HORIZONTAL).grid(row=row_index, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=8)
+        row_index += 1
+
+        # 操作按钮
+        btn_frame = ttk.Frame(container)
+        btn_frame.grid(row=row_index, column=0, columnspan=3, sticky=tk.E)
+
+        def on_save():
+            new_data = {}
+            try:
+                for key, var in existing_rows:
+                    val = float((var.get() or '').strip())
+                    new_data[key] = val
+            except ValueError:
+                messagebox.showerror("错误", "请填写正确的数字价格")
+                return
+            try:
+                self.save_price_thresholds(new_data)
+                messagebox.showinfo("成功", "价格底线已保存")
+                top.destroy()
+            except Exception as e:
+                messagebox.showerror("错误", f"保存失败：{str(e)}")
+
+        ttk.Button(btn_frame, text="保存", command=on_save).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(btn_frame, text="取消", command=top.destroy).pack(side=tk.RIGHT)
