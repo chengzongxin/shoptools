@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Body
-import json
-import os
+from fastapi import APIRouter, Body, Depends, HTTPException
+from sqlalchemy.orm import Session
 from typing import Dict, Any, Optional
-
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), '..', 'config.json')
+from database.connection import get_db
+from models.user import User
+from models.user_config import UserConfig
+from routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -11,90 +12,188 @@ router = APIRouter()
 def set_config(
     seller_cookie: str = Body(...),
     compliance_cookie: str = Body(...),
-    mallid: str = Body(...)
+    mallid: str = Body(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    # 读取现有配置
-    existing_config = {}
-    if os.path.exists(CONFIG_PATH):
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            existing_config = json.load(f)
-    
-    # 检查配置是否有变化
-    config_changed = (
-        existing_config.get("seller_cookie") != seller_cookie or
-        existing_config.get("compliance_cookie") != compliance_cookie or
-        existing_config.get("mallid") != mallid
-    )
-    
-    config: Dict[str, Any] = {
-        "seller_cookie": seller_cookie,
-        "compliance_cookie": compliance_cookie,
-        "mallid": mallid,
-    }
-    
-    # 如果配置没有变化，保留现有的缓存数据
-    if not config_changed:
-        config["parent_msg_id"] = existing_config.get("parent_msg_id")
-        config["parent_msg_timestamp"] = existing_config.get("parent_msg_timestamp")
-        config["tool_id"] = existing_config.get("tool_id")
-    else:
-        # 配置有变化，清除缓存数据
-        config["parent_msg_id"] = None
-        config["parent_msg_timestamp"] = None
-        config["tool_id"] = None
-    
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, ensure_ascii=False, indent=2)
-    
-    return {
-        "success": True, 
-        "msg": "配置已保存",
-        "config_changed": config_changed
-    }
+    """设置用户配置"""
+    try:
+        # 查找现有配置
+        existing_config = db.query(UserConfig).filter(UserConfig.user_id == current_user.id).first()
+        
+        if existing_config:
+            # 检查配置是否有变化
+            config_changed = (
+                existing_config.seller_cookie != seller_cookie or
+                existing_config.compliance_cookie != compliance_cookie or
+                existing_config.mallid != mallid
+            )
+            
+            # 更新配置
+            existing_config.seller_cookie = seller_cookie
+            existing_config.compliance_cookie = compliance_cookie
+            existing_config.mallid = mallid
+            
+            # 如果配置有变化，清除缓存数据
+            if config_changed:
+                existing_config.parent_msg_id = None
+                existing_config.parent_msg_timestamp = None
+                existing_config.tool_id = None
+            
+            db.commit()
+            db.refresh(existing_config)
+            
+            return {
+                "success": True, 
+                "msg": "配置已更新",
+                "config_changed": config_changed
+            }
+        else:
+            # 创建新配置
+            new_config = UserConfig(
+                user_id=current_user.id,
+                seller_cookie=seller_cookie,
+                compliance_cookie=compliance_cookie,
+                mallid=mallid,
+                parent_msg_id=None,
+                parent_msg_timestamp=None,
+                tool_id=None
+            )
+            
+            db.add(new_config)
+            db.commit()
+            db.refresh(new_config)
+            
+            return {
+                "success": True, 
+                "msg": "配置已创建",
+                "config_changed": True
+            }
+            
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"保存配置失败: {str(e)}")
 
 @router.get("/config")
-def get_config():
-    if not os.path.exists(CONFIG_PATH):
-        return {"success": False, "msg": "未配置"}
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        config = json.load(f)
-    return {"success": True, "data": config}
+def get_config(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """获取用户配置"""
+    try:
+        config = db.query(UserConfig).filter(UserConfig.user_id == current_user.id).first()
+        
+        if not config:
+            return {"success": False, "msg": "未配置"}
+        
+        return {
+            "success": True, 
+            "data": {
+                "seller_cookie": config.seller_cookie,
+                "compliance_cookie": config.compliance_cookie,
+                "mallid": config.mallid,
+                "parent_msg_id": config.parent_msg_id,
+                "parent_msg_timestamp": config.parent_msg_timestamp,
+                "tool_id": config.tool_id
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取配置失败: {str(e)}")
 
 @router.post("/config/cache")
 def update_cache(
     parent_msg_id: Optional[str] = Body(None),
     parent_msg_timestamp: Optional[str] = Body(None),
-    tool_id: Optional[str] = Body(None)
+    tool_id: Optional[str] = Body(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """更新缓存数据"""
-    if not os.path.exists(CONFIG_PATH):
-        return {"success": False, "msg": "未配置"}
-    
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        config = json.load(f)
-    
-    # 只更新提供的字段
-    if parent_msg_id is not None:
-        config["parent_msg_id"] = parent_msg_id
-    if parent_msg_timestamp is not None:
-        config["parent_msg_timestamp"] = parent_msg_timestamp
-    if tool_id is not None:
-        config["tool_id"] = tool_id
-    
-    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-        json.dump(config, f, ensure_ascii=False, indent=2)
-    
-    return {"success": True, "msg": "缓存已更新"}
+    """更新用户缓存数据"""
+    try:
+        config = db.query(UserConfig).filter(UserConfig.user_id == current_user.id).first()
+        
+        if not config:
+            raise HTTPException(status_code=404, detail="用户配置不存在")
+        
+        # 只更新提供的字段
+        if parent_msg_id is not None:
+            config.parent_msg_id = parent_msg_id
+        if parent_msg_timestamp is not None:
+            config.parent_msg_timestamp = parent_msg_timestamp
+        if tool_id is not None:
+            config.tool_id = tool_id
+        
+        db.commit()
+        db.refresh(config)
+        
+        return {"success": True, "msg": "缓存已更新"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"更新缓存失败: {str(e)}")
 
 @router.delete("/config")
-def clear_config():
-    """清除所有配置"""
+def clear_config(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """清除用户配置"""
     try:
-        # 如果配置文件存在，则删除它
-        if os.path.exists(CONFIG_PATH):
-            os.remove(CONFIG_PATH)
+        config = db.query(UserConfig).filter(UserConfig.user_id == current_user.id).first()
+        
+        if config:
+            db.delete(config)
+            db.commit()
             return {"success": True, "msg": "配置已清除"}
         else:
-            return {"success": True, "msg": "配置文件不存在"}
+            return {"success": True, "msg": "配置不存在"}
+            
     except Exception as e:
-        return {"success": False, "msg": f"清除配置失败: {str(e)}"} 
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"清除配置失败: {str(e)}")
+
+@router.get("/config/status")
+def get_config_status(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """获取用户配置状态"""
+    try:
+        config = db.query(UserConfig).filter(UserConfig.user_id == current_user.id).first()
+        
+        if not config:
+            return {
+                "success": True,
+                "data": {
+                    "has_config": False,
+                    "config_complete": False,
+                    "missing_fields": ["seller_cookie", "compliance_cookie", "mallid"]
+                }
+            }
+        
+        # 检查配置完整性
+        missing_fields = []
+        if not config.seller_cookie:
+            missing_fields.append("seller_cookie")
+        if not config.compliance_cookie:
+            missing_fields.append("compliance_cookie")
+        if not config.mallid:
+            missing_fields.append("mallid")
+        
+        config_complete = len(missing_fields) == 0
+        
+        return {
+            "success": True,
+            "data": {
+                "has_config": True,
+                "config_complete": config_complete,
+                "missing_fields": missing_fields,
+                "last_updated": config.updated_at.isoformat() if config.updated_at else None
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"获取配置状态失败: {str(e)}") 

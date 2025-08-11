@@ -33,6 +33,23 @@ CREATE TABLE IF NOT EXISTS file_records (
     INDEX idx_file_type (file_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='文件记录表';
 
+-- 创建用户配置表
+CREATE TABLE IF NOT EXISTS user_configs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL COMMENT '用户ID',
+    seller_cookie TEXT COMMENT '商家中心Cookie',
+    compliance_cookie TEXT COMMENT '合规中心Cookie',
+    mallid VARCHAR(100) COMMENT 'MallId',
+    parent_msg_id VARCHAR(100) COMMENT '父消息ID',
+    parent_msg_timestamp VARCHAR(100) COMMENT '父消息时间戳',
+    tool_id VARCHAR(100) COMMENT '工具ID',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_config (user_id),
+    INDEX idx_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户配置表';
+
 -- 插入默认管理员用户（密码：admin123）
 -- 使用bcrypt生成的哈希值
 INSERT IGNORE INTO users (username, email, password_hash, is_admin) VALUES 

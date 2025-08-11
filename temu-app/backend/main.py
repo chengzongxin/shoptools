@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import temu, blue, config, auth, files
 from database.connection import engine
-from models import user, file_model
+from models import user, file_model, user_config
 import os
 
 # 根据环境决定是否自动创建表
@@ -13,6 +13,7 @@ if ENVIRONMENT == "development":
     print("🔧 开发环境：自动创建数据库表...")
     user.Base.metadata.create_all(bind=engine)
     file_model.Base.metadata.create_all(bind=engine)
+    user_config.Base.metadata.create_all(bind=engine)
     print("✅ 数据库表创建完成")
 else:
     # 生产环境：依赖 init.sql 初始化
