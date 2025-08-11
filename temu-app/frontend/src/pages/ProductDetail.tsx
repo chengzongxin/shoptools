@@ -4,6 +4,7 @@ import { Card, Button, Table, message, Image, Descriptions, Input, Modal, notifi
 import { CopyOutlined } from "@ant-design/icons";
 import { useGlobalNotification } from './GlobalNotification';
 import { useUnpublishedRecords } from '../contexts/UnpublishedRecordsContext';
+import { useAuth } from "../contexts/AuthContext";
 
 // 支持通过props传递spu_id、violationData和onClose
 const ProductDetail: React.FC<{ spu_id?: string, violationData?: any, onClose?: () => void }> = ({ spu_id: propSpuId, violationData: propViolationData, onClose }) => {
@@ -21,6 +22,7 @@ const ProductDetail: React.FC<{ spu_id?: string, violationData?: any, onClose?: 
   const [searchName, setSearchName] = useState(""); // 关联搜索输入框内容
   const [selectedRelatedKeys, setSelectedRelatedKeys] = useState<React.Key[]>([]); // 关联商品多选
   const [offlineResults, setOfflineResults] = useState<{[key: string]: {success: boolean, message: string}}>({}); // 下架结果缓存
+  const { user, token, isAuthenticated } = useAuth();
 
   // 查询商品详情，并自动用前三个单词做关联搜索
   useEffect(() => {
@@ -28,7 +30,10 @@ const ProductDetail: React.FC<{ spu_id?: string, violationData?: any, onClose?: 
     setDetailLoading(true);
     fetch("/api/temu/seller/product", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ productIds: [spu_id] }),
     })
       .then(res => res.json())
@@ -55,7 +60,10 @@ const ProductDetail: React.FC<{ spu_id?: string, violationData?: any, onClose?: 
     setRelatedLoading(true);
     const res = await fetch("/api/temu/seller/product", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify({ productName: keyword }),
     });
     const data = await res.json();
@@ -70,7 +78,10 @@ const ProductDetail: React.FC<{ spu_id?: string, violationData?: any, onClose?: 
     try {
       const res = await fetch("/api/temu/seller/offline", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           productIds: [parseInt(spu_id || "0")],
           max_threads: 4  // 单个商品使用较少线程
@@ -145,7 +156,10 @@ const ProductDetail: React.FC<{ spu_id?: string, violationData?: any, onClose?: 
     try {
       const res = await fetch("/api/temu/seller/offline", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           productIds: selectedRelatedKeys.map(key => parseInt(key.toString())),
           max_threads: 8  // 批量下架使用更多线程

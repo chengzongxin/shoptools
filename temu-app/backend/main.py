@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import temu, blue, config, auth, files
+from routers import temu, config, auth, files
 from database.connection import engine
 from models import user, file_model, user_config
 import os
@@ -33,7 +33,6 @@ app.add_middleware(
 # 注册路由
 app.include_router(auth.router, prefix="/api/auth", tags=["认证"])
 app.include_router(temu.router, prefix="/api/temu", tags=["TEMU"])
-app.include_router(blue.router, prefix="/api/blue", tags=["蓝站"])
 app.include_router(config.router, prefix="/api", tags=["配置"])
 app.include_router(files.router, prefix="/api/files", tags=["文件管理"])
 

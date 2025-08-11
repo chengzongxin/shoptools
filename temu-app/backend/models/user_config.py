@@ -18,4 +18,4 @@ class UserConfig(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), comment="更新时间")
     
     def __repr__(self):
-        return f"<UserConfig(user_id={self.user_id}, mallid='{self.mallid}')>"
+        return f"<UserConfig(user_id={self.user_id}, mallid='{self.mallid}', kuajingmaihuo_cookie='{self.kuajingmaihuo_cookie}', agentseller_cookie='{self.agentseller_cookie}')>"
