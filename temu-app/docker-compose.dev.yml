@@ -1,0 +1,95 @@
+# 开发环境 Docker Compose 配置
+# 使用方法: docker-compose -f docker-compose.dev.yml up -d
+
+services:
+  # MySQL数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: temu-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456789
+      MYSQL_DATABASE: temu_app
+      MYSQL_USER: temu_user
+      MYSQL_PASSWORD: temu_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - temu-network-dev
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 后端服务（开发环境）
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: temu-backend-dev
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=development  # 开发环境
+      - DB_HOST=mysql
+      - DB_USER=root
+      - DB_PASSWORD=123456789
+      - DB_NAME=temu_app
+      - DB_PORT=3306
+      - SECRET_KEY=dev-secret-key
+      - JWT_SECRET_KEY=dev-jwt-secret-key
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    volumes:
+      # 开发环境：挂载源代码目录，支持热重载
+      - ./backend:/app
+      # 文件上传目录持久化
+      - file_uploads_dev:/app/uploads
+      # 日志目录
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"  # 开发环境直接暴露端口
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - temu-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端服务（开发环境）
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: temu-frontend-dev
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "5173:80"  # 开发环境直接暴露端口
+    depends_on:
+      - backend
+    networks:
+      - temu-network-dev
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  temu-network-dev:
+    driver: bridge
+
+volumes:
+  mysql_data_dev:
+  file_uploads_dev:  # 开发环境文件上传存储卷
+  logs: 

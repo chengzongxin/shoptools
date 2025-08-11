@@ -4,6 +4,7 @@ import { CopyOutlined } from "@ant-design/icons";
 import { useGlobalNotification } from './GlobalNotification';
 import { useUnpublishedRecords } from '../contexts/UnpublishedRecordsContext';
 import { useProductSearchContext } from './ProductSearchContext';
+import { useAuth } from "../contexts/AuthContext";
 
 interface Product {
   productId: string;
@@ -32,7 +33,7 @@ const ProductPage: React.FC = () => {
 
   const notify = useGlobalNotification();
   const { addRecords } = useUnpublishedRecords();
-
+  const { user, token, isAuthenticated } = useAuth();
   // 搜索功能，支持商品ID数组和商品名称
   const handleSearch = async () => {
     setLoading(true);
@@ -54,7 +55,10 @@ const ProductPage: React.FC = () => {
     }
     const res = await fetch("/api/temu/seller/product", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
       body: JSON.stringify(body),
     });
     const data = await res.json();
@@ -131,7 +135,10 @@ const ProductPage: React.FC = () => {
     try {
       const res = await fetch("/api/temu/seller/offline", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           productIds: selectedRowKeys.map(id => parseInt(id.toString())),
           max_threads: 8

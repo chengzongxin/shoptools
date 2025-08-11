@@ -21,15 +21,20 @@ wheels/
 *.egg
 
 # Virtual environments
-venv/
+.env
+.venv
 env/
+venv/
 ENV/
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
@@ -39,6 +44,9 @@ Thumbs.db
 *.log
 logs/
 
+# Uploads (will be mounted as volume)
+uploads/
+
 # Git
 .git/
 .gitignore
@@ -46,6 +54,7 @@ logs/
 # Docker
 Dockerfile
 .dockerignore
+docker-compose.yml
 
 # 测试文件
 test_*.py

@@ -5,6 +5,7 @@ import { useProductListContext } from './ProductListContext';
 import ProductDetail from './ProductDetail';
 import { useGlobalNotification } from './GlobalNotification';
 import './ProductList.css';
+import { useAuth } from "../contexts/AuthContext";
 
 const ProductList: React.FC = () => {
   const { products, setProducts, page, setPage, pageSize, setPageSize, total, setTotal } = useProductListContext();
@@ -20,13 +21,18 @@ const ProductList: React.FC = () => {
   const [customMax, setCustomMax] = useState<number>(999); // 自定义最大值
   const [showUSViolation, setShowUSViolation] = useState<boolean>(false); // 美国站违规筛选
   const notify = useGlobalNotification();
-
+  const { user, token, isAuthenticated } = useAuth();
+  
   // 获取违规商品列表
   const fetchProducts = async (pageNum = page, size = pageSize) => {
     setLoading(true);
     // 清理选择状态，避免缓存问题
     setSelectedRowKeys([]);
-    const res = await fetch(`/api/temu/compliance/list?page=${pageNum}&page_size=${size}`);
+    const res = await fetch(`/api/temu/compliance/list?page=${pageNum}&page_size=${size}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
     const data = await res.json();
     if (data.success) {
       setProducts(data.data.items || data.data); // 兼容返回结构
@@ -37,7 +43,11 @@ const ProductList: React.FC = () => {
   };
 
   const fetchTotal = async (pageNum = page, size = pageSize) => {
-    const res = await fetch(`/api/temu/compliance/total?page=${pageNum}&page_size=${size}`);
+    const res = await fetch(`/api/temu/compliance/total?page=${pageNum}&page_size=${size}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
     const data = await res.json();
     if (data.success) {
       setTotal(data.total || 8000);
@@ -66,7 +76,10 @@ const ProductList: React.FC = () => {
       message.loading("正在获取商品详情...", 0);
       const productRes = await fetch("/api/temu/seller/product", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ productIds: selectedRowKeys.map(String) }),
       });
       const productData = await productRes.json();
@@ -96,7 +109,10 @@ const ProductList: React.FC = () => {
       message.loading(`正在下架 ${allSkcIds.length} 个SKC...`, 0);
       const res = await fetch("/api/temu/seller/offline", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           productIds: allSkcIds,  // 传递skcId列表
           max_threads: 8  // 批量下架使用更多线程

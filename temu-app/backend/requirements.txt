@@ -3,4 +3,22 @@ fastapi  # 主框架
 uvicorn  # ASGI 服务器，推荐用于 FastAPI
 requests  # HTTP 请求库
 bs4  # BeautifulSoup4，HTML 解析（用于图片搜索）
-dataclasses  # Python 3.7+ 标准库自带，低版本需手动安装 
+dataclasses  # Python 3.7+ 标准库自带，低版本需手动安装
+
+# 数据库相关
+sqlalchemy  # ORM框架
+pymysql  # MySQL驱动
+cryptography  # 加密库，用于MySQL连接
+
+# 认证相关
+python-jose[cryptography]  # JWT处理
+passlib[bcrypt]  # 密码加密
+bcrypt==4.0.1  # 指定兼容版本
+python-multipart  # 表单数据处理
+
+# 文件处理相关
+python-multipart  # 文件上传处理
+aiofiles  # 异步文件操作
+
+# 其他工具
+python-dotenv  # 环境变量管理 
