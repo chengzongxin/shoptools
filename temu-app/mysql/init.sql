@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS file_records (
 CREATE TABLE IF NOT EXISTS user_configs (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL COMMENT '用户ID',
-    seller_cookie TEXT COMMENT '商家中心Cookie',
-    compliance_cookie TEXT COMMENT '合规中心Cookie',
+    kuajingmaihuo_cookie TEXT COMMENT '跨境猫卖家中心Cookie',
+    agentseller_cookie TEXT COMMENT 'TEMU代理商中心Cookie',
     mallid VARCHAR(100) COMMENT 'MallId',
     parent_msg_id VARCHAR(100) COMMENT '父消息ID',
     parent_msg_timestamp VARCHAR(100) COMMENT '父消息时间戳',

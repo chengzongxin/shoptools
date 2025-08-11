@@ -8,8 +8,8 @@ class UserConfig(Base):
     
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, comment="用户ID")
-    seller_cookie = Column(Text, comment="商家中心Cookie")
-    compliance_cookie = Column(Text, comment="合规中心Cookie")
+    kuajingmaihuo_cookie = Column(Text, comment="跨境猫卖家中心Cookie")
+    agentseller_cookie = Column(Text, comment="TEMU代理商中心Cookie")
     mallid = Column(String(100), comment="MallId")
     parent_msg_id = Column(String(100), comment="父消息ID")
     parent_msg_timestamp = Column(String(100), comment="父消息时间戳")

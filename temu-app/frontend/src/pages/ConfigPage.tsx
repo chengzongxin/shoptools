@@ -7,8 +7,8 @@ import { useNavigate } from "react-router-dom";
 const { Text } = Typography;
 
 interface ConfigData {
-  seller_cookie: string;
-  compliance_cookie: string;
+  kuajingmaihuo_cookie: string;
+  agentseller_cookie: string;
   mallid: string;
   parent_msg_id?: string;
   parent_msg_timestamp?: string;
@@ -198,8 +198,8 @@ const ConfigPage: React.FC = () => {
                 <br />
                 {configStatus.missing_fields.map(field => (
                   <Tag key={field} color="red" style={{ marginTop: 4 }}>
-                    {field === 'seller_cookie' ? '商家中心Cookie' :
-                     field === 'compliance_cookie' ? '合规中心Cookie' :
+                    {field === 'kuajingmaihuo_cookie' ? '跨境猫卖家中心Cookie' :
+                     field === 'agentseller_cookie' ? 'TEMU代理商中心Cookie' :
                      field === 'mallid' ? 'MallId' : field}
                   </Tag>
                 ))}
@@ -231,19 +231,25 @@ const ConfigPage: React.FC = () => {
         layout="vertical"
       >
         <Form.Item 
-          label="商家中心Cookie" 
-          name="seller_cookie"
-          rules={[{ required: true, message: '请输入商家中心Cookie' }]}
+          label="跨境猫卖家中心Cookie" 
+          name="kuajingmaihuo_cookie"
+          rules={[{ required: true, message: '请输入跨境猫卖家中心Cookie' }]}
         >
-          <Input.TextArea rows={3} placeholder="请输入商家中心的Cookie信息" />
+          <Input.TextArea 
+            rows={3} 
+            placeholder="请输入 https://seller.kuajingmaihuo.com/ 的Cookie信息" 
+          />
         </Form.Item>
         
         <Form.Item 
-          label="合规中心Cookie" 
-          name="compliance_cookie"
-          rules={[{ required: true, message: '请输入合规中心Cookie' }]}
+          label="TEMU代理商中心Cookie" 
+          name="agentseller_cookie"
+          rules={[{ required: true, message: '请输入TEMU代理商中心Cookie' }]}
         >
-          <Input.TextArea rows={3} placeholder="请输入合规中心的Cookie信息" />
+          <Input.TextArea 
+            rows={3} 
+            placeholder="请输入 https://agentseller.temu.com/ 的Cookie信息" 
+          />
         </Form.Item>
         
         <Form.Item 

@@ -56,11 +56,11 @@ def migrate_configs():
                 print("ℹ️  admin用户已有配置，跳过迁移")
                 return
             
-            # 创建新配置
+            # 创建新配置（字段名映射）
             new_config = UserConfig(
                 user_id=admin_user.id,
-                seller_cookie=old_config.get("seller_cookie"),
-                compliance_cookie=old_config.get("compliance_cookie"),
+                kuajingmaihuo_cookie=old_config.get("seller_cookie"),  # 旧字段映射到新字段
+                agentseller_cookie=old_config.get("compliance_cookie"),  # 旧字段映射到新字段
                 mallid=old_config.get("mallid"),
                 parent_msg_id=old_config.get("parent_msg_id"),
                 parent_msg_timestamp=old_config.get("parent_msg_timestamp"),
@@ -73,6 +73,9 @@ def migrate_configs():
             print("✅ 配置迁移成功！")
             print(f"👤 用户: {admin_user.username}")
             print(f"🔧 配置项: {list(old_config.keys())}")
+            print("📝 字段映射:")
+            print("   seller_cookie → kuajingmaihuo_cookie (跨境猫卖家中心)")
+            print("   compliance_cookie → agentseller_cookie (TEMU代理商中心)")
             
             # 备份原配置文件
             backup_path = config_path.with_suffix('.json.backup')
@@ -121,8 +124,8 @@ def create_default_configs():
             # 创建空配置
             new_config = UserConfig(
                 user_id=user.id,
-                seller_cookie=None,
-                compliance_cookie=None,
+                kuajingmaihuo_cookie=None,
+                agentseller_cookie=None,
                 mallid=None,
                 parent_msg_id=None,
                 parent_msg_timestamp=None,

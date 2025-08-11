@@ -10,8 +10,8 @@ router = APIRouter()
 
 @router.post("/config")
 def set_config(
-    seller_cookie: str = Body(...),
-    compliance_cookie: str = Body(...),
+    kuajingmaihuo_cookie: str = Body(...),
+    agentseller_cookie: str = Body(...),
     mallid: str = Body(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -24,14 +24,14 @@ def set_config(
         if existing_config:
             # 检查配置是否有变化
             config_changed = (
-                existing_config.seller_cookie != seller_cookie or
-                existing_config.compliance_cookie != compliance_cookie or
+                existing_config.kuajingmaihuo_cookie != kuajingmaihuo_cookie or
+                existing_config.agentseller_cookie != agentseller_cookie or
                 existing_config.mallid != mallid
             )
             
             # 更新配置
-            existing_config.seller_cookie = seller_cookie
-            existing_config.compliance_cookie = compliance_cookie
+            existing_config.kuajingmaihuo_cookie = kuajingmaihuo_cookie
+            existing_config.agentseller_cookie = agentseller_cookie
             existing_config.mallid = mallid
             
             # 如果配置有变化，清除缓存数据
@@ -52,8 +52,8 @@ def set_config(
             # 创建新配置
             new_config = UserConfig(
                 user_id=current_user.id,
-                seller_cookie=seller_cookie,
-                compliance_cookie=compliance_cookie,
+                kuajingmaihuo_cookie=kuajingmaihuo_cookie,
+                agentseller_cookie=agentseller_cookie,
                 mallid=mallid,
                 parent_msg_id=None,
                 parent_msg_timestamp=None,
@@ -89,8 +89,8 @@ def get_config(
         return {
             "success": True, 
             "data": {
-                "seller_cookie": config.seller_cookie,
-                "compliance_cookie": config.compliance_cookie,
+                "kuajingmaihuo_cookie": config.kuajingmaihuo_cookie,
+                "agentseller_cookie": config.agentseller_cookie,
                 "mallid": config.mallid,
                 "parent_msg_id": config.parent_msg_id,
                 "parent_msg_timestamp": config.parent_msg_timestamp,
@@ -170,16 +170,16 @@ def get_config_status(
                 "data": {
                     "has_config": False,
                     "config_complete": False,
-                    "missing_fields": ["seller_cookie", "compliance_cookie", "mallid"]
+                    "missing_fields": ["kuajingmaihuo_cookie", "agentseller_cookie", "mallid"]
                 }
             }
         
         # 检查配置完整性
         missing_fields = []
-        if not config.seller_cookie:
-            missing_fields.append("seller_cookie")
-        if not config.compliance_cookie:
-            missing_fields.append("compliance_cookie")
+        if not config.kuajingmaihuo_cookie:
+            missing_fields.append("kuajingmaihuo_cookie")
+        if not config.agentseller_cookie:
+            missing_fields.append("agentseller_cookie")
         if not config.mallid:
             missing_fields.append("mallid")
         
