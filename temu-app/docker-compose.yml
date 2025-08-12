@@ -81,7 +81,7 @@ services:
     container_name: temu-nginx-proxy
     restart: unless-stopped
     ports:
-      - "${NGINX_PORT:-8082}:80"  # 使用环境变量，默认 8082
+      - "${NGINX_PORT:-80}:80"   # 改成使用80端口，之前是8082
     volumes:
       - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
     depends_on:
