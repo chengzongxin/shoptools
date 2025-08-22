@@ -10,6 +10,7 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from .crawler import ProductListCrawler
 from ..system_config.config import SystemConfig
+from ..price_review.config import get_price_threshold
 
 # 模块级常量：商品识别码映射
 CODE_MAPPING = {
@@ -51,33 +52,65 @@ class ProductListTab(ttk.Frame):
         self.setup_logging()
 
     def setup_ui(self):
+        """设置用户界面"""
+        # 创建主框架，添加padding
+        main_frame = ttk.Frame(self, padding="10")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        
+        # 第一行：使用Frame来组织控件，确保均匀分布
+        first_row_frame = ttk.Frame(main_frame)
+        first_row_frame.grid(row=0, column=0, columnspan=5, sticky=(tk.W, tk.E), pady=(0, 10))
+        
         # 页数输入
-        ttk.Label(self, text="获取页数:").grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(first_row_frame, text="获取页数:").pack(side=tk.LEFT)
         self.pages_var = tk.StringVar(value="1")
-        self.pages_entry = ttk.Entry(self, textvariable=self.pages_var, width=10)
-        self.pages_entry.grid(row=0, column=1, sticky=tk.W)
-        # 每页数据量输入
-        ttk.Label(self, text="每页数量:").grid(row=1, column=0, sticky=tk.W)
+        self.pages_entry = ttk.Entry(first_row_frame, textvariable=self.pages_var, width=10)
+        self.pages_entry.pack(side=tk.LEFT, padx=(0, 20))
+        
+        # 每页数量输入
+        ttk.Label(first_row_frame, text="每页数量:").pack(side=tk.LEFT)
         self.page_size_var = tk.StringVar(value="100")
-        self.page_size_entry = ttk.Entry(self, textvariable=self.page_size_var, width=10)
-        self.page_size_entry.grid(row=1, column=1, sticky=tk.W)
+        self.page_size_entry = ttk.Entry(first_row_frame, textvariable=self.page_size_var, width=10)
+        self.page_size_entry.pack(side=tk.LEFT, padx=(0, 20))
+        
+        # 只爬取在售商品选项
+        self.only_on_sale_var = tk.BooleanVar(value=False)
+        self.only_on_sale_checkbox = ttk.Checkbutton(
+            first_row_frame, 
+            text="只爬取在售商品", 
+            variable=self.only_on_sale_var,
+            command=self.on_checkbox_change
+        )
+        self.only_on_sale_checkbox.pack(side=tk.LEFT)
+        
         # 进度条
         self.progress_var = tk.DoubleVar()
-        self.progress_bar = ttk.Progressbar(self, variable=self.progress_var, maximum=100)
-        self.progress_bar.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
-        # 日志显示
-        self.log_text = tk.Text(self, height=15, width=80)
-        self.log_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
-        scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=self.log_text.yview)
-        scrollbar.grid(row=3, column=2, sticky=(tk.N, tk.S))
-        self.log_text['yscrollcommand'] = scrollbar.set
-        # 按钮
-        button_frame = ttk.Frame(self)
-        button_frame.grid(row=4, column=0, columnspan=2, pady=10)
+        self.progress_bar = ttk.Progressbar(main_frame, variable=self.progress_var, maximum=100)
+        self.progress_bar.grid(row=1, column=0, columnspan=5, sticky=(tk.W, tk.E), pady=10)
+        
+        # 日志显示框架
+        log_frame = ttk.LabelFrame(main_frame, text="操作日志", padding="5")
+        log_frame.grid(row=2, column=0, columnspan=5, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
+        
+        self.log_text = tk.Text(log_frame, height=15, width=100, state='disabled')
+        scrollbar = ttk.Scrollbar(log_frame, orient=tk.VERTICAL, command=self.log_text.yview)
+        self.log_text.configure(yscrollcommand=scrollbar.set)
+        
+        self.log_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        scrollbar.grid(row=0, column=1, sticky=(tk.N, tk.S))
+        
+        log_frame.columnconfigure(0, weight=1)
+        log_frame.rowconfigure(0, weight=1)
+        
+        # 按钮框架
+        button_frame = ttk.Frame(main_frame)
+        button_frame.grid(row=3, column=0, columnspan=5, pady=10)
+        
         self.start_button = ttk.Button(button_frame, text="开始爬取", command=self.start_crawling)
         self.start_button.pack(side=tk.LEFT, padx=5)
         self.stop_button = ttk.Button(button_frame, text="停止", command=self.stop_crawling, state=tk.DISABLED)
         self.stop_button.pack(side=tk.LEFT, padx=5)
+        
         # 导出按钮
         export_frame = ttk.LabelFrame(button_frame, text="导出", padding="5")
         export_frame.pack(side=tk.LEFT, padx=5)
@@ -90,8 +123,19 @@ class ProductListTab(ttk.Frame):
         self.export_code_button.pack(side=tk.LEFT, padx=2)
         self.export_inventory_button = ttk.Button(export_frame, text="导出库存模板", command=self.export_inventory_template, state=tk.DISABLED)
         self.export_inventory_button.pack(side=tk.LEFT, padx=2)
+        
+        # 配置网格权重
         self.columnconfigure(0, weight=1)
-        self.rowconfigure(3, weight=1)
+        self.rowconfigure(0, weight=1)
+        main_frame.columnconfigure(0, weight=1)
+        main_frame.rowconfigure(2, weight=1)
+
+    def on_checkbox_change(self):
+        """复选框状态变化时的处理函数"""
+        if self.only_on_sale_var.get():
+            self.logger.info("已选择只爬取在售商品")
+        else:
+            self.logger.info("已选择爬取所有商品")
 
     def setup_logging(self):
         class TextHandler(logging.Handler):
@@ -125,19 +169,29 @@ class ProductListTab(ttk.Frame):
             self.start_button.configure(state='disabled')
             self.stop_button.configure(state='normal')
             self.log_text.delete(1.0, tk.END)
+            
+            # 获取是否只爬取在售商品的选项
+            only_on_sale = self.only_on_sale_var.get()
+            
             self.crawler_thread = threading.Thread(
                 target=self.run_crawler,
-                args=(pages, page_size)
+                args=(pages, page_size, only_on_sale)
             )
             self.crawler_thread.start()
         except ValueError:
             messagebox.showerror("错误", "请输入有效的数字")
 
-    def run_crawler(self, pages, page_size):
+    def run_crawler(self, pages, page_size, only_on_sale=False):
         try:
             crawler = ProductListCrawler(logger=self.logger)
-            self.logger.info(f"开始获取商品列表数据，计划获取 {pages} 页...")
-            all_data = crawler.get_all_data(max_pages=pages, page_size=page_size)
+            
+            # 根据选项显示不同的日志信息
+            if only_on_sale:
+                self.logger.info(f"开始获取在售商品列表数据，计划获取 {pages} 页...")
+            else:
+                self.logger.info(f"开始获取所有商品列表数据，计划获取 {pages} 页...")
+                
+            all_data = crawler.get_all_data(max_pages=pages, page_size=page_size, only_on_sale=only_on_sale)
             if all_data:
                 self.current_data = all_data
                 self.logger.info(f"共获取到 {len(all_data)} 条数据")
@@ -215,10 +269,19 @@ class ProductListTab(ttk.Frame):
                 # 处理SKU信息
                 for sku in product['productSkuSummaries']:
                     sku_info = base_info.copy()
+                    supplier_price = sku['supplierPrice'] / 100  # 转换为元
+                    
+                    # 计算底线价格和价格差额
+                    sku_code = sku['extCode']
+                    price_threshold = get_price_threshold(sku_code)
+                    price_difference = supplier_price - price_threshold if price_threshold is not None else None
+                    
                     sku_info.update({
                         'SKU ID': sku['productSkuId'],
                         'SKU编码': sku['extCode'],
-                        '供应商价格': sku['supplierPrice'] / 100,  # 转换为元
+                        '供应商价格': supplier_price,
+                        '底线价格': price_threshold,
+                        '价格差额': price_difference,
                         'SKU图片': sku['thumbUrl']
                     })
                     
@@ -248,7 +311,7 @@ class ProductListTab(ttk.Frame):
             columns_order = [
                 '商品ID', '商品名称', '商品类型', '来源类型', '商品编码',
                 '类目ID', '类目名称', 'SKU ID', 'SKU编码', '供应商价格',
-                '颜色', '尺码', '主图URL', 'SKU图片', '创建时间'
+                '底线价格', '价格差额', '颜色', '尺码', '主图URL', 'SKU图片', '创建时间'
             ]
             
             # 写入表头
@@ -585,10 +648,19 @@ class ProductListTab(ttk.Frame):
                 # 处理SKU信息
                 for sku in product['productSkuSummaries']:
                     sku_info = base_info.copy()
+                    supplier_price = sku['supplierPrice'] / 100  # 转换为元
+                    
+                    # 计算底线价格和价格差额
+                    sku_code = sku['extCode']
+                    price_threshold = get_price_threshold(sku_code)
+                    price_difference = supplier_price - price_threshold if price_threshold is not None else None
+                    
                     sku_info.update({
                         'SKU ID': sku['productSkuId'],
                         'SKU编码': sku['extCode'],
-                        '供应商价格': sku['supplierPrice'] / 100,  # 转换为元
+                        '供应商价格': supplier_price,
+                        '底线价格': price_threshold,
+                        '价格差额': price_difference,
                         'SKU图片': sku['thumbUrl']
                     })
                     
@@ -618,7 +690,7 @@ class ProductListTab(ttk.Frame):
             columns_order = [
                 '商品ID', '商品名称', '商品类型', '来源类型', '商品编码',
                 '类目ID', '类目名称', 'SKU ID', 'SKU编码', '供应商价格',
-                '颜色', '尺码', '主图URL', 'SKU图片', '创建时间'
+                '底线价格', '价格差额', '颜色', '尺码', '主图URL', 'SKU图片', '创建时间'
             ]
             
             # 写入表头

@@ -69,12 +69,18 @@ class ProductListCrawler:
         self.request = NetworkRequest()
         self.logger = logger or logging.getLogger('product_list')
 
-    def get_page_data(self, page: int, page_size: int = None) -> Optional[Dict]:
+    def get_page_data(self, page: int, page_size: int = None, only_on_sale: bool = False) -> Optional[Dict]:
         """获取指定页码的数据"""
         payload = {
             "page": page,
             "pageSize": page_size or self.page_size
         }
+        
+        # 如果选择只爬取在售商品，添加 skcTopStatus 参数
+        if only_on_sale:
+            payload["skcTopStatus"] = 100
+            self.logger.debug(f"添加在售商品筛选参数: skcTopStatus=100")
+        
         self.logger.info(f"正在获取第 {page} 页数据")
         self.logger.debug(f"请求URL: {self.api_url}")
         self.logger.debug(f"请求体: {payload}")
@@ -84,11 +90,11 @@ class ProductListCrawler:
             return None
         return result
 
-    def get_all_data(self, max_pages: int = 2, page_size: int = None) -> List[Dict]:
+    def get_all_data(self, max_pages: int = 2, page_size: int = None, only_on_sale: bool = False) -> List[Dict]:
         """获取指定页数的数据"""
         all_data = []
         for page in range(1, max_pages + 1):
-            result = self.get_page_data(page, page_size)
+            result = self.get_page_data(page, page_size, only_on_sale)
             if not result:
                 self.logger.error(f"第 {page} 页数据获取失败")
                 break
