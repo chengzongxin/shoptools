@@ -81,6 +81,11 @@ class RealPictureUploader:
                 "name": "工作帽",
                 "cate_id": 28768,
                 "image_file": "头带、厨师帽.jpg"
+            },
+            {
+                "name": "袜子备选",
+                "cate_id": 27851,
+                "image_file": "袜子.jpg"
             }
         ]
         
