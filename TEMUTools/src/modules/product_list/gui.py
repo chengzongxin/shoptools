@@ -25,6 +25,7 @@ CODE_MAPPING = {
     "bag": "CB-0608", # 双肩包
     "beanie": "BE-0608", # 套头帽
     "workcap": "SH-0608", # 工作帽
+    "Handkerchief": "SH-0608", # 方巾
 }
 
 

@@ -40,7 +40,8 @@ class RealPictureUploaderTab(ttk.Frame):
         self.categories = [
             "抽绳健身包", "帆布袋", "冰袖", "头带",
             "头巾", "袜子", "围裙", "抱枕",
-            "双肩包", "套头帽", "工作帽", "袜子备选"
+            "双肩包", "套头帽", "工作帽", "袜子备选",
+            "方巾"
         ]
         
         self.category_vars = {}
