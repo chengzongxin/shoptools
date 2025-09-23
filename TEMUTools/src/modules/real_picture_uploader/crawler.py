@@ -91,6 +91,11 @@ class RealPictureUploader:
                 "name": "方巾",
                 "cate_id": 30628,
                 "image_file": "头带、厨师帽.jpg"
+            },
+            {
+                "name": "防风骑行面罩",
+                "cate_id": 27615,
+                "image_file": "头巾、冰袖、套头帽.jpg"
             }
         ]
         
