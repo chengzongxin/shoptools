@@ -96,6 +96,11 @@ class RealPictureUploader:
                 "name": "防风骑行面罩",
                 "cate_id": 27615,
                 "image_file": "头巾、冰袖、套头帽.jpg"
+            },
+            {
+                "name": "防风骑行面罩黑",
+                "cate_id": 27615,
+                "image_file": "头巾、冰袖、套头帽.jpg"
             }
         ]
         

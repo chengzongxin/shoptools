@@ -14,7 +14,8 @@ PRICE_THRESHOLDS = {
     "beanies": 11.4,
     "workcap": 13.5,
     "Handkerchief": 10.0,
-    "WindproofMask": 13.5
+    "WindproofMask": 13.5,
+    "WindBlack": 13.5
 }
 
 def get_price_threshold(ext_code: str) -> float:
