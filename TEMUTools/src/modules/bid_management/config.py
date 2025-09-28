@@ -64,6 +64,24 @@ class CategoryConfigManager:
                 return category
         return None
     
+    def get_code_mapping_by_category_id(self, cate_id: int) -> Optional[str]:
+        """根据品类ID获取商品码映射"""
+        category_info = self.get_category_info_by_id(cate_id)
+        if category_info:
+            return category_info.get("code_mapping")
+        return None
+    
+    def get_code_mapping_by_category_ids(self, cate_id_list: List[int]) -> Optional[str]:
+        """根据品类ID列表获取商品码映射（返回第一个匹配的）"""
+        if not cate_id_list:
+            return None
+            
+        for cate_id in cate_id_list:
+            code_mapping = self.get_code_mapping_by_category_id(cate_id)
+            if code_mapping is not None:
+                return code_mapping
+        return None
+    
     def refresh_cache(self):
         """刷新缓存"""
         self._categories_cache = None

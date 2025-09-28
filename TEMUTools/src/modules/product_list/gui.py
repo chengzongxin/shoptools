@@ -11,6 +11,7 @@ from openpyxl.utils import get_column_letter
 from .crawler import ProductListCrawler
 from ..system_config.config import SystemConfig
 from ..price_review.config import get_price_threshold
+from ..bid_management.config import category_config
 
 # 模块级常量：商品识别码映射
 CODE_MAPPING = {
@@ -370,19 +371,40 @@ class ProductListTab(ttk.Frame):
             for product in self.current_data:
                 product_id = product['productId']
                 
-                # 处理SKU信息
-                for sku in product['productSkuSummaries']:
-                    sku_code = sku['extCode']
-                    # 获取下划线前的部分
-                    key = sku_code.split('_')[0] if '_' in sku_code else sku_code
-                    
-                    # 使用模块级智能匹配函数查找对应的商品码
-                    product_code = get_product_code(key)
-                    
-                    excel_data.append({
-                        'SPUID': product_id,
-                        '商品识别码': product_code
-                    })
+                # 获取商品的类别ID列表
+                category_ids = []
+                if 'leafCat' in product and product['leafCat']:
+                    category_ids.append(product['leafCat']['catId'])
+                
+                # 如果有categories字段，也添加进去
+                if 'categories' in product:
+                    categories = product['categories']
+                    for cat_key in ['cat1', 'cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8', 'cat9', 'cat10']:
+                        if cat_key in categories and categories[cat_key]['catId'] > 0:
+                            category_ids.append(categories[cat_key]['catId'])
+                
+                # 通过类别ID获取商品码映射
+                product_code = category_config.get_code_mapping_by_category_ids(category_ids)
+                
+                # 如果没有找到映射，使用原来的逻辑作为备选
+                if not product_code:
+                    # 处理SKU信息，使用原来的逻辑作为备选
+                    for sku in product['productSkuSummaries']:
+                        sku_code = sku['extCode']
+                        # 获取下划线前的部分
+                        key = sku_code.split('_')[0] if '_' in sku_code else sku_code
+                        
+                        # 使用模块级智能匹配函数查找对应的商品码
+                        product_code = get_product_code(key)
+                        break  # 只需要处理第一个SKU
+                
+                if not product_code:
+                    product_code = "未定义"
+                
+                excel_data.append({
+                    'SPUID': product_id,
+                    '商品识别码': product_code
+                })
             
             # 创建工作簿
             wb = Workbook()
@@ -729,19 +751,40 @@ class ProductListTab(ttk.Frame):
             for product in self.current_data:
                 product_id = product['productId']
                 
-                # 处理SKU信息
-                for sku in product['productSkuSummaries']:
-                    sku_code = sku['extCode']
-                    # 获取下划线前的部分
-                    key = sku_code.split('_')[0] if '_' in sku_code else sku_code
-                    
-                    # 使用模块级智能匹配函数查找对应的商品码
-                    product_code = get_product_code(key)
-                    
-                    excel_data.append({
-                        'SPUID': product_id,
-                        '商品识别码': product_code
-                    })
+                # 获取商品的类别ID列表
+                category_ids = []
+                if 'leafCat' in product and product['leafCat']:
+                    category_ids.append(product['leafCat']['catId'])
+                
+                # 如果有categories字段，也添加进去
+                if 'categories' in product:
+                    categories = product['categories']
+                    for cat_key in ['cat1', 'cat2', 'cat3', 'cat4', 'cat5', 'cat6', 'cat7', 'cat8', 'cat9', 'cat10']:
+                        if cat_key in categories and categories[cat_key]['catId'] > 0:
+                            category_ids.append(categories[cat_key]['catId'])
+                
+                # 通过类别ID获取商品码映射
+                product_code = category_config.get_code_mapping_by_category_ids(category_ids)
+                
+                # 如果没有找到映射，使用原来的逻辑作为备选
+                if not product_code:
+                    # 处理SKU信息，使用原来的逻辑作为备选
+                    for sku in product['productSkuSummaries']:
+                        sku_code = sku['extCode']
+                        # 获取下划线前的部分
+                        key = sku_code.split('_')[0] if '_' in sku_code else sku_code
+                        
+                        # 使用模块级智能匹配函数查找对应的商品码
+                        product_code = get_product_code(key)
+                        break  # 只需要处理第一个SKU
+                
+                if not product_code:
+                    product_code = "未定义"
+                
+                excel_data.append({
+                    'SPUID': product_id,
+                    '商品识别码': product_code
+                })
             
             # 创建工作簿
             wb = Workbook()

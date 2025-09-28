@@ -6,6 +6,7 @@ import requests
 import sys
 from typing import List, Dict, Any, Optional
 from ..network.request import NetworkRequest
+from ..bid_management.config import category_config
 
 class RealPictureUploader:
     """
@@ -24,100 +25,8 @@ class RealPictureUploader:
         self.upload_url = f"{self.base_url}/api/galerie/v3/store_image"
         self.batch_upload_url = f"{self.base_url}/api/flash/real_picture/batch_upload"
         
-        # 品类配置
-        self.categories = [
-            {
-                "name": "抽绳健身包",
-                "cate_id": 31563,
-                "image_file": "帆布袋、束口袋.jpg",
-                "price_threshold": 12.7
-            },
-            {
-                "name": "帆布袋",
-                "cate_id": 29157,
-                "image_file": "帆布袋、束口袋.jpg",
-                "price_threshold": 10.7
-            },
-            {
-                "name": "冰袖",
-                "cate_id": 34959,
-                "image_file": "头巾、冰袖、套头帽.jpg",
-                "price_threshold": 11.4
-            },
-            {
-                "name": "头带",
-                "cate_id": 27618,
-                "image_file": "头带、厨师帽.jpg",
-                "price_threshold": 8.7
-            },
-            {
-                "name": "头巾",
-                "cate_id": 31087,
-                "image_file": "头巾、冰袖、套头帽.jpg",
-                "price_threshold": 7.4
-            },
-            {
-                "name": "袜子",
-                "cate_id": 30242,
-                "image_file": "袜子.jpg",
-                "price_threshold": 10.7
-            },
-            {
-                "name": "围裙",
-                "cate_id": 28769,
-                "image_file": "围裙.jpg",
-                "price_threshold": 10
-            },
-            {
-                "name": "抱枕",
-                "cate_id": 12044,
-                "image_file": "抱枕套、窗帘.jpg",
-                "price_threshold": 9
-            },
-            # 新增品类
-            {
-                "name": "双肩包",
-                "cate_id": 40414,
-                "image_file": "双肩背包、男包套装.jpg",
-                "price_threshold": 33
-            },
-            {
-                "name": "套头帽",
-                "cate_id": 30259,
-                "image_file": "头巾、冰袖、套头帽.jpg",
-                "price_threshold": 11.4
-            },
-            {
-                "name": "工作帽",
-                "cate_id": 28768,
-                "image_file": "头带、厨师帽.jpg",
-                "price_threshold": 13.5
-            },
-            {
-                "name": "袜子备选",
-                "cate_id": 27851,
-                "image_file": "袜子.jpg",
-                "price_threshold": 10.7
-            },
-            {
-                "name": "方巾",
-                "cate_id": 30628,
-                "image_file": "头带、厨师帽.jpg",
-                "price_threshold": 10
-            },
-            {
-                "name": "防风骑行面罩",
-                "cate_id": 27615,
-                "image_file": "头巾、冰袖、套头帽.jpg",
-                "price_threshold": 13.5
-            },
-            {
-                "name": "防风骑行面罩黑",
-                "cate_id": 27615,
-                "image_file": "头巾、冰袖、套头帽.jpg",
-                "price_threshold": 13.5
-            }
-        ]
+        # 从全局配置获取品类配置
+        self.categories = category_config.get_categories()
         
         # 图片文件路径
         if getattr(sys, 'frozen', False):

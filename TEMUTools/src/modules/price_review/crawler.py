@@ -8,6 +8,7 @@ from typing import List, Dict, Optional, Any, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from ..network.request import NetworkRequest
 from .config import get_price_threshold
+from ..bid_management.config import category_config
 
 # 配置日志
 logging.basicConfig(
@@ -509,13 +510,27 @@ class PriceReviewCrawler:
             if not suggestion:
                 return False, "获取核价建议失败"
                 
-            # 获取价格底线
-            if ext_code is None:
-                return False, "商品缺少货号信息"
-                
-            threshold = get_price_threshold(ext_code)
+            # 获取价格底线 - 优先通过商品类别ID获取
+            cat_id_list = product_data.get('catIdList', [])
+            threshold = None
+            
+            # 首先尝试通过类别ID获取价格阈值
+            if cat_id_list:
+                threshold = category_config.get_price_threshold_by_category_ids(cat_id_list)
+                if threshold is not None:
+                    self.logger.debug(f"通过类别ID {cat_id_list} 获取到价格阈值: {threshold}元")
+            
+            # 如果通过类别ID没有找到，使用原有的SKU编码方式作为备选
+            if threshold is None and ext_code is not None:
+                threshold = get_price_threshold(ext_code)
+                if threshold is not None:
+                    self.logger.debug(f"通过SKU编码 {ext_code} 获取到价格阈值: {threshold}元")
+            
+            # 如果仍然没有找到价格阈值
             if threshold is None:
-                return False, f"未找到商品 {ext_code} 的价格底线规则"
+                cat_info = f"类别ID: {cat_id_list}" if cat_id_list else "无类别ID"
+                sku_info = f"SKU编码: {ext_code}" if ext_code else "无SKU编码"
+                return False, f"未找到商品的价格底线规则 ({cat_info}, {sku_info})"
                 
             # 将价格底线转换为分
             threshold_cents = int(threshold * 100)
