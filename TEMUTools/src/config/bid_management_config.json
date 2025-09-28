@@ -1,0 +1,9 @@
+{
+  "bid_reduction": 0.2,
+  "max_page_size": 100,
+  "random_delay_min": 1.0,
+  "random_delay_max": 3.0,
+  "adjust_reason": 6,
+  "last_update": "2025-01-28 10:00:00",
+  "enable_price_threshold_check": true
+}
