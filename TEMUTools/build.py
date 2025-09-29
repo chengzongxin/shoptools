@@ -15,12 +15,33 @@ def build_executable():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "pyinstaller"])
     
     # 清理旧的构建文件
-    if os.path.exists("build"):
-        shutil.rmtree("build")
-    if os.path.exists("dist"):
-        shutil.rmtree("dist")
+    def safe_remove_tree(path):
+        """安全删除目录树"""
+        if os.path.exists(path):
+            try:
+                shutil.rmtree(path)
+                print(f"已清理目录: {path}")
+            except Exception as e:
+                print(f"清理目录 {path} 时出错: {e}")
+                # 尝试强制删除
+                try:
+                    if sys.platform.startswith('win'):
+                        os.system(f'rmdir /s /q "{path}"')
+                    else:
+                        os.system(f'rm -rf "{path}"')
+                    print(f"强制清理目录: {path}")
+                except Exception as e2:
+                    print(f"强制清理也失败: {e2}")
+    
+    safe_remove_tree("build")
+    safe_remove_tree("dist")
+    
     if os.path.exists("TEMUTools.spec"):
-        os.remove("TEMUTools.spec")
+        try:
+            os.remove("TEMUTools.spec")
+            print("已清理spec文件")
+        except Exception as e:
+            print(f"清理spec文件时出错: {e}")
     
     # 创建打包命令
     sep = ';' if sys.platform.startswith('win') else ':'
@@ -30,6 +51,7 @@ def build_executable():
         "--windowed",  # 不显示控制台窗口
         "--icon=assets/icon.ico",  # 应用图标
         f"--add-data=assets{sep}assets",  # 添加资源文件
+        f"--add-data=src/config{sep}config",  # 添加配置文件目录
         "--hidden-import=PIL._tkinter_finder",  # 添加隐藏导入
         "--noconfirm",  # 不询问确认
         "--clean",  # 清理临时文件

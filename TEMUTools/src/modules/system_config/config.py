@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import browsercookie
 from typing import Dict, Optional, Tuple
 from urllib.parse import urlparse
@@ -17,7 +18,14 @@ class SystemConfig:
     
     def _init_config(self):
         """初始化配置"""
-        self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config', 'system_config.json')
+        # 处理打包环境和开发环境的路径差异
+        if getattr(sys, 'frozen', False):
+            # 打包环境：从可执行文件目录查找配置
+            base_path = sys._MEIPASS
+            self.config_file = os.path.join(base_path, 'config', 'system_config.json')
+        else:
+            # 开发环境：从源码目录查找配置
+            self.config_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'config', 'system_config.json')
         self.config: Dict = self._load_config()
         
         # 统一使用agentseller.temu.com域名
