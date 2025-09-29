@@ -282,7 +282,7 @@ class BidManagementTab(ttk.Frame):
         enable_threshold_check = self.enable_threshold_check_var.get()
         
         # 保存配置到配置文件
-        from src.modules.config.config import bid_config
+        from ..config.config import bid_config
         bid_config.set_bid_reduction(bid_reduction)
         config_data = bid_config._load_config()
         config_data["enable_price_threshold_check"] = enable_threshold_check
