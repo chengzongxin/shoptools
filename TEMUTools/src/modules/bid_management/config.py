@@ -19,7 +19,11 @@ class CategoryConfigManager:
             self.config_file = os.path.join(base_path, 'config', 'category_config.json')
         else:
             # 开发环境：从源码目录查找配置
-            self.config_file = os.path.join(os.path.dirname(__file__),'category_config.json')
+            self.config_file = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                'config', 
+                'category_config.json'
+            )
         self._categories_cache = None
         
     def _load_config(self) -> Dict:
@@ -102,7 +106,11 @@ class BidConfigManager:
             self.config_file = os.path.join(base_path, 'config', 'bid_management_config.json')
         else:
             # 开发环境：从源码目录查找配置
-            self.config_file = os.path.join(os.path.dirname(__file__), 'bid_management_config.json')
+            self.config_file = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                'config', 
+                'bid_management_config.json'
+            )
         
     def _load_config(self) -> Dict:
         """加载配置文件"""

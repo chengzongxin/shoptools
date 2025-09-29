@@ -8,7 +8,7 @@ import logging
 from typing import List, Dict, Optional, Any, Tuple
 from decimal import Decimal, ROUND_DOWN
 from ..network.request import NetworkRequest
-from src.config.config import category_config, bid_config
+from .config import category_config, bid_config
 from .models import (
     BidOrderListResponse, BidOrderItem, BidDetailResponse, 
     BidResult, AdjustItem, AdjustSku, PriceAdjustRequest,

@@ -2,12 +2,13 @@ import json
 import time
 import random
 import logging
+from datetime import datetime
 from dataclasses import dataclass
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Any, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from ..network.request import NetworkRequest
 from .config import get_price_threshold
-from src.config.config import category_config
+from ..bid_management.config import category_config
 
 # 配置日志
 logging.basicConfig(
