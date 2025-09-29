@@ -12,40 +12,6 @@ from ..system_config.config import SystemConfig
 from ..price_review.config import get_price_threshold
 from ..config.config import category_config
 
-# 模块级常量：商品识别码映射
-CODE_MAPPING = {
-    "CUSHION": "CU-0608",
-    "SLEEVE": "BE-0608",
-    "SH": "SH-0608",
-    "CB": "CB-0608",
-    "Sock": "SO-0608",
-    "drawing": "CB-0608",
-    "Scarf": "BE-0608",
-    "Apron": "AP-0608",
-    "bag": "CB-0608", # 双肩包
-    "beanie": "BE-0608", # 套头帽
-    "workcap": "SH-0608", # 工作帽
-    "Handkerchief": "SH-0608", # 方巾
-    "WindproofMask": "BE-0608", # 防风骑行面罩
-    "WindBlack": "BE-0608", # 防风骑行面罩黑
-}
-
-
-def get_product_code(key: str) -> str:
-    """根据 `CODE_MAPPING` 智能匹配商品码，忽略大小写和复数形式。
-
-    参数:
-        key: SKU编码中用于匹配商品码的关键字
-
-    返回:
-        对应的商品识别码，未匹配到则返回“未定义”
-    """
-    normalized_key = key.lower().rstrip('s')
-    for mapping_key, code in CODE_MAPPING.items():
-        if normalized_key == mapping_key.lower():
-            return code
-    return "未定义"
-
 class ProductListTab(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -384,18 +350,6 @@ class ProductListTab(ttk.Frame):
                 
                 # 通过类别ID获取商品码映射
                 product_code = category_config.get_code_mapping_by_category_ids(category_ids)
-                
-                # 如果没有找到映射，使用原来的逻辑作为备选
-                if not product_code:
-                    # 处理SKU信息，使用原来的逻辑作为备选
-                    for sku in product['productSkuSummaries']:
-                        sku_code = sku['extCode']
-                        # 获取下划线前的部分
-                        key = sku_code.split('_')[0] if '_' in sku_code else sku_code
-                        
-                        # 使用模块级智能匹配函数查找对应的商品码
-                        product_code = get_product_code(key)
-                        break  # 只需要处理第一个SKU
                 
                 if not product_code:
                     product_code = "未定义"
@@ -764,18 +718,6 @@ class ProductListTab(ttk.Frame):
                 
                 # 通过类别ID获取商品码映射
                 product_code = category_config.get_code_mapping_by_category_ids(category_ids)
-                
-                # 如果没有找到映射，使用原来的逻辑作为备选
-                if not product_code:
-                    # 处理SKU信息，使用原来的逻辑作为备选
-                    for sku in product['productSkuSummaries']:
-                        sku_code = sku['extCode']
-                        # 获取下划线前的部分
-                        key = sku_code.split('_')[0] if '_' in sku_code else sku_code
-                        
-                        # 使用模块级智能匹配函数查找对应的商品码
-                        product_code = get_product_code(key)
-                        break  # 只需要处理第一个SKU
                 
                 if not product_code:
                     product_code = "未定义"

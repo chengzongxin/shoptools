@@ -104,6 +104,13 @@
       "image_file": "头巾、冰袖、套头帽.jpg",
       "price_threshold": 13.5,
       "code_mapping": "BE-0608"
+    },
+    {
+      "name": "平角内裤",
+      "cate_id": 27851,
+      "image_file": "平角内裤.jpg",
+      "price_threshold": 19,
+      "code_mapping": "SO-0608"
     }
   ],
   "last_update": "2025-01-28 15:00:00"
