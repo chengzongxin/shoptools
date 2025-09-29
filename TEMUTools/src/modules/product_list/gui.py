@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import threading
-import json
 import os
 import logging
 from datetime import datetime
@@ -11,7 +10,7 @@ from openpyxl.utils import get_column_letter
 from .crawler import ProductListCrawler
 from ..system_config.config import SystemConfig
 from ..price_review.config import get_price_threshold
-from ..bid_management.config import category_config
+from src.config.config import category_config
 
 # 模块级常量：商品识别码映射
 CODE_MAPPING = {

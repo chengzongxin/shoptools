@@ -4,7 +4,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext
 import threading
-import json
 import logging
 import os
 from datetime import datetime
@@ -67,7 +66,7 @@ class BidManagementTab(ttk.Frame):
         ttk.Label(config_frame, text="减价金额(元):").grid(row=0, column=0, sticky=tk.W, padx=(0, 5))
         
         # 从配置文件加载默认值
-        from .config import bid_config
+        from src.config.config import bid_config
         default_reduction = bid_config.get_bid_reduction()
         self.bid_reduction_var = tk.StringVar(value=str(default_reduction))
         bid_reduction_entry = ttk.Entry(config_frame, textvariable=self.bid_reduction_var, width=10)
@@ -283,7 +282,7 @@ class BidManagementTab(ttk.Frame):
         enable_threshold_check = self.enable_threshold_check_var.get()
         
         # 保存配置到配置文件
-        from .config import bid_config
+        from src.config.config import bid_config
         bid_config.set_bid_reduction(bid_reduction)
         config_data = bid_config._load_config()
         config_data["enable_price_threshold_check"] = enable_threshold_check
