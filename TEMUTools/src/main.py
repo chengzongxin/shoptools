@@ -278,7 +278,7 @@ class TEMUToolsApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("TEMU工具集 V1.4.0")
+        self.root.title("TEMU工具集 V1.4.2")
         self.logger = Logger()
         
         # 创建标签页
@@ -312,12 +312,12 @@ class TEMUToolsApp:
         self.price_review_tab = PriceReviewTab(self.notebook)
         self.notebook.add(self.price_review_tab, text="核价管理")
 
+        self.confirm_upload_tab = ConfirmUploadTab(self.notebook)
+        self.notebook.add(self.confirm_upload_tab, text="确认上新")
+
         # 添加竞价管理Tab
         self.bid_management_tab = BidManagementTab(self.notebook)
         self.notebook.add(self.bid_management_tab, text="竞价管理")
-
-        self.confirm_upload_tab = ConfirmUploadTab(self.notebook)
-        self.notebook.add(self.confirm_upload_tab, text="确认上新")
         
         self.link_checker_tab = LinkCheckerTab(self.notebook)
         self.notebook.add(self.link_checker_tab, text="链接检查")
@@ -326,8 +326,8 @@ class TEMUToolsApp:
         self.notebook.add(self.violation_list_tab, text="违规列表")
 
         # 签署JIT(废弃)
-        self.jit_sign_tab_bak = JitSignTabBak(self.notebook)
-        self.notebook.add(self.jit_sign_tab_bak, text="JIT签署(废弃)")
+        # self.jit_sign_tab_bak = JitSignTabBak(self.notebook)
+        # self.notebook.add(self.jit_sign_tab_bak, text="JIT签署(废弃)")
         
         self.system_config_tab = SystemConfigTab(self.notebook)
         self.notebook.add(self.system_config_tab, text="系统配置")

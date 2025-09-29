@@ -6,7 +6,7 @@ import requests
 import sys
 from typing import List, Dict, Any, Optional
 from ..network.request import NetworkRequest
-from ..bid_management.config import category_config
+from ..config.config import category_config
 
 class RealPictureUploader:
     """
