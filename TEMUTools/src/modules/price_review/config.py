@@ -17,22 +17,3 @@ PRICE_THRESHOLDS = {
     "WindproofMask": 13.5,
     "WindBlack": 13.5
 }
-
-def get_price_threshold(ext_code: str) -> float:
-    """根据商品货号获取对应的价格底线
-    
-    Args:
-        ext_code: 商品货号，例如 "drawing_#NLG8LEM"
-        
-    Returns:
-        float: 价格底线（元），如果没有匹配的规则则返回None
-    """
-    # 将货号转换为小写以进行不区分大小写的匹配
-    ext_code = ext_code.lower()
-    
-    # 遍历所有价格底线规则
-    for prefix, threshold in PRICE_THRESHOLDS.items():
-        if ext_code.startswith(prefix.lower()):
-            return threshold
-            
-    return None 

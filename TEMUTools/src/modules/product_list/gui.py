@@ -9,7 +9,6 @@ from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 from .crawler import ProductListCrawler
 from ..system_config.config import SystemConfig
-from ..price_review.config import get_price_threshold
 from ..config.config import category_config
 
 class ProductListTab(ttk.Frame):
@@ -241,10 +240,10 @@ class ProductListTab(ttk.Frame):
                     supplier_price = sku['supplierPrice'] / 100  # 转换为元
                     
                     # 计算底线价格和价格差额
-                    sku_code = sku['extCode']
-                    price_threshold = get_price_threshold(sku_code)
-                    price_difference = supplier_price - price_threshold if price_threshold is not None else None
-                    
+                    cat_id = product.get("leafCat", {}).get("catId")
+                    price_threshold = category_config.get_price_threshold_by_category_id(cat_id)
+                    price_difference = supplier_price - price_threshold if price_threshold not in (None, 0) else None
+
                     sku_info.update({
                         'SKU ID': sku['productSkuId'],
                         'SKU编码': sku['extCode'],
@@ -629,9 +628,9 @@ class ProductListTab(ttk.Frame):
                     supplier_price = sku['supplierPrice'] / 100  # 转换为元
                     
                     # 计算底线价格和价格差额
-                    sku_code = sku['extCode']
-                    price_threshold = get_price_threshold(sku_code)
-                    price_difference = supplier_price - price_threshold if price_threshold is not None else None
+                    cat_id = product.get("leafCat", {}).get("catId")
+                    price_threshold = category_config.get_price_threshold_by_category_id(cat_id)
+                    price_difference = supplier_price - price_threshold if price_threshold not in (None, 0) else None
                     
                     sku_info.update({
                         'SKU ID': sku['productSkuId'],

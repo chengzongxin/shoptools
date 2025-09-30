@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from ..network.request import NetworkRequest
-from .config import get_price_threshold
 from ..config.config import category_config
 
 # 配置日志
@@ -518,12 +517,6 @@ class PriceReviewCrawler:
                 threshold = category_config.get_price_threshold_by_category_ids(cat_id_list)
                 if threshold is not None:
                     self.logger.debug(f"通过类别ID {cat_id_list} 获取到价格阈值: {threshold}元")
-            
-            # 如果通过类别ID没有找到，使用原有的SKU编码方式作为备选
-            if threshold is None and ext_code is not None:
-                threshold = get_price_threshold(ext_code)
-                if threshold is not None:
-                    self.logger.debug(f"通过SKU编码 {ext_code} 获取到价格阈值: {threshold}元")
             
             # 如果仍然没有找到价格阈值
             if threshold is None:
