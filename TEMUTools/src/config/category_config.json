@@ -74,7 +74,7 @@
       "name": "工作帽",
       "cate_id": 28768,
       "image_file": "头带、厨师帽.jpg",
-      "price_threshold": 13.5,
+      "price_threshold": 16.8,
       "code_mapping": "SH-0608"
     },
     {
@@ -113,5 +113,5 @@
       "code_mapping": "SO-0608"
     }
   ],
-  "last_update": "2025-09-30 10:28:54"
+  "last_update": "2025-09-30 14:16:42"
 }

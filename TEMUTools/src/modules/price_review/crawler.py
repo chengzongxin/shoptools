@@ -488,9 +488,11 @@ class PriceReviewCrawler:
             price_order_id = None
             product_sku_id = None
             ext_code = None
-            
+            # 获取核价轮次
+            review_rounds = 0
             for skc in product_data.get('skcList', []):
                 for review_info in skc.get('supplierPriceReviewInfoList', []):
+                    review_rounds = review_info.get('times', 0)
                     if review_info.get('status') == 1:  # 待核价状态
                         price_order_id = review_info.get('priceOrderId')
                         if skc.get('skuList'):
@@ -534,13 +536,11 @@ class PriceReviewCrawler:
                     # 使用重新调价：当前价格减去1元
                     current_price_cents = suggestion.supplyPrice
                     new_price_cents = current_price_cents - 100  # 减去1元（100分）
-                    # TODO:  判断是否达到最大核价轮次, 需要取商品真实的核价轮次
-                    review_rounds = product_data.get('reviewRounds', 0)
                     # 是否达到最大核价轮次
-                    is_max_review_rounds = review_rounds >= max_review_rounds
+                    is_max_review_rounds = review_rounds and review_rounds >= max_review_rounds
                     # 如果减去1元后仍低于底线，则拒绝
                     if new_price_cents < threshold_cents:
-                        if is_max_review_rounds and self.reject_price_review(price_order_id):
+                        if  self.reject_price_review(price_order_id):
                             message = f"已拒绝核价建议，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元 仍低于底线 {threshold}元"
                             self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
                             return True, message
@@ -549,6 +549,17 @@ class PriceReviewCrawler:
                             self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
                             return False, message
                     else:
+                        # 达到最大核价轮次，拒绝核价建议
+                        if is_max_review_rounds:
+                            if self.reject_price_review(price_order_id):
+                                message = f"已拒绝核价建议，达到最大核价轮次 {max_review_rounds}，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元, 建议价格{suggestion.suggestSupplyPrice}元, 仍低于底线 {threshold}元"
+                                self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                                return True, message
+                            else:
+                                message = "拒绝核价建议失败"
+                                self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                                return False, message
+
                         # 减去1元后高于底线，发起重新调价
                         if self.rebargain_price_review(price_order_id, product_sku_id, new_price_cents):
                             message = f"已发起重新调价，当前价格 {current_price_cents/100}元 调整为 {new_price_cents/100}元（底线 {threshold}元）"
