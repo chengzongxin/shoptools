@@ -53,7 +53,7 @@
       "name": "抱枕",
       "cate_id": 12044,
       "image_file": "抱枕套、窗帘.jpg",
-      "price_threshold": 9.0,
+      "price_threshold": 20.0,
       "code_mapping": "CU-0608"
     },
     {
@@ -109,9 +109,9 @@
       "name": "平角内裤",
       "cate_id": 27851,
       "image_file": "平角内裤.jpg",
-      "price_threshold": 19,
+      "price_threshold": 19.0,
       "code_mapping": "SO-0608"
     }
   ],
-  "last_update": "2025-01-28 15:00:00"
+  "last_update": "2025-09-30 10:28:54"
 }
