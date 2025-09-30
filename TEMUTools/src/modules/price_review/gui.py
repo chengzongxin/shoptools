@@ -9,131 +9,6 @@ from .crawler import PriceReviewCrawler, PriceReviewSuggestion
 from ..system_config.config import SystemConfig
 from ..config.config import category_config
 
-class PriceReviewSuggestionDialog(tk.Toplevel):
-    def __init__(self, parent, suggestion: PriceReviewSuggestion, crawler: PriceReviewCrawler, price_order_id: int, product_sku_id: int):
-        super().__init__(parent)
-        self.title("核价建议")
-        self.geometry("600x400")
-        
-        # 保存参数
-        self.suggestion = suggestion
-        self.crawler = crawler
-        self.price_order_id = price_order_id
-        self.product_sku_id = product_sku_id
-        
-        # 创建主框架
-        main_frame = ttk.Frame(self, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        
-        # 显示核价建议信息
-        self.create_suggestion_info(main_frame, suggestion)
-        
-        # 创建按钮
-        self.create_buttons(main_frame)
-        
-        # 配置网格权重
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(1, weight=1)
-        
-    def create_suggestion_info(self, parent, suggestion: PriceReviewSuggestion):
-        """创建核价建议信息显示区域"""
-        # 创建信息框架
-        info_frame = ttk.LabelFrame(parent, text="核价建议详情", padding="5")
-        info_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-        
-        # 当前价格
-        ttk.Label(info_frame, text="当前价格:").grid(row=0, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text=f"{suggestion.supplyPrice} {suggestion.priceCurrency}").grid(row=0, column=1, sticky=tk.W, pady=2)
-        
-        # 建议价格
-        ttk.Label(info_frame, text="建议价格:").grid(row=1, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text=f"{suggestion.suggestSupplyPrice} {suggestion.suggestPriceCurrency}").grid(row=1, column=1, sticky=tk.W, pady=2)
-        
-        # 拒绝原因
-        ttk.Label(info_frame, text="拒绝原因:").grid(row=2, column=0, sticky=tk.W, pady=2)
-        reason_text = tk.Text(info_frame, height=4, width=50, wrap=tk.WORD)
-        reason_text.insert('1.0', suggestion.rejectRemark)
-        reason_text.configure(state='disabled')
-        reason_text.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=2)
-        
-        # 其他信息
-        ttk.Label(info_frame, text="需要编辑BOM:").grid(row=3, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text="是" if suggestion.needEditBomInfo else "否").grid(row=3, column=1, sticky=tk.W, pady=2)
-        
-        ttk.Label(info_frame, text="可以申诉:").grid(row=4, column=0, sticky=tk.W, pady=2)
-        ttk.Label(info_frame, text="是" if suggestion.canAppeal else "否").grid(row=4, column=1, sticky=tk.W, pady=2)
-        
-        if suggestion.canAppealTime:
-            ttk.Label(info_frame, text="申诉截止时间:").grid(row=5, column=0, sticky=tk.W, pady=2)
-            appeal_time = datetime.fromtimestamp(suggestion.canAppealTime/1000).strftime('%Y-%m-%d %H:%M:%S')
-            ttk.Label(info_frame, text=appeal_time).grid(row=5, column=1, sticky=tk.W, pady=2)
-        
-        # 配置网格权重
-        info_frame.columnconfigure(1, weight=1)
-        
-    def create_buttons(self, parent):
-        """创建按钮"""
-        button_frame = ttk.Frame(parent)
-        button_frame.grid(row=1, column=0, columnspan=2, pady=10)
-        
-        # 同意按钮
-        self.accept_button = ttk.Button(
-            button_frame,
-            text="同意",
-            command=self.accept_suggestion
-        )
-        self.accept_button.grid(row=0, column=0, padx=5)
-        
-        # 拒绝按钮
-        self.reject_button = ttk.Button(
-            button_frame,
-            text="拒绝",
-            command=self.reject_suggestion
-        )
-        self.reject_button.grid(row=0, column=1, padx=5)
-        
-        # 关闭按钮
-        self.close_button = ttk.Button(
-            button_frame,
-            text="关闭",
-            command=self.destroy
-        )
-        self.close_button.grid(row=0, column=2, padx=5)
-        
-    def accept_suggestion(self):
-        """处理同意核价建议"""
-        try:
-            # 使用建议价格
-            price = self.suggestion.suggestSupplyPrice
-            
-            # 调用同意核价接口
-            if self.crawler.accept_price_review(self.price_order_id, self.product_sku_id, price):
-                messagebox.showinfo("成功", "已成功同意核价建议")
-                self.destroy()  # 关闭对话框
-            else:
-                messagebox.showerror("错误", "同意核价建议失败")
-                
-        except Exception as e:
-            messagebox.showerror("错误", f"处理同意核价建议时发生错误: {str(e)}")
-        
-    def reject_suggestion(self):
-        """处理拒绝核价建议"""
-        try:
-            # 显示确认对话框
-            if not messagebox.askyesno("确认", "确定要拒绝核价建议吗？拒绝后链接将作废。"):
-                return
-                
-            # 调用拒绝核价接口
-            if self.crawler.reject_price_review(self.price_order_id):
-                messagebox.showinfo("成功", "已成功拒绝核价建议")
-                self.destroy()  # 关闭对话框
-            else:
-                messagebox.showerror("错误", "拒绝核价建议失败")
-                
-        except Exception as e:
-            messagebox.showerror("错误", f"处理拒绝核价建议时发生错误: {str(e)}")
-
 class PriceReviewTab(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
@@ -201,6 +76,16 @@ class PriceReviewTab(ttk.Frame):
             value=True
         )
         self.rebargain_radio.grid(row=1, column=1, sticky=tk.W, pady=(10, 0))
+
+        # 最多核价几轮输入控件
+        # 创建标签，提示用户输入最多核价的轮数
+        ttk.Label(input_frame, text="最多核价几轮:（选择重新调价时生效）").grid(row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(10, 0))
+        # 创建一个字符串变量用于存储用户输入的轮数，默认值为5
+        self.max_review_rounds_var = tk.StringVar(value="5")
+        # 创建输入框，让用户输入轮数
+        self.max_review_rounds_entry = ttk.Entry(input_frame, textvariable=self.max_review_rounds_var, width=10)
+        self.max_review_rounds_entry.grid(row=2, column=1, sticky=tk.W, padx=(0, 5), pady=(10, 0))
+
         
         self.reject_radio = ttk.Radiobutton(
             input_frame, 
@@ -208,7 +93,7 @@ class PriceReviewTab(ttk.Frame):
             variable=self.rebargain_var, 
             value=False
         )
-        self.reject_radio.grid(row=1, column=2, sticky=tk.W, padx=(20, 0), pady=(10, 0))
+        self.reject_radio.grid(row=1, column=3, sticky=tk.W, padx=(20, 0), pady=(10, 0))
         
         
         # 价格底线设置按钮
@@ -217,7 +102,7 @@ class PriceReviewTab(ttk.Frame):
             text="价格底线设置",
             command=self.open_thresholds_editor
         )
-        self.thresholds_button.grid(row=1, column=4, sticky=tk.W, padx=(20, 0))
+        self.thresholds_button.grid(row=3, column=0, sticky=tk.W, padx=(20, 0), pady=(10, 0))
 
         
         # 配置父框架的网格权重
@@ -256,15 +141,6 @@ class PriceReviewTab(ttk.Frame):
         button_frame = ttk.Frame(parent)
         button_frame.grid(row=3, column=0, columnspan=2, pady=10)
         
-        
-        # 开始爬取按钮
-        # self.start_button = ttk.Button(
-        #     button_frame,
-        #     text="获取待核价商品",
-        #     command=self.start_crawling
-        # )
-        # self.start_button.grid(row=0, column=0, padx=5)
-        
         # 批量处理按钮
         self.batch_button = ttk.Button(
             button_frame,
@@ -281,28 +157,6 @@ class PriceReviewTab(ttk.Frame):
             state='disabled'
         )
         self.stop_button.grid(row=0, column=2, padx=5)
-        
-    # def create_product_list(self, parent):
-    #     """创建商品列表"""
-    #     # 创建表格
-    #     columns = ("商品ID", "商品名称", "当前价格", "买家", "创建时间", "状态")
-    #     self.tree = ttk.Treeview(parent, columns=columns, show="headings", height=10)
-        
-    #     # 设置列标题
-    #     for col in columns:
-    #         self.tree.heading(col, text=col)
-    #         self.tree.column(col, width=100)
-            
-    #     # 添加滚动条
-    #     scrollbar = ttk.Scrollbar(parent, orient="vertical", command=self.tree.yview)
-    #     self.tree.configure(yscrollcommand=scrollbar.set)
-        
-    #     # 放置表格和滚动条
-    #     self.tree.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
-    #     scrollbar.grid(row=4, column=2, sticky=(tk.N, tk.S))
-        
-    #     # 绑定双击事件
-    #     self.tree.bind("<Double-1>", self.on_item_double_click)
         
     def setup_logging(self):
         """设置日志处理器"""
@@ -375,60 +229,6 @@ class PriceReviewTab(ttk.Frame):
         
         # 记录到日志文件
         self.logger.info(f"核价操作: {json.dumps(log_entry, ensure_ascii=False)}")
-        
-    def start_crawling(self):
-        """开始爬取数据"""
-        try:
-            # 获取系统配置
-            cookie = self.config.get_seller_cookie()
-            
-            if not cookie:
-                messagebox.showerror("错误", "请先在系统配置中设置Cookie")
-                return
-                
-            # 禁用开始按钮,启用停止按钮
-            self.start_button.config(state='disabled')
-            self.stop_button.config(state='normal')
-            
-            # 清空进度条
-            self.progress_var.set(0)
-            
-            # 创建爬虫实例
-            self.crawler = PriceReviewCrawler(
-                cookie=cookie,
-                logger=self.logger,
-                progress_callback=self.update_progress
-            )
-            
-            # 在新线程中运行爬虫
-            self.crawler_thread = threading.Thread(
-                target=self.run_crawler,
-                args=(cookie,)
-            )
-            self.crawler_thread.start()
-            
-        except Exception as e:
-            self.logger.error(f"启动爬虫失败: {str(e)}")
-            messagebox.showerror("错误", f"启动爬虫失败: {str(e)}")
-            
-    def run_crawler(self, cookie):
-        """运行爬虫"""
-        try:
-            self.current_data = self.crawler.crawl(cookie)
-            
-            # 更新商品列表
-            self.update_product_list()
-            
-            self.logger.info(f"成功获取 {len(self.current_data)} 条数据")
-            messagebox.showinfo("成功", f"成功获取 {len(self.current_data)} 条数据")
-            
-        except Exception as e:
-            self.logger.error(f"爬取数据失败: {str(e)}")
-            messagebox.showerror("错误", f"爬取数据失败: {str(e)}")
-        finally:
-            # 恢复按钮状态
-            self.start_button.config(state='normal')
-            self.stop_button.config(state='disabled')
             
     def stop_crawling(self):
         """停止爬取"""
@@ -457,59 +257,6 @@ class PriceReviewTab(ttk.Frame):
                 created_at,
                 "待核价"
             ))
-            
-    def on_item_double_click(self, event):
-        """处理双击事件"""
-        try:
-            item = self.tree.selection()[0]
-            values = self.tree.item(item)['values']
-            product_id = values[0]
-            
-            # 获取商品数据
-            product_data = next((item for item in self.current_data if item['productId'] == product_id), None)
-            if not product_data:
-                self.logger.error(f"未找到商品 {product_id} 的数据")
-                return
-                
-            # 获取核价订单ID和SKU ID
-            price_order_id = None
-            product_sku_id = None
-            for skc in product_data.get('skcList', []):
-                for review_info in skc.get('supplierPriceReviewInfoList', []):
-                    if review_info.get('status') == 1:  # 假设状态1表示待核价
-                        price_order_id = review_info.get('priceOrderId')
-                        # 获取第一个SKU的ID
-                        if skc.get('skuList'):
-                            product_sku_id = skc['skuList'][0].get('skuId')
-                        break
-                if price_order_id and product_sku_id:
-                    break
-                    
-            if not price_order_id or not product_sku_id:
-                self.logger.error(f"商品 {product_id} 没有待核价的订单或SKU")
-                messagebox.showerror("错误", "该商品没有待核价的订单或SKU")
-                return
-                
-            # 获取核价建议
-            suggestion = self.crawler.get_price_review_suggestion(price_order_id)
-            if not suggestion:
-                self.logger.error(f"获取商品 {product_id} 的核价建议失败")
-                messagebox.showerror("错误", "获取核价建议失败")
-                return
-                
-            # 显示核价建议对话框
-            dialog = PriceReviewSuggestionDialog(
-                self, 
-                suggestion,
-                self.crawler,
-                price_order_id,
-                product_sku_id
-            )
-            dialog.grab_set()  # 使对话框模态
-            
-        except Exception as e:
-            self.logger.error(f"处理双击事件时发生错误: {str(e)}")
-            messagebox.showerror("错误", f"处理双击事件时发生错误: {str(e)}")
 
     def start_batch_processing(self):
         """开始批量处理核价"""
@@ -569,8 +316,9 @@ class PriceReviewTab(ttk.Frame):
         try:
             # 获取重新调价设置
             use_rebargain = self.rebargain_var.get()
-            
-            results = self.crawler.batch_process_price_reviews_mt(thread_num, use_rebargain)
+            max_review_rounds = int(self.max_review_rounds_var.get())
+            # 获取最多核价几轮
+            results = self.crawler.batch_process_price_reviews_mt(thread_num, use_rebargain, max_review_rounds)
             # 统计处理结果
             success_count = sum(1 for r in results if r['success'])
             fail_count = len(results) - success_count

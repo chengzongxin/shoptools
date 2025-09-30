@@ -473,13 +473,13 @@ class PriceReviewCrawler:
             self.logger.error(f"重新调价时发生错误: {str(e)}")
             return False
 
-    def process_single_price_review(self, product_data: Dict, use_rebargain: bool = True) -> Tuple[bool, str]:
+    def process_single_price_review(self, product_data: Dict, use_rebargain: bool = True, max_review_rounds: int = 5) -> Tuple[bool, str]:
         """处理单个商品的核价（用于多线程）
         
         Args:
             product_data: 商品数据
             use_rebargain: 当价格低于底线时是否使用重新调价（True为重新调价，False为拒绝）
-            
+            max_review_rounds: 最多核价几轮
         Returns:
             Tuple[bool, str]: (是否成功, 处理结果说明)
         """
@@ -534,10 +534,13 @@ class PriceReviewCrawler:
                     # 使用重新调价：当前价格减去1元
                     current_price_cents = suggestion.supplyPrice
                     new_price_cents = current_price_cents - 100  # 减去1元（100分）
-                    
+                    # TODO:  判断是否达到最大核价轮次, 需要取商品真实的核价轮次
+                    review_rounds = product_data.get('reviewRounds', 0)
+                    # 是否达到最大核价轮次
+                    is_max_review_rounds = review_rounds >= max_review_rounds
                     # 如果减去1元后仍低于底线，则拒绝
                     if new_price_cents < threshold_cents:
-                        if self.reject_price_review(price_order_id):
+                        if is_max_review_rounds and self.reject_price_review(price_order_id):
                             message = f"已拒绝核价建议，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元 仍低于底线 {threshold}元"
                             self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
                             return True, message
@@ -581,13 +584,13 @@ class PriceReviewCrawler:
             self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {error_message}")
             return False, error_message
             
-    def batch_process_price_reviews_mt(self, max_workers: int = 5, use_rebargain: bool = True) -> List[Dict]:
+    def batch_process_price_reviews_mt(self, max_workers: int = 5, use_rebargain: bool = True, max_review_rounds: int = 5) -> List[Dict]:
         """多线程批量处理核价
         
         Args:
             max_workers: 最大线程数
             use_rebargain: 当价格低于底线时是否使用重新调价（True为重新调价，False为拒绝）
-            
+            max_review_rounds: 最多核价几轮
         Returns:
             List[Dict]: 处理结果列表
         """
@@ -612,7 +615,7 @@ class PriceReviewCrawler:
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 # 提交所有任务
                 future_to_product = {
-                    executor.submit(self.process_single_price_review, product, use_rebargain): product 
+                    executor.submit(self.process_single_price_review, product, use_rebargain, max_review_rounds): product 
                     for product in products
                 }
                 
@@ -661,71 +664,3 @@ class PriceReviewCrawler:
             self.logger.error(f"批量处理核价时发生错误: {str(e)}")
             
         return results
-
-    # 保留原有方法以兼容旧版本
-    def crawl(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
-        """爬取待核价商品列表数据（保留兼容性）"""
-        all_data = []
-        total_pages = end_page - start_page + 1
-        
-        for page in range(start_page, end_page + 1):
-            if self.stop_flag_callback():
-                self.logger.info("爬取已停止")
-                break
-                
-            result = self.get_page_data(page, page_size)
-            
-            if not result:
-                self.logger.error(f"第 {page} 页数据获取失败")
-                break
-                
-            items = result.get('result', {}).get('dataList', [])
-            if not items:
-                self.logger.info("没有更多数据")
-                break
-                
-            all_data.extend(items)
-            self.logger.info(f"已获取第 {page} 页数据，当前共 {len(all_data)} 条记录")
-            
-            if self.progress_callback:
-                progress = ((page - start_page + 1) / total_pages) * 100
-                self.progress_callback(progress)
-            
-            self.random_delay('page_request')
-            
-        return all_data
-
-    def process_price_review(self, product_data: Dict) -> Tuple[bool, str]:
-        """处理单个商品的核价（保留兼容性）"""
-        return self.process_single_price_review(product_data)
-
-    def batch_process_price_reviews(self, start_page: int = 1, end_page: int = 1, page_size: int = 50) -> List[Dict]:
-        """批量处理核价（保留兼容性）"""
-        results = []
-        
-        try:
-            products = self.crawl(start_page, end_page, page_size)
-            
-            for product in products:
-                if self.stop_flag_callback():
-                    self.logger.info("批量处理已停止")
-                    break
-                    
-                product_id = product.get('productId')
-                self.logger.info(f"正在处理商品 {product_id}")
-                
-                success, message = self.process_price_review(product)
-                
-                results.append({
-                    'productId': product_id,
-                    'success': success,
-                    'message': message
-                })
-                
-                self.random_delay('between_items')
-                
-            return results
-            
-        except Exception as e:
-            self.logger.error(f"批量处理核价时发生错误: {str(e)}")
-            return results 

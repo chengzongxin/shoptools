@@ -278,7 +278,7 @@ class TEMUToolsApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("TEMU工具集 V1.4.5")
+        self.root.title("TEMU工具集 V1.4.6")
         self.logger = Logger()
         
         # 创建标签页
