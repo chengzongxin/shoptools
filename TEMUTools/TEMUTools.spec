@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['src/main.py'],
+    ['src\\main.py'],
     pathex=[],
     binaries=[],
     datas=[('assets', 'assets'), ('src/config', 'config')],
@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['assets/icon.ico'],
+    icon=['assets\\icon.ico'],
 )
 coll = COLLECT(
     exe,
@@ -42,10 +42,4 @@ coll = COLLECT(
     upx=True,
     upx_exclude=[],
     name='TEMUTools',
-)
-app = BUNDLE(
-    coll,
-    name='TEMUTools.app',
-    icon='assets/icon.ico',
-    bundle_identifier=None,
 )

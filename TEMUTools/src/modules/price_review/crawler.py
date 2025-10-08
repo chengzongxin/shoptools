@@ -357,29 +357,32 @@ class PriceReviewCrawler:
             self.logger.error(f"获取核价建议时发生错误: {str(e)}")
             return None 
 
-    def accept_price_review(self, price_order_id: int, product_sku_id: int, price: int) -> bool:
+    def accept_price_review(self, price_order_id: int, product_sku_ids: List[int], price: int) -> bool:
         """同意核价建议
         
         Args:
             price_order_id: 核价订单ID
-            product_sku_id: 商品SKU ID
+            product_sku_ids: 商品SKU ID列表
             price: 同意后的价格
             
         Returns:
             bool: 是否成功
         """
         try:
-            self.logger.debug(f"正在同意核价建议，订单ID: {price_order_id}, SKU ID: {product_sku_id}, 价格: {price}")
+            self.logger.debug(f"正在同意核价建议，订单ID: {price_order_id}, SKU IDs: {product_sku_ids}, 价格: {price}")
+            
+            # 构建items数组，包含所有SKU
+            items = []
+            for sku_id in product_sku_ids:
+                items.append({
+                    "productSkuId": sku_id,
+                    "price": price
+                })
             
             payload = {
                 "supplierResult": 1,
                 "priceOrderId": price_order_id,
-                "items": [
-                    {
-                        "productSkuId": product_sku_id,
-                        "price": price
-                    }
-                ],
+                "items": items,
                 "bargainReasonList": []
             }
             
@@ -431,29 +434,32 @@ class PriceReviewCrawler:
             self.logger.error(f"拒绝核价建议时发生错误: {str(e)}")
             return False 
 
-    def rebargain_price_review(self, price_order_id: int, product_sku_id: int, new_price: int) -> bool:
+    def rebargain_price_review(self, price_order_id: int, product_sku_ids: List[int], new_price: int) -> bool:
         """重新调价
         
         Args:
             price_order_id: 核价订单ID
-            product_sku_id: 商品SKU ID
+            product_sku_ids: 商品SKU ID列表
             new_price: 新的价格（分）
             
         Returns:
             bool: 是否成功
         """
         try:
-            self.logger.debug(f"正在重新调价，订单ID: {price_order_id}, SKU ID: {product_sku_id}, 新价格: {new_price}分")
+            self.logger.debug(f"正在重新调价，订单ID: {price_order_id}, SKU IDs: {product_sku_ids}, 新价格: {new_price}分")
+            
+            # 构建items数组，包含所有SKU
+            items = []
+            for sku_id in product_sku_ids:
+                items.append({
+                    "productSkuId": sku_id,
+                    "price": new_price
+                })
             
             payload = {
                 "supplierResult": 2,  # 2表示重新调价
                 "priceOrderId": price_order_id,
-                "items": [
-                    {
-                        "productSkuId": product_sku_id,
-                        "price": new_price
-                    }
-                ],
+                "items": items,
                 "bargainReasonList": []
             }
             
@@ -484,10 +490,10 @@ class PriceReviewCrawler:
             Tuple[bool, str]: (是否成功, 处理结果说明)
         """
         try:
-            # 获取核价订单ID和SKU ID
+            # 获取核价订单ID和所有SKU ID
             price_order_id = None
-            product_sku_id = None
-            ext_code = None
+            product_sku_ids = []  # 改为数组存储所有SKU ID
+            # ext_codes = []  # 存储所有SKU的extCode
             # 获取核价轮次
             review_rounds = 0
             for skc in product_data.get('skcList', []):
@@ -495,14 +501,20 @@ class PriceReviewCrawler:
                     review_rounds = review_info.get('times', 0)
                     if review_info.get('status') == 1:  # 待核价状态
                         price_order_id = review_info.get('priceOrderId')
-                        if skc.get('skuList'):
-                            product_sku_id = skc['skuList'][0].get('skuId')
-                            ext_code = skc['skuList'][0].get('extCode')
+                        # 获取所有SKU ID和extCode
+                        if review_info.get('productSkuList'):
+                            for sku in review_info['productSkuList']:
+                                sku_id = sku.get('skuId')
+                                # ext_code = sku.get('extCode')
+                                if sku_id:
+                                    product_sku_ids.append(sku_id)
+                                    # if ext_code:
+                                    #     ext_codes.append(ext_code)
                         break
-                if price_order_id and product_sku_id:
+                if price_order_id and product_sku_ids:
                     break
                     
-            if not price_order_id or not product_sku_id:
+            if not price_order_id or not product_sku_ids:
                 return False, "没有待核价的订单或SKU"
                 
             # 获取核价建议
@@ -523,8 +535,8 @@ class PriceReviewCrawler:
             # 如果仍然没有找到价格阈值
             if threshold is None:
                 cat_info = f"类别ID: {cat_id_list}" if cat_id_list else "无类别ID"
-                sku_info = f"SKU编码: {ext_code}" if ext_code else "无SKU编码"
-                return False, f"未找到商品的价格底线规则 ({cat_info}, {sku_info})"
+                # sku_info = f"SKU编码: {ext_code}" if ext_code else "无SKU编码"
+                return False, f"未找到商品的价格底线规则 ({cat_info})"
                 
             # 将价格底线转换为分
             threshold_cents = int(threshold * 100)
@@ -542,57 +554,57 @@ class PriceReviewCrawler:
                     if new_price_cents < threshold_cents:
                         if  self.reject_price_review(price_order_id):
                             message = f"已拒绝核价建议，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元 仍低于底线 {threshold}元"
-                            self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            self.logger.info(f"商品 {product_data.get('productId')} ,{message}")
                             return True, message
                         else:
                             message = "拒绝核价建议失败"
-                            self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            self.logger.error(f"商品 {product_data.get('productId')} ,{message}")
                             return False, message
                     else:
                         # 达到最大核价轮次，拒绝核价建议
                         if is_max_review_rounds:
                             if self.reject_price_review(price_order_id):
                                 message = f"已拒绝核价建议，达到最大核价轮次 {max_review_rounds}，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元, 建议价格{suggestion.suggestSupplyPrice}元, 仍低于底线 {threshold}元"
-                                self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                                self.logger.info(f"商品 {product_data.get('productId')} ,{message}")
                                 return True, message
                             else:
                                 message = "拒绝核价建议失败"
-                                self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                                self.logger.error(f"商品 {product_data.get('productId')} ,{message}")
                                 return False, message
 
                         # 减去1元后高于底线，发起重新调价
-                        if self.rebargain_price_review(price_order_id, product_sku_id, new_price_cents):
+                        if self.rebargain_price_review(price_order_id, product_sku_ids, new_price_cents):
                             message = f"已发起重新调价，当前价格 {current_price_cents/100}元 调整为 {new_price_cents/100}元（底线 {threshold}元）"
-                            self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            self.logger.info(f"商品 {product_data.get('productId')} , {message}")
                             return True, message
                         else:
                             message = "发起重新调价失败"
-                            self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                            self.logger.error(f"商品 {product_data.get('productId')} , {message}")
                             return False, message
                 else:
                     # 直接拒绝
                     if self.reject_price_review(price_order_id):
                         message = f"已拒绝核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 低于底线 {threshold}元"
-                        self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                        self.logger.info(f"商品 {product_data.get('productId')} , {message}")
                         return True, message
                     else:
                         message = "拒绝核价建议失败"
-                        self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                        self.logger.error(f"商品 {product_data.get('productId')} , {message}")
                         return False, message
             else:
                 # 价格高于底线，同意
-                if self.accept_price_review(price_order_id, product_sku_id, suggestion.suggestSupplyPrice):
+                if self.accept_price_review(price_order_id, product_sku_ids, suggestion.suggestSupplyPrice):
                     message = f"已同意核价建议，建议价格 {suggestion.suggestSupplyPrice/100}元 高于底线 {threshold}元"
-                    self.logger.info(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                    self.logger.info(f"商品 {product_data.get('productId')} , {message}")
                     return True, message
                 else:
                     message = "同意核价建议失败"
-                    self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {message}")
+                    self.logger.error(f"商品 {product_data.get('productId')} , {message}")
                     return False, message
                     
         except Exception as e:
             error_message = f"处理核价时发生错误: {str(e)}"
-            self.logger.error(f"商品 {product_data.get('productId')} ({ext_code}) {error_message}")
+            self.logger.error(f"商品 {product_data.get('productId')} , {error_message}")
             return False, error_message
             
     def batch_process_price_reviews_mt(self, max_workers: int = 5, use_rebargain: bool = True, max_review_rounds: int = 5) -> List[Dict]:
