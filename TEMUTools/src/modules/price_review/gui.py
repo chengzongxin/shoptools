@@ -379,7 +379,7 @@ class PriceReviewTab(ttk.Frame):
         ttk.Label(scrollable_frame, text="底线价格(元)", font=('Arial', 10, 'bold')).grid(row=0, column=2, sticky=tk.W, padx=(0, 10), pady=5)
 
         # 获取所有类别配置
-        categories = category_config.get_categories()
+        categories = category_config.get_categories(enabled_only=True)
         category_vars = []  # (category_dict, price_var)
         
         row_index = 1

@@ -25,8 +25,8 @@ class RealPictureUploader:
         self.upload_url = f"{self.base_url}/api/galerie/v3/store_image"
         self.batch_upload_url = f"{self.base_url}/api/flash/real_picture/batch_upload"
         
-        # 从全局配置获取品类配置
-        self.categories = category_config.get_categories()
+        # 从全局配置获取品类配置（只使用已启用的品类）
+        self.categories = category_config.get_categories(enabled_only=True)
         
         # 图片文件路径
         if getattr(sys, 'frozen', False):

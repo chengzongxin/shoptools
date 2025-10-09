@@ -18,6 +18,7 @@ from modules.real_picture_uploader.gui import RealPictureUploaderTab
 from modules.stock_setter.gui import StockSetterTab
 from modules.jit_sign_bak.gui import JitSignTab as JitSignTabBak
 from modules.bid_management.gui import BidManagementTab
+from modules.category_manager.gui import CategoryManagerTab
 from modules.system_config.websocket_cookie import start_websocket_server
 
 class LinkCheckerTab(ttk.Frame):
@@ -278,7 +279,7 @@ class TEMUToolsApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("TEMU工具集 V1.4.9")
+        self.root.title("TEMU工具集 V1.5.0")
         self.logger = Logger()
         
         # 创建标签页
@@ -328,6 +329,10 @@ class TEMUToolsApp:
         # 签署JIT(废弃)
         # self.jit_sign_tab_bak = JitSignTabBak(self.notebook)
         # self.notebook.add(self.jit_sign_tab_bak, text="JIT签署(废弃)")
+        
+        # 品类配置管理
+        self.category_manager_tab = CategoryManagerTab(self.notebook)
+        self.notebook.add(self.category_manager_tab, text="品类配置")
         
         self.system_config_tab = SystemConfigTab(self.notebook)
         self.notebook.add(self.system_config_tab, text="系统配置")

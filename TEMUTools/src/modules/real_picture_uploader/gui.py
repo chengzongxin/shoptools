@@ -37,8 +37,8 @@ class RealPictureUploaderTab(ttk.Frame):
         category_frame = ttk.LabelFrame(main_frame, text="品类选择", padding="5")
         category_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
         
-        # 从配置管理器获取品类列表
-        config_categories = category_config.get_categories()
+        # 从配置管理器获取品类列表（只显示已启用的品类）
+        config_categories = category_config.get_categories(enabled_only=True)
         self.categories = [cat.get("name", "") for cat in config_categories if cat.get("name")]
         
         self.category_vars = {}
@@ -187,7 +187,7 @@ class RealPictureUploaderTab(ttk.Frame):
             return
 
         # 根据选择的品类，检查对应的图片文件
-        all_category_configs = category_config.get_categories()
+        all_category_configs = category_config.get_categories(enabled_only=True)
         
         required_images = set()
         for cat_name in selected_categories:
