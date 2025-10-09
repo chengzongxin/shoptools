@@ -6,6 +6,7 @@ import os
 import sys
 from datetime import datetime
 from .crawler import RealPictureUploader
+from ..config.config import category_config
 
 class RealPictureUploaderTab(ttk.Frame):
     def __init__(self, parent):
@@ -36,13 +37,9 @@ class RealPictureUploaderTab(ttk.Frame):
         category_frame = ttk.LabelFrame(main_frame, text="品类选择", padding="5")
         category_frame.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=5)
         
-        # 品类列表（与crawler保持一致，可勾选）
-        self.categories = [
-            "抽绳健身包", "帆布袋", "冰袖", "头带",
-            "头巾", "袜子", "围裙", "抱枕",
-            "双肩包", "套头帽", "工作帽", "袜子备选",
-            "方巾", "防风骑行面罩", "防风骑行面罩黑", "平角内裤"
-        ]
+        # 从配置管理器获取品类列表
+        config_categories = category_config.get_categories()
+        self.categories = [cat.get("name", "") for cat in config_categories if cat.get("name")]
         
         self.category_vars = {}
         for i, category in enumerate(self.categories):
@@ -190,14 +187,15 @@ class RealPictureUploaderTab(ttk.Frame):
             return
 
         # 根据选择的品类，检查对应的图片文件
-        temp_uploader = RealPictureUploader(logger=self.logger)
-        all_category_configs = temp_uploader.categories
+        all_category_configs = category_config.get_categories()
         
         required_images = set()
         for cat_name in selected_categories:
             for cat_config in all_category_configs:
-                if cat_config['name'] == cat_name:
-                    required_images.add(cat_config['image_file'])
+                if cat_config.get('name') == cat_name:
+                    image_file = cat_config.get('image_file')
+                    if image_file:
+                        required_images.add(image_file)
         
         missing_images = []
         for image_name in required_images:
