@@ -6,6 +6,7 @@ import logging
 import os
 from datetime import datetime
 from .crawler import PriceReviewCrawler, PriceReviewSuggestion
+from ..config.global_config_manager import GlobalConfigManager
 from ..system_config.config import SystemConfig
 from ..config.config import category_config
 
@@ -14,6 +15,7 @@ class PriceReviewTab(ttk.Frame):
         super().__init__(parent)
         # 初始化默认值
         self.config = SystemConfig()
+        self.global_config = GlobalConfigManager()
         self.current_data = []  # 存储当前获取的数据
         
         # 创建日志目录
@@ -81,11 +83,19 @@ class PriceReviewTab(ttk.Frame):
         # 创建标签，提示用户输入最多核价的轮数
         ttk.Label(input_frame, text="最多核价几轮:（选择重新调价时生效）").grid(row=2, column=0, sticky=tk.W, padx=(0, 5), pady=(10, 0))
         # 创建一个字符串变量用于存储用户输入的轮数，默认值为5
-        self.max_review_rounds_var = tk.StringVar(value="5")
+        max_review_rounds = self.global_config.get_config().get("max_review_rounds", 5)
+        self.max_review_rounds_var = tk.StringVar(value=str(max_review_rounds))
         # 创建输入框，让用户输入轮数
         self.max_review_rounds_entry = ttk.Entry(input_frame, textvariable=self.max_review_rounds_var, width=10)
         self.max_review_rounds_entry.grid(row=2, column=1, sticky=tk.W, padx=(0, 5), pady=(10, 0))
-
+        # 输入后，实时保存到全局配置
+        def save_max_review_rounds(event):
+            try:
+                max_review_rounds = int(self.max_review_rounds_var.get())
+                self.global_config.update_max_review_rounds(max_review_rounds)
+            except ValueError:
+                messagebox.showerror("错误", "最多核价几轮必须是数字")
+        self.max_review_rounds_entry.bind("<KeyRelease>", save_max_review_rounds)
         
         self.reject_radio = ttk.Radiobutton(
             input_frame, 
@@ -102,7 +112,7 @@ class PriceReviewTab(ttk.Frame):
             text="价格底线设置",
             command=self.open_thresholds_editor
         )
-        self.thresholds_button.grid(row=3, column=0, sticky=tk.W, padx=(20, 0), pady=(10, 0))
+        self.thresholds_button.grid(row=2, column=2, sticky=tk.W, padx=(20, 0), pady=(10, 0))
 
         
         # 配置父框架的网格权重
