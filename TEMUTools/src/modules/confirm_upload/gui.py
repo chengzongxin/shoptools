@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from .crawler import ConfirmUploadCrawler, UploadProduct
 from ..system_config.config import SystemConfig
+from ..network.event_manager import EventManager
 
 class ConfirmUploadTab(ttk.Frame):
     def __init__(self, parent):
@@ -14,6 +15,13 @@ class ConfirmUploadTab(ttk.Frame):
         # 初始化默认值
         self.config = SystemConfig()
         self.current_data = []  # 存储当前获取的数据
+        
+        # 初始化停止标志
+        self._stop_flag = False
+        
+        # 初始化事件管理器并订阅403错误事件
+        self.event_manager = EventManager()
+        self.event_manager.subscribe("config_error", self._handle_config_error)
         
         # 创建日志目录
         self.log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
@@ -183,6 +191,22 @@ class ConfirmUploadTab(ttk.Frame):
         # 添加一个初始日志
         self.logger.info("批量确认上新工具已初始化")
         self.logger.info(f"日志文件保存在: {log_file}")
+    
+    def _handle_config_error(self, **kwargs):
+        """处理配置错误事件（403错误）"""
+        error_code = kwargs.get('error_code', 'Unknown')
+        request_type = kwargs.get('request_type', 'Unknown')
+        
+        # 设置停止标志
+        self._stop_flag = True
+        
+        # 记录日志
+        self.logger.error("=" * 50)
+        self.logger.error("⚠️  检测到配置错误，自动停止任务！")
+        self.logger.error(f"错误代码: {error_code}")
+        self.logger.error(f"请求类型: {request_type}")
+        self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
+        self.logger.error("=" * 50)
         
     def start_batch_processing(self):
         """开始批量处理确认上新"""

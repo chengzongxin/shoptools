@@ -337,7 +337,10 @@ class PriceReviewCrawler:
             result = self.request.post(self.price_review_url, data=payload)
             
             if not result or not result.get('success'):
+                # TODO
                 self.logger.error(f"获取订单 {order_id} 的核价建议失败")
+
+                
                 return None
                 
             suggestion_data = result.get('result', {})
@@ -490,6 +493,10 @@ class PriceReviewCrawler:
             Tuple[bool, str]: (是否成功, 处理结果说明)
         """
         try:
+            # 🔑 检查停止标志 - 在任务开始时检查
+            if self.stop_flag_callback():
+                return False, "任务已被用户停止"
+            
             # 获取核价订单ID和所有SKU ID
             price_order_id = None
             product_sku_ids = []  # 改为数组存储所有SKU ID
@@ -516,6 +523,10 @@ class PriceReviewCrawler:
                     
             if not price_order_id or not product_sku_ids:
                 return False, "没有待核价的订单或SKU"
+            
+            # 🔑 检查停止标志 - 在发送网络请求前检查
+            if self.stop_flag_callback():
+                return False, "任务已被用户停止"
                 
             # 获取核价建议
             suggestion = self.get_price_review_suggestion(price_order_id)
@@ -540,6 +551,10 @@ class PriceReviewCrawler:
                 
             # 将价格底线转换为分
             threshold_cents = int(threshold * 100)
+            
+            # 🔑 检查停止标志 - 在执行操作前检查
+            if self.stop_flag_callback():
+                return False, "任务已被用户停止"
             
             # 比较价格
             if suggestion.suggestSupplyPrice < threshold_cents:
@@ -649,6 +664,11 @@ class PriceReviewCrawler:
                     # 检查是否被用户停止
                     if self.stop_flag_callback():
                         self.logger.info("用户手动停止批量处理核价")
+                        self.logger.info("正在取消剩余任务...")
+                        # 取消所有未完成的任务
+                        for f in future_to_product.keys():
+                            if not f.done():
+                                f.cancel()
                         break
                     
                     try:
@@ -681,7 +701,15 @@ class PriceReviewCrawler:
                     # 添加商品之间的延时
                     self.random_delay('between_items')
             
-            self.logger.info(f"批量处理核价完成！成功: {success_count}, 失败: {failed_count}, 总计: {total_products}")
+            # 显示最终统计信息
+            if self.stop_flag_callback():
+                self.logger.info("=" * 50)
+                self.logger.info(f"任务已停止！")
+                self.logger.info(f"已处理: {len(results)}/{total_products} 个商品")
+                self.logger.info(f"成功: {success_count}, 失败: {failed_count}")
+                self.logger.info("=" * 50)
+            else:
+                self.logger.info(f"批量处理核价完成！成功: {success_count}, 失败: {failed_count}, 总计: {total_products}")
             
         except Exception as e:
             self.logger.error(f"批量处理核价时发生错误: {str(e)}")

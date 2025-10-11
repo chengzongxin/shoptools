@@ -8,6 +8,7 @@ import subprocess
 import os
 from ..system_config.config import SystemConfig
 from ..logger.logger import Logger
+from .event_manager import EventManager
 
 class NetworkRequest:
     """网络请求封装类"""
@@ -20,6 +21,8 @@ class NetworkRequest:
         self._root_window = None
         self._is_macos = platform.system() == "Darwin"
         self._is_windows = platform.system() == "Windows"
+        # 初始化事件管理器
+        self.event_manager = EventManager()
         
     def _show_config_error_dialog(self, error_msg: str):
         """显示配置错误弹窗 - 跨平台兼容"""
@@ -145,6 +148,8 @@ class NetworkRequest:
                 self.logger.error(error_msg)
                 # 直接显示弹窗
                 self._show_config_error_dialog(error_msg)
+                # 发布配置错误事件，通知所有订阅的模块停止任务
+                self.event_manager.publish("config_error", error_code=403, error_message=error_msg, request_type="GET")
                 return None
             else:
                 self.logger.error(f"GET请求失败: HTTP {e.response.status_code} - {str(e)}")
@@ -172,6 +177,8 @@ class NetworkRequest:
                 self.logger.error(error_msg)
                 # 直接显示弹窗
                 self._show_config_error_dialog(error_msg)
+                # 发布配置错误事件，通知所有订阅的模块停止任务
+                self.event_manager.publish("config_error", error_code=403, error_message=error_msg, request_type="POST")
                 return None
             else:
                 self.logger.error(f"POST请求失败: HTTP {e.response.status_code} - {str(e)}")
@@ -199,6 +206,8 @@ class NetworkRequest:
                 self.logger.error(error_msg)
                 # 直接显示弹窗
                 self._show_config_error_dialog(error_msg)
+                # 发布配置错误事件，通知所有订阅的模块停止任务
+                self.event_manager.publish("config_error", error_code=403, error_message=error_msg, request_type="PUT")
                 return None
             else:
                 self.logger.error(f"PUT请求失败: HTTP {e.response.status_code} - {str(e)}")
@@ -226,6 +235,8 @@ class NetworkRequest:
                 self.logger.error(error_msg)
                 # 直接显示弹窗
                 self._show_config_error_dialog(error_msg)
+                # 发布配置错误事件，通知所有订阅的模块停止任务
+                self.event_manager.publish("config_error", error_code=403, error_message=error_msg, request_type="DELETE")
                 return None
             else:
                 self.logger.error(f"DELETE请求失败: HTTP {e.response.status_code} - {str(e)}")

@@ -9,6 +9,7 @@ from .crawler import PriceReviewCrawler, PriceReviewSuggestion
 from ..config.global_config_manager import GlobalConfigManager
 from ..system_config.config import SystemConfig
 from ..config.config import category_config
+from ..network.event_manager import EventManager
 
 class PriceReviewTab(ttk.Frame):
     def __init__(self, parent):
@@ -17,6 +18,13 @@ class PriceReviewTab(ttk.Frame):
         self.config = SystemConfig()
         self.global_config = GlobalConfigManager()
         self.current_data = []  # 存储当前获取的数据
+        
+        # 初始化停止标志
+        self._stop_flag = False
+        
+        # 初始化事件管理器并订阅403错误事件
+        self.event_manager = EventManager()
+        self.event_manager.subscribe("config_error", self._handle_config_error)
         
         # 创建日志目录
         self.log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
@@ -240,12 +248,38 @@ class PriceReviewTab(ttk.Frame):
         # 记录到日志文件
         self.logger.info(f"核价操作: {json.dumps(log_entry, ensure_ascii=False)}")
             
+    def _handle_config_error(self, **kwargs):
+        """
+        处理配置错误事件（403错误）
+        当网络请求发生403错误时，这个方法会被自动调用
+        
+        参数:
+            error_code: 错误代码（403）
+            error_message: 错误消息
+            request_type: 请求类型（GET/POST/PUT/DELETE）
+        """
+        error_code = kwargs.get('error_code', 'Unknown')
+        request_type = kwargs.get('request_type', 'Unknown')
+        
+        # 设置停止标志，复用现有的停止机制
+        self._stop_flag = True
+        
+        # 记录日志
+        self.logger.error("=" * 50)
+        self.logger.error("⚠️  检测到配置错误，自动停止任务！")
+        self.logger.error(f"错误代码: {error_code}")
+        self.logger.error(f"请求类型: {request_type}")
+        self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
+        self.logger.error("=" * 50)
+    
     def stop_crawling(self):
         """停止爬取"""
-        if hasattr(self, 'crawler'):
-            self.crawler.stop()
-            self.logger.info("已停止爬取")
-            
+        self._stop_flag = True
+        self.logger.info("=" * 50)
+        self.logger.info("用户点击停止按钮 - 正在停止任务...")
+        self.logger.info("正在取消未完成的任务，请稍候...")
+        self.logger.info("=" * 50)
+
     def update_progress(self, value):
         """更新进度条"""
         self.progress_var.set(value)

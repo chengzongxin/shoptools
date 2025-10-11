@@ -5,6 +5,7 @@ import threading
 from typing import Optional
 from .crawler import StockBatchSetter
 from ..system_config.config import SystemConfig
+from ..network.event_manager import EventManager
 
 class StockSetterTab(ttk.Frame):
     """批量设置库存标签页"""
@@ -19,6 +20,11 @@ class StockSetterTab(ttk.Frame):
         self.config = SystemConfig()
         self.crawler: Optional[StockBatchSetter] = None
         self._stop_flag = False
+        
+        # 初始化事件管理器并订阅403错误事件
+        self.event_manager = EventManager()
+        self.event_manager.subscribe("config_error", self._handle_config_error)
+        
         self.setup_ui()
         self.setup_logging()
         
@@ -180,6 +186,22 @@ class StockSetterTab(ttk.Frame):
         )
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
+    
+    def _handle_config_error(self, **kwargs):
+        """处理配置错误事件（403错误）"""
+        error_code = kwargs.get('error_code', 'Unknown')
+        request_type = kwargs.get('request_type', 'Unknown')
+        
+        # 设置停止标志
+        self._stop_flag = True
+        
+        # 记录日志
+        self.logger.error("=" * 50)
+        self.logger.error("⚠️  检测到配置错误，自动停止任务！")
+        self.logger.error(f"错误代码: {error_code}")
+        self.logger.error(f"请求类型: {request_type}")
+        self.logger.error("请前往'系统配置'页面检查Cookie和MallID设置")
+        self.logger.error("=" * 50)
         
     def validate_inputs(self) -> bool:
         """验证输入参数
