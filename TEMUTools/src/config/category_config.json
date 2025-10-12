@@ -106,7 +106,7 @@
       "image_file": "袜子.jpg",
       "price_threshold": 10.7,
       "code_mapping": "SO-0608",
-      "enabled": true
+      "enabled": false
     },
     {
       "id": 13,
@@ -145,5 +145,5 @@
       "enabled": true
     }
   ],
-  "last_update": "2025-10-09 17:10:10"
+  "last_update": "2025-10-12 23:22:45"
 }

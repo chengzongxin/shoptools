@@ -337,10 +337,7 @@ class PriceReviewCrawler:
             result = self.request.post(self.price_review_url, data=payload)
             
             if not result or not result.get('success'):
-                # TODO
                 self.logger.error(f"获取订单 {order_id} 的核价建议失败")
-
-                
                 return None
                 
             suggestion_data = result.get('result', {})
@@ -568,7 +565,7 @@ class PriceReviewCrawler:
                     # 如果减去1元后仍低于底线，则拒绝
                     if new_price_cents < threshold_cents:
                         if  self.reject_price_review(price_order_id):
-                            message = f"已拒绝核价建议，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元 仍低于底线 {threshold}元"
+                            message = f"已拒绝核价建议，建议价格{suggestion.suggestSupplyPrice/100}元 ，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元 仍低于底线 {threshold}元"
                             self.logger.info(f"商品 {product_data.get('productId')} ,{message}")
                             return True, message
                         else:
@@ -579,7 +576,7 @@ class PriceReviewCrawler:
                         # 达到最大核价轮次，拒绝核价建议
                         if is_max_review_rounds:
                             if self.reject_price_review(price_order_id):
-                                message = f"已拒绝核价建议，达到最大核价轮次 {max_review_rounds}，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元, 建议价格{suggestion.suggestSupplyPrice}元, 仍低于底线 {threshold}元"
+                                message = f"已拒绝核价建议，达到最大核价轮次 {max_review_rounds}，建议价格{suggestion.suggestSupplyPrice/100}元，当前价格 {current_price_cents/100}元 减去1元后 {new_price_cents/100}元, 建议价格{suggestion.suggestSupplyPrice}元, 仍低于底线 {threshold}元"
                                 self.logger.info(f"商品 {product_data.get('productId')} ,{message}")
                                 return True, message
                             else:
@@ -589,7 +586,7 @@ class PriceReviewCrawler:
 
                         # 减去1元后高于底线，发起重新调价
                         if self.rebargain_price_review(price_order_id, product_sku_ids, new_price_cents):
-                            message = f"已发起重新调价，当前价格 {current_price_cents/100}元 调整为 {new_price_cents/100}元（底线 {threshold}元）"
+                            message = f"已发起重新调价，建议价格{suggestion.suggestSupplyPrice/100}元，当前价格 {current_price_cents/100}元 调整为 {new_price_cents/100}元（底线 {threshold}元）"
                             self.logger.info(f"商品 {product_data.get('productId')} , {message}")
                             return True, message
                         else:

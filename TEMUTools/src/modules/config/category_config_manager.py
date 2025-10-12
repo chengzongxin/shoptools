@@ -48,9 +48,9 @@ class CategoryConfigManager:
             return [cat for cat in self._categories_cache if cat.get("enabled", True)]
         return self._categories_cache
 
-    def get_price_threshold_by_category_id(self, cate_id: int) -> Optional[float]:
+    def get_price_threshold_by_category_id(self, cate_id: int, enable_only=False) -> Optional[float]:
         """根据品类ID获取价格阈值"""
-        categories = self.get_categories()
+        categories = self.get_categories(enabled_only=enable_only)
         for category in categories:
             if category.get("cate_id") == cate_id:
                 return float(category.get("price_threshold", 0))
@@ -62,7 +62,7 @@ class CategoryConfigManager:
             return None
 
         for cate_id in cate_id_list:
-            threshold = self.get_price_threshold_by_category_id(cate_id)
+            threshold = self.get_price_threshold_by_category_id(cate_id, enable_only=True)
             if threshold is not None:
                 return threshold
         return None

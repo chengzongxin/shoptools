@@ -203,10 +203,8 @@ class SystemConfig:
         
     def update_config(self, cookie: str = "", mallid: str = "") -> None:
         """更新配置"""
-        if cookie:
-            self.config["cookie"] = cookie
-        if mallid:
-            self.config["mallid"] = mallid
+        self.config["cookie"] = cookie
+        self.config["mallid"] = mallid
             
         self.config["last_update"] = self._get_current_time()
         self._save_config(self.config)
