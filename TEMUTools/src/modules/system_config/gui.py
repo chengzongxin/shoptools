@@ -30,6 +30,9 @@ class SystemConfigTab(ttk.Frame):
         self.cookie_text.grid(row=1, column=0, columnspan=4, sticky=(tk.W, tk.E), pady=2)
         self.cookie_text.insert('1.0', self.config.get_cookie())
         
+        # 绑定文本框修改事件，自动检测mallid
+        self.cookie_text.bind('<<Modified>>', self._on_cookie_modified)
+        
         # Cookie操作按钮
         ttk.Button(cookie_frame, text="获取Cookie(浏览器)", 
                   command=self._get_cookie).grid(row=2, column=0, pady=5, padx=2, sticky=tk.W)
@@ -180,6 +183,47 @@ class SystemConfigTab(ttk.Frame):
             error_msg = f"停止WebSocket服务器失败: {str(e)}"
             self._log(f"❌ {error_msg}")
             messagebox.showerror("错误", error_msg)
+    
+    def _extract_mallid_from_cookie(self, cookie_string: str) -> str:
+        """从cookie字符串中提取mallid"""
+        try:
+            # cookie格式: key1=value1; key2=value2; mallid=123456
+            cookies = cookie_string.split(';')
+            for cookie in cookies:
+                cookie = cookie.strip()
+                if cookie.startswith('mallid='):
+                    mallid = cookie.split('=', 1)[1].strip()
+                    if mallid:
+                        return mallid
+        except Exception as e:
+            print(f"提取mallid失败: {e}")
+        return ""
+    
+    def _on_cookie_modified(self, event):
+        """处理cookie文本框修改事件"""
+        try:
+            # 重置修改标志，避免重复触发
+            self.cookie_text.edit_modified(False)
+            
+            # 获取当前cookie内容
+            cookie_string = self.cookie_text.get('1.0', tk.END).strip()
+            
+            # 如果cookie为空，不处理
+            if not cookie_string:
+                return
+            
+            # 提取mallid
+            mallid = self._extract_mallid_from_cookie(cookie_string)
+            
+            # 如果找到mallid且当前mallid输入框为空或与提取的不同，则自动填入
+            if mallid:
+                current_mallid = self.mallid_entry.get().strip()
+                if not current_mallid or current_mallid != mallid:
+                    self.mallid_entry.delete(0, tk.END)
+                    self.mallid_entry.insert(0, mallid)
+                    self._log(f"✅ 自动从Cookie中提取到MallID: {mallid}")
+        except Exception as e:
+            print(f"处理cookie修改事件失败: {e}")
     
     def _log(self, message: str):
         """添加日志消息"""
