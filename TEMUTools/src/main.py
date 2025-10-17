@@ -19,6 +19,7 @@ from modules.stock_setter.gui import StockSetterTab
 from modules.jit_sign_bak.gui import JitSignTab as JitSignTabBak
 from modules.bid_management.gui import BidManagementTab
 from modules.category_manager.gui import CategoryManagerTab
+from modules.cert_checker.gui import CertCheckerGUI
 from modules.system_config.websocket_cookie import start_websocket_server
 
 class LinkCheckerTab(ttk.Frame):
@@ -279,34 +280,28 @@ class TEMUToolsApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("TEMU工具集 V1.5.5")
+        self.root.title("TEMU工具集 V1.5.6")
         self.logger = Logger()
         
         # 创建标签页
         self.notebook = ttk.Notebook(root)
         self.notebook.pack(expand=True, fill='both', padx=5, pady=5)
         
-        # 添加合规批量上传Tab
         self.compliance_tab = ComplianceUploaderTab(self.notebook)
         self.notebook.add(self.compliance_tab, text="合规批量上传")
 
-        # 添加商品列表Tab- 商品列表、商品码、库存
         self.product_list_tab = ProductListTab(self.notebook)
         self.notebook.add(self.product_list_tab, text="商品码、库存")
 
-        # 添加实拍图上传Tab
         self.real_picture_tab = RealPictureUploaderTab(self.notebook)
         self.notebook.add(self.real_picture_tab, text="上传实拍图")
         
-        # 开通JIT
         self.jit_open_tab = JitOpenTab(self.notebook)
         self.notebook.add(self.jit_open_tab, text="JIT开通")
 
-        # 签署JIT
-        self.jit_sign_tab = JitSignTab(self.notebook)
-        self.notebook.add(self.jit_sign_tab, text="JIT签署")
+        # self.jit_sign_tab = JitSignTab(self.notebook)
+        # self.notebook.add(self.jit_sign_tab, text="JIT签署")
 
-        # 添加批量设置库存Tab
         self.stock_setter_tab = StockSetterTab(self.notebook)
         self.notebook.add(self.stock_setter_tab, text="批量设置库存")
 
@@ -316,7 +311,9 @@ class TEMUToolsApp:
         self.confirm_upload_tab = ConfirmUploadTab(self.notebook)
         self.notebook.add(self.confirm_upload_tab, text="确认上新")
 
-        # 添加竞价管理Tab
+        # 资质排查
+        self.cert_checker_tab = CertCheckerGUI(self.notebook)
+
         self.bid_management_tab = BidManagementTab(self.notebook)
         self.notebook.add(self.bid_management_tab, text="竞价管理")
         
