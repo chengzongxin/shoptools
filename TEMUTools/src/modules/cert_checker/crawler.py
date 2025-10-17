@@ -47,7 +47,7 @@ class CertChecker:
         self.request = NetworkRequest()
         self.page_size = 500  # 每页查询500个商品
         self.max_cert_types_per_request = 500  # 每次最多查询500个资质类型
-        self.low_stock_products = []  # 库存 < 990的商品
+        self.low_stock_products = []  # 库存 < 998的商品
         
     def random_delay(self):
         """随机延时，避免请求过于频繁"""
@@ -255,10 +255,10 @@ class CertChecker:
                 # 如果当前库存大于0，则设置为负数以减少到0
                 if current_stock == 0:
                     self.logger.info(f"SKU {sku['productSkuId']} 当前库存为 {current_stock}，跳过")
-                elif 0 < current_stock <= 990:
+                elif 0 < current_stock <= 998:
                     self.low_stock_products.append(product)
                     self.logger.info(f"SKU {sku['productSkuId']} 当前库存为 {current_stock}， 卖了一些，跳过")
-                elif current_stock > 990:
+                elif current_stock > 998:
                     sku_list.append({
                         "productSkuId": sku["productSkuId"],
                         "virtualStockDiff": -current_stock  # 传入负数减少库存
@@ -358,7 +358,7 @@ class CertChecker:
         # 4. 如果有需要手动处理的商品，打印详细列表
         if self.low_stock_products:
             self.logger.info(f"\n{'='*60}")
-            self.logger.info(f"⚠️ 以下 {len(self.low_stock_products)} 个商品库存 < 990，需要手动处理：")
+            self.logger.info(f"⚠️ 以下 {len(self.low_stock_products)} 个商品库存 < 998，需要手动处理：")
             self.logger.info(f"{'='*60}")
             for i, prod in enumerate(self.low_stock_products, 1):
                 self.logger.info(f"  {i}. ID: {prod.productId}, Name: {prod.productName}")
