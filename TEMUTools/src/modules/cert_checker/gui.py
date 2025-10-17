@@ -34,27 +34,25 @@ class CertCheckerGUI:
         self.logger = logging.getLogger('CertChecker')
         self.logger.setLevel(logging.INFO)
         
-        # 避免重复添加handler
-        if not self.logger.handlers:
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-            
-            # 确保日志目录存在
-            log_dir = 'logs'
-            if not os.path.exists(log_dir):
-                os.makedirs(log_dir)
-            
-            # 文件handler
-            log_file = os.path.join(log_dir, f'cert_checker_{datetime.now().strftime("%Y%m%d")}.log')
-            fh = logging.FileHandler(log_file, encoding='utf-8')
-            fh.setLevel(logging.INFO)
-            fh.setFormatter(formatter)
-            self.logger.addHandler(fh)
-            
-            # 控制台handler
-            ch = logging.StreamHandler()
-            ch.setLevel(logging.INFO)
-            ch.setFormatter(formatter)
-            self.logger.addHandler(ch)
+        # 清除现有的handlers，避免重复
+        for handler in self.logger.handlers[:]:
+            self.logger.removeHandler(handler)
+        
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        
+        # 确保日志目录存在（使用相对于模块文件的路径，兼容打包后的环境）
+        log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+        
+        # 文件handler
+        log_file = os.path.join(log_dir, f'cert_checker_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+        fh = logging.FileHandler(log_file, encoding='utf-8')
+        fh.setLevel(logging.INFO)
+        fh.setFormatter(formatter)
+        self.logger.addHandler(fh)
+        
+        self.logger.info("资质排查工具已初始化")
+        self.logger.info(f"日志文件保存在: {log_file}")
     
     def create_widgets(self):
         """创建UI组件"""
@@ -290,13 +288,17 @@ class CertCheckerGUI:
                     f"已处理: {result['success'] + result['failed']}/{result['total']} 个商品"
                 )
             else:
-                messagebox.showinfo(
-                    "执行完成",
-                    f"资质排查任务已完成！\n\n"
-                    f"成功: {result['success']} 个商品\n"
-                    f"失败: {result['failed']} 个商品\n"
-                    f"总计: {result['total']} 个商品"
-                )
+                low_stock_count = result.get('low_stock_count', 0)
+                msg = f"资质排查任务已完成！\n\n"
+                msg += f"成功: {result['success']} 个商品\n"
+                msg += f"失败: {result['failed']} 个商品\n"
+                msg += f"总计: {result['total']} 个商品"
+                
+                if low_stock_count > 0:
+                    msg += f"\n\n⚠️ 提示: {low_stock_count} 个商品库存 < 990\n需要手动处理，详情请查看日志"
+                    messagebox.showwarning("执行完成（有待处理）", msg)
+                else:
+                    messagebox.showinfo("执行完成", msg)
             
         except Exception as e:
             self.logger.error(f"执行资质排查时发生异常: {str(e)}")
