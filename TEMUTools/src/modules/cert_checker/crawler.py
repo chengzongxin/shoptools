@@ -47,6 +47,7 @@ class CertChecker:
         self.request = NetworkRequest()
         self.page_size = 500  # 每页查询500个商品
         self.max_cert_types_per_request = 500  # 每次最多查询500个资质类型
+        self.low_stock_products = []  # 库存 < 990的商品
         
     def random_delay(self):
         """随机延时，避免请求过于频繁"""
@@ -252,19 +253,23 @@ class CertChecker:
                 current_stock = sku.get("virtualStock", 0)
                 
                 # 如果当前库存大于0，则设置为负数以减少到0
-                if current_stock > 0:
+                if current_stock == 0:
+                    self.logger.info(f"SKU {sku['productSkuId']} 当前库存为 {current_stock}，跳过")
+                elif 0 < current_stock <= 990:
+                    self.low_stock_products.append(product)
+                    self.logger.info(f"SKU {sku['productSkuId']} 当前库存为 {current_stock}， 卖了一些，跳过")
+                elif current_stock > 990:
                     sku_list.append({
                         "productSkuId": sku["productSkuId"],
                         "virtualStockDiff": -current_stock  # 传入负数减少库存
                     })
                 else:
                     # 如果当前库存已经是0或负数，跳过
-                    self.logger.debug(f"SKU {sku['productSkuId']} 当前库存为 {current_stock}，跳过")
+                    self.logger.info(f"SKU {sku['productSkuId']} 当前库存为 {current_stock}，跳过")
             
             # 如果没有需要修改的SKU，直接返回成功
             if not sku_list:
-                self.logger.info(f"商品 {product.productName} 所有SKU库存已为0，无需修改")
-                return {"success": True, "errorMsg": "库存已为0"}
+                return {"success": True, "errorMsg": "无需设置库存"}
             
             data = {
                 "productId": product.productId,
@@ -324,7 +329,7 @@ class CertChecker:
                 try:
                     result = future.result()
                     if result and result.get("success"):
-                        self.logger.info(f"✓ [{idx}/{total}] {product.productName} (ID: {product.productId}) 已下架（库存设为0）")
+                        # self.logger.info(f"✓ [{idx}/{total}] {product.productName} (ID: {product.productId}) 已下架（库存设为0）")
                         success_count += 1
                     else:
                         error_msg = result.get('errorMsg', '未知错误') if result else '无返回'
@@ -349,6 +354,15 @@ class CertChecker:
         self.logger.info(f"失败: {failed_count} 个商品")
         self.logger.info(f"总计: {total} 个商品")
         self.logger.info(f"{'='*60}\n")
+
+        # 4. 如果有需要手动处理的商品，打印详细列表
+        if self.low_stock_products:
+            self.logger.info(f"\n{'='*60}")
+            self.logger.info(f"⚠️ 以下 {len(self.low_stock_products)} 个商品库存 < 990，需要手动处理：")
+            self.logger.info(f"{'='*60}")
+            for i, prod in enumerate(self.low_stock_products, 1):
+                self.logger.info(f"  {i}. ID: {prod.productId}, Name: {prod.productName}")
+            self.logger.info(f"{'='*60}\n")
         
         return {
             "success": success_count,
