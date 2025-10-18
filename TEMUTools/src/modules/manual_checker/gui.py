@@ -2,12 +2,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import threading
 import logging
+import os
 from datetime import datetime
-from .crawler import CertChecker
+from .crawler import ManualChecker
 
 
-class CertCheckerGUI:
-    """资质排查GUI界面类"""
+class ManualCheckerGUI:
+    """说明书排查GUI界面类"""
     
     def __init__(self, parent_notebook):
         """初始化GUI
@@ -17,7 +18,7 @@ class CertCheckerGUI:
         """
         # 创建标签页
         self.frame = ttk.Frame(parent_notebook)
-        parent_notebook.add(self.frame, text='资质排查')
+        parent_notebook.add(self.frame, text='说明书排查')
         
         # 设置日志
         self.setup_logger()
@@ -30,8 +31,7 @@ class CertCheckerGUI:
         
     def setup_logger(self):
         """设置日志记录器"""
-        import os
-        self.logger = logging.getLogger('CertChecker')
+        self.logger = logging.getLogger('ManualChecker')
         self.logger.setLevel(logging.INFO)
         
         # 清除现有的handlers，避免重复
@@ -45,13 +45,13 @@ class CertCheckerGUI:
         os.makedirs(log_dir, exist_ok=True)
         
         # 文件handler
-        log_file = os.path.join(log_dir, f'cert_checker_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
+        log_file = os.path.join(log_dir, f'manual_checker_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log')
         fh = logging.FileHandler(log_file, encoding='utf-8')
         fh.setLevel(logging.INFO)
         fh.setFormatter(formatter)
         self.logger.addHandler(fh)
         
-        self.logger.info("资质排查工具已初始化")
+        self.logger.info("说明书排查工具已初始化")
         self.logger.info(f"日志文件保存在: {log_file}")
     
     def create_widgets(self):
@@ -66,7 +66,7 @@ class CertCheckerGUI:
         
         title_label = ttk.Label(
             title_frame,
-            text="资质排查 - 自动下架需要资质的商品",
+            text="说明书排查 - 自动下架未上传说明书的商品",
             font=("微软雅黑", 14, "bold")
         )
         title_label.pack(side=tk.LEFT)
@@ -113,7 +113,7 @@ class CertCheckerGUI:
         # 开始执行按钮
         self.start_button = ttk.Button(
             button_frame,
-            text="🚀 开始执行资质排查",
+            text="🚀 开始执行说明书排查",
             command=self.start_check,
             style="Accent.TButton"
         )
@@ -214,42 +214,38 @@ class CertCheckerGUI:
         """显示功能说明弹窗"""
         help_text = """
 📋 功能说明:
-  1. 自动查询所有资质类型（排除GCC资质）
-  2. 查询所有触发资质要求的商品
-  3. 批量将这些商品的库存设为0（下架处理）
+  1. 自动查询所有未上传说明书的商品（库存>=1）
+  2. 批量将这些商品的库存设为0（下架处理）
 
 ⚠️ 注意事项:
-  • 本功能会自动排除GCC（ID=28）资质
-  • 如果资质类型超过500个，会自动分批查询
-  • 只处理库存 < 998 的商品（自动下架）
-  • 库存 < 998 的商品会跳过，需要手动处理（可能已有销售）
+  • 只处理库存 > 998 的商品（自动下架）
+  • 库存 <= 998 的商品会跳过，需要手动处理（可能已有销售）
   • 下架操作不可逆，请谨慎使用
   • 建议在执行前做好数据备份
 
-🔍 查询流程:
-  1. API: /product/skc/certTypeEnum（获取资质类型）
-  2. API: /product/skc/pageQuery（查询需要资质的商品）
-     - 参数: requireCertTypes（资质类型ID数组，每批最多500个）
-  3. API: /sales/stock/updateMmsSkuSalesStock（设置库存为0）
+🔍 查询条件:
+  • API: /product/skc/pageQuery
+  • 参数: needGuideFile=true（需要上传说明书）
+  • 参数: jitStockQuantitySection.leftValue=1（库存>=1）
 
 📊 处理逻辑:
-  • 库存 >= 998：自动设为0（下架）
-  • 0 < 库存 < 998：跳过，记录到日志
+  • 库存 > 998：自动设为0（下架）
+  • 0 < 库存 <= 998：跳过，记录到日志
   • 库存 = 0：已下架，跳过
         """
         
         messagebox.showinfo("功能说明", help_text)
     
     def start_check(self):
-        """开始执行资质排查"""
+        """开始执行说明书排查"""
         # 确认对话框
         result = messagebox.askyesno(
             "确认执行",
             "此操作将会:\n\n"
-            "1. 查询所有触发资质要求的商品（排除GCC）\n"
+            "1. 查询所有未上传说明书的商品（库存>=1）\n"
             "2. 将这些商品的库存全部设为0（下架）\n"
-            "   - 库存 >= 998：自动下架\n"
-            "   - 库存 < 998：跳过，需手动处理\n\n"
+            "   - 库存 > 998：自动下架\n"
+            "   - 库存 <= 998：跳过，需手动处理\n\n"
             "⚠️ 此操作不可逆，是否继续？",
             icon='warning'
         )
@@ -278,14 +274,14 @@ class CertCheckerGUI:
         self.stop_button.config(state=tk.DISABLED)
     
     def run_check(self):
-        """执行资质排查（在后台线程中运行）"""
+        """执行说明书排查（在后台线程中运行）"""
         try:
             self.logger.info("="*60)
-            self.logger.info("开始执行资质排查任务")
+            self.logger.info("开始执行说明书排查任务")
             self.logger.info("="*60)
             
             # 创建爬虫实例
-            crawler = CertChecker(
+            crawler = ManualChecker(
                 logger=self.logger,
                 progress_callback=self.update_progress,
                 stop_flag_callback=self.check_stop_flag
@@ -305,20 +301,20 @@ class CertCheckerGUI:
                     f"已处理: {result['success'] + result['failed']}/{result['total']} 个商品"
                 )
             else:
-                low_stock_count = result.get('low_stock_count', 0)
-                msg = f"资质排查任务已完成！\n\n"
+                low_stock_count = len(crawler.low_stock_products) if hasattr(crawler, 'low_stock_products') else 0
+                msg = f"说明书排查任务已完成！\n\n"
                 msg += f"成功: {result['success']} 个商品\n"
                 msg += f"失败: {result['failed']} 个商品\n"
                 msg += f"总计: {result['total']} 个商品"
                 
                 if low_stock_count > 0:
-                    msg += f"\n\n⚠️ 提示: {low_stock_count} 个商品库存 < 998\n需要手动处理，详情请查看日志"
+                    msg += f"\n\n⚠️ 提示: {low_stock_count} 个商品库存 <= 998\n需要手动处理，详情请查看日志"
                     messagebox.showwarning("执行完成（有待处理）", msg)
                 else:
                     messagebox.showinfo("执行完成", msg)
             
         except Exception as e:
-            self.logger.error(f"执行资质排查时发生异常: {str(e)}")
+            self.logger.error(f"执行说明书排查时发生异常: {str(e)}")
             messagebox.showerror("执行失败", f"执行过程中发生错误:\n{str(e)}")
             
         finally:

@@ -20,6 +20,7 @@ from modules.jit_sign_bak.gui import JitSignTab as JitSignTabBak
 from modules.bid_management.gui import BidManagementTab
 from modules.category_manager.gui import CategoryManagerTab
 from modules.cert_checker.gui import CertCheckerGUI
+from modules.manual_checker.gui import ManualCheckerGUI
 from modules.system_config.websocket_cookie import start_websocket_server
 
 class LinkCheckerTab(ttk.Frame):
@@ -280,7 +281,7 @@ class TEMUToolsApp:
     
     def __init__(self, root):
         self.root = root
-        self.root.title("TEMU工具集 V1.5.9")
+        self.root.title("TEMU工具集 V1.6.0")
         self.logger = Logger()
         
         # 创建标签页
@@ -313,6 +314,9 @@ class TEMUToolsApp:
 
         # 资质排查
         self.cert_checker_tab = CertCheckerGUI(self.notebook)
+
+        # 说明书排查
+        self.manual_checker_tab = ManualCheckerGUI(self.notebook)
 
         self.bid_management_tab = BidManagementTab(self.notebook)
         self.notebook.add(self.bid_management_tab, text="竞价管理")
