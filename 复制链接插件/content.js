@@ -1,7 +1,12 @@
 /**
- * 图片链接复制工具 v1.4.1
+ * 图片链接复制工具 v1.4.2
  * 
  * 更新日志：
+ * v1.4.2 (2025-10-23)
+ * - 添加作者黑名单过滤功能
+ * - 支持添加/删除黑名单作者
+ * - 复制时自动过滤黑名单作者的链接
+ * 
  * v1.4.1 (2025-07-06)
  * - 添加图片链接过滤功能
  * - 图片自动滚动到最底部
@@ -32,13 +37,14 @@
 
 // 创建插件的命名空间
 window.ImageCopyPlugin = window.ImageCopyPlugin || {
-    version: '1.4.1',
+    version: '1.4.2',
     enabled: true, // 添加全局开关状态
     initialized: false,
     autoShowButton: false,
     immersiveButton: false, // 添加沉浸式按钮模式开关
     notepad: null,
-    observer: null
+    observer: null,
+    authorBlacklist: [] // 添加作者黑名单
 };
 
 // 调试日志函数
@@ -56,62 +62,103 @@ function log(message, type = 'info') {
     }
 }
 
-// 创建全局提示框
-function createToast() {
+// 显示提示信息（重构版本，更可靠）
+function showToast(message, type = 'success') {
+    // 移除旧的 toast（如果存在）
+    const oldToast = document.getElementById('_globalToast');
+    if (oldToast) {
+        oldToast.remove();
+    }
+
+    // 创建新的 toast
     const toast = document.createElement('div');
     toast.id = '_globalToast';
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 12px 24px;
-        border-radius: 4px;
-        font-size: 14px;
-        color: white;
-        z-index: 1000000;
-        opacity: 0;
-        transform: translateY(-20px);
-        transition: all 0.3s ease;
-        pointer-events: none;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    `;
-    document.body.appendChild(toast);
-    return toast;
-}
-
-// 显示提示信息
-function showToast(message, type = 'success') {
-    let toast = document.getElementById('_globalToast');
-    if (!toast) {
-        toast = createToast();
+    
+    // 根据类型设置背景色
+    let backgroundColor = '#4285f4'; // 默认蓝色
+    switch (type) {
+        case 'warn':
+            backgroundColor = '#ff9800'; // 警告橙色
+            break;
+        case 'error':
+            backgroundColor = '#f44336'; // 错误红色
+            break;
+        case 'success':
+            backgroundColor = '#4caf50'; // 成功绿色
+            break;
     }
 
     // 设置样式
-    switch (type) {
-        case 'warn':
-            toast.style.backgroundColor = '#ff9800'; // 警告使用橙色
-            break;
-        case 'error':
-            toast.style.backgroundColor = '#f44336'; // 错误使用红色
-            break;
-        default:
-            toast.style.backgroundColor = '#4285f4'; // 成功使用蓝色
+    toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        color: white;
+        background-color: ${backgroundColor};
+        z-index: 2147483647;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        pointer-events: none;
+        animation: toastSlideIn 0.3s ease-out;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        white-space: nowrap;
+        max-width: 80%;
+        text-align: center;
+    `;
+
+    // 添加动画样式（如果还没有）
+    if (!document.getElementById('_toastAnimationStyle')) {
+        const style = document.createElement('style');
+        style.id = '_toastAnimationStyle';
+        style.textContent = `
+            @keyframes toastSlideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+            @keyframes toastSlideOut {
+                from {
+                    opacity: 1;
+                    transform: translateX(-50%) translateY(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(-50%) translateY(-20px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
     }
 
     // 设置内容
     toast.textContent = message;
 
-    // 显示提示
-    requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-        toast.style.transform = 'translateY(0)';
-    });
+    // 添加到页面
+    document.body.appendChild(toast);
 
-    // 2秒后隐藏
+    // 记录日志
+    log(`Toast显示: ${message} (类型: ${type})`);
+
+    // 2.5秒后添加退出动画
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-20px)';
-    }, 2000);
+        toast.style.animation = 'toastSlideOut 0.3s ease-out';
+        
+        // 动画完成后移除元素
+        setTimeout(() => {
+            if (toast && toast.parentNode) {
+                toast.remove();
+            }
+        }, 300);
+    }, 2500);
 }
 
 // 创建复制按钮
@@ -636,6 +683,31 @@ function showNotepadMessage(message, type = 'success') {
     }
 }
 
+// 从链接中提取作者名
+// 支持格式：https://www.redbubble.com/i/tote-bag/IYKYK-GD-Hidden-Line-by-GDEU/174351110.A9G4R
+// 提取出：GDEU
+function extractAuthorFromLink(link) {
+    try {
+        // 匹配 -by-作者名/ 格式（注意是连字符-by-，不是斜杠/by-）
+        const match = link.match(/-by-([^\/]+)\//);
+        if (match && match[1]) {
+            return match[1];
+        }
+        return null;
+    } catch (error) {
+        log('提取作者名失败: ' + error.message, 'error');
+        return null;
+    }
+}
+
+// 检查作者是否在黑名单中
+function isAuthorBlacklisted(author) {
+    if (!author) return false;
+    return window.ImageCopyPlugin.authorBlacklist.some(
+        blacklistedAuthor => blacklistedAuthor.toLowerCase() === author.toLowerCase()
+    );
+}
+
 // 修改 addToNotepad 函数，使用新的弹窗方法
 async function addToNotepad(link) {
     try {
@@ -653,6 +725,19 @@ async function addToNotepad(link) {
             return; // 直接返回，不添加到记事本
         }
 
+        // 检查作者是否在黑名单中
+        const author = extractAuthorFromLink(link);
+        log(`link: ${link}`);
+        log(`作者: ${author}`);
+        log(`window.ImageCopyPlugin.authorBlacklist: ${window.ImageCopyPlugin.authorBlacklist}`);
+        log(`isAuthorBlacklisted: ${isAuthorBlacklisted(author)}`);
+        if (author && isAuthorBlacklisted(author)) {
+            log(`已过滤黑名单作者: ${author}`);
+            showNotepadMessage(`已过滤作者: ${author}`, 'warn');
+            showToast(`已过滤黑名单作者: ${author}`, 'warn');
+            return; // 直接返回，不添加到记事本
+        }
+
         if (!window.ImageCopyPlugin.notepad) {
             window.ImageCopyPlugin.notepad = createNotepad();
         }
@@ -666,7 +751,7 @@ async function addToNotepad(link) {
             currentLinks.push(link);
             // 更新存储
             await chrome.storage.local.set({ 'savedLinks': currentLinks });
-            log(`新链接已添加: ${link}`);
+            log(`新链接已添加: ${link}${author ? ` (作者: ${author})` : ''}`);
         } else {
             log('链接已存在，跳过添加');
             showNotepadMessage('链接已存在于记事本中！', 'warn');
@@ -911,10 +996,23 @@ async function initialize() {
         }
 
         // 从存储中获取插件状态
-        chrome.storage.sync.get(['pluginEnabled', 'autoShowButton', 'immersiveButton'], async function (result) {
+        chrome.storage.sync.get(['pluginEnabled', 'autoShowButton', 'immersiveButton', 'authorBlacklist'], async function (result) {
             window.ImageCopyPlugin.enabled = result.pluginEnabled !== false; // 默认为启用
             window.ImageCopyPlugin.autoShowButton = result.autoShowButton || false;
             window.ImageCopyPlugin.immersiveButton = result.immersiveButton || false;
+            
+            // 加载黑名单，如果为空则设置默认值
+            if (result.authorBlacklist && result.authorBlacklist.length > 0) {
+                window.ImageCopyPlugin.authorBlacklist = result.authorBlacklist;
+            } else {
+                // 首次使用，设置默认黑名单
+                window.ImageCopyPlugin.authorBlacklist = ['paisley'];
+                // 保存默认黑名单到存储
+                chrome.storage.sync.set({ authorBlacklist: ['paisley'] });
+                log('已设置默认黑名单作者: paisley');
+            }
+            
+            log(`黑名单已加载，共 ${window.ImageCopyPlugin.authorBlacklist.length} 个作者: ${window.ImageCopyPlugin.authorBlacklist.join(', ')}`);
 
             if (window.ImageCopyPlugin.enabled) {
                 // 创建记事本
@@ -1099,6 +1197,77 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
                 sendResponse({
                     success: true,
                     message: request.value ? '已启用沉浸式按钮' : '已禁用沉浸式按钮'
+                });
+                break;
+
+            case 'addToBlacklist':
+                (async () => {
+                    try {
+                        const author = request.author.trim();
+                        if (!author) {
+                            sendResponse({ success: false, message: '作者名不能为空' });
+                            return;
+                        }
+                        
+                        // 检查是否已存在
+                        if (window.ImageCopyPlugin.authorBlacklist.some(a => a.toLowerCase() === author.toLowerCase())) {
+                            sendResponse({ success: false, message: '该作者已在黑名单中' });
+                            return;
+                        }
+                        
+                        // 添加到黑名单
+                        window.ImageCopyPlugin.authorBlacklist.push(author);
+                        
+                        // 保存到存储
+                        await chrome.storage.sync.set({ 
+                            authorBlacklist: window.ImageCopyPlugin.authorBlacklist 
+                        });
+                        
+                        log(`已添加作者到黑名单: ${author}`);
+                        sendResponse({ 
+                            success: true, 
+                            message: `已添加 ${author} 到黑名单`,
+                            blacklist: window.ImageCopyPlugin.authorBlacklist
+                        });
+                    } catch (error) {
+                        log('添加作者到黑名单失败: ' + error.message, 'error');
+                        sendResponse({ success: false, message: '添加失败: ' + error.message });
+                    }
+                })();
+                break;
+
+            case 'removeFromBlacklist':
+                (async () => {
+                    try {
+                        const author = request.author;
+                        
+                        // 从黑名单中移除
+                        window.ImageCopyPlugin.authorBlacklist = window.ImageCopyPlugin.authorBlacklist.filter(
+                            a => a.toLowerCase() !== author.toLowerCase()
+                        );
+                        
+                        // 保存到存储
+                        await chrome.storage.sync.set({ 
+                            authorBlacklist: window.ImageCopyPlugin.authorBlacklist 
+                        });
+                        
+                        log(`已从黑名单移除作者: ${author}`);
+                        sendResponse({ 
+                            success: true, 
+                            message: `已移除 ${author}`,
+                            blacklist: window.ImageCopyPlugin.authorBlacklist
+                        });
+                    } catch (error) {
+                        log('从黑名单移除作者失败: ' + error.message, 'error');
+                        sendResponse({ success: false, message: '移除失败: ' + error.message });
+                    }
+                })();
+                break;
+
+            case 'getBlacklist':
+                sendResponse({ 
+                    success: true, 
+                    blacklist: window.ImageCopyPlugin.authorBlacklist 
                 });
                 break;
 

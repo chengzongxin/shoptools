@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <style>
         body {
-            width: 200px;
+            width: 280px;
             padding: 10px;
             font-family: Arial, sans-serif;
         }
@@ -49,6 +49,97 @@
             background: #fce8e6;
             color: #c5221f;
         }
+        
+        /* 黑名单管理样式 */
+        .blacklist-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        .input-group textarea {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: Arial, sans-serif;
+            resize: vertical;
+            min-height: 50px;
+            box-sizing: border-box;
+        }
+        .input-group input {
+            flex: 1;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .input-group button {
+            width: auto;
+            padding: 6px 12px;
+            margin: 0;
+            font-size: 12px;
+        }
+        .blacklist-list {
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            background: #f9f9f9;
+        }
+        .blacklist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: white;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        .blacklist-item:last-child {
+            margin-bottom: 0;
+        }
+        .blacklist-item-name {
+            flex: 1;
+            color: #333;
+            word-break: break-all;
+        }
+        .blacklist-item button {
+            width: auto;
+            padding: 3px 8px;
+            margin: 0;
+            font-size: 11px;
+            background: #f44336;
+        }
+        .blacklist-item button:hover {
+            background: #d32f2f;
+        }
+        .blacklist-empty {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            padding: 10px;
+        }
+        .blacklist-count {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -65,6 +156,20 @@
         <label for="immersiveButton">沉浸式按钮</label>
     </div>
     <button id="toggleNotepad">显示/隐藏记事本</button>
+    
+    <!-- 黑名单管理区域 -->
+    <div class="blacklist-section">
+        <div class="section-title">作者黑名单</div>
+        <div class="input-group">
+            <textarea id="authorInput" placeholder="输入作者名（支持批量添加）&#10;示例：paisley, author2, author3&#10;或每行一个作者" rows="2"></textarea>
+        </div>
+        <button id="addAuthorBtn" style="margin-bottom: 10px;">添加</button>
+        <div class="blacklist-list" id="blacklistContainer">
+            <div class="blacklist-empty">暂无黑名单作者</div>
+        </div>
+        <div class="blacklist-count" id="blacklistCount">共 0 个作者</div>
+    </div>
+    
     <div id="status" class="status" style="display: none;"></div>
     <script src="popup.js"></script>
 </body>

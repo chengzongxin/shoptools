@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "图片链接复制工具",
-  "version": "1.0",
+  "version": "1.4.2",
   "description": "复制图片链接的Chrome扩展",
   "permissions": [
     "storage",
