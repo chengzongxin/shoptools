@@ -722,7 +722,8 @@ async function addToNotepad(link) {
         if (isFilteredImage) {
             log(`跳过图片链接: ${link}`);
             showNotepadMessage('图片链接已跳过！', 'warn');
-            return; // 直接返回，不添加到记事本
+            showToast('图片链接已跳过！', 'warn');
+            return false; // 直接返回，不添加到记事本
         }
 
         // 检查作者是否在黑名单中
@@ -735,7 +736,7 @@ async function addToNotepad(link) {
             log(`已过滤黑名单作者: ${author}`);
             showNotepadMessage(`已过滤作者: ${author}`, 'warn');
             showToast(`已过滤黑名单作者: ${author}`, 'warn');
-            return; // 直接返回，不添加到记事本
+            return false; // 直接返回，不添加到记事本
         }
 
         if (!window.ImageCopyPlugin.notepad) {
@@ -752,13 +753,18 @@ async function addToNotepad(link) {
             // 更新存储
             await chrome.storage.local.set({ 'savedLinks': currentLinks });
             log(`新链接已添加: ${link}${author ? ` (作者: ${author})` : ''}`);
+            return true
         } else {
             log('链接已存在，跳过添加');
             showNotepadMessage('链接已存在于记事本中！', 'warn');
+            showToast('链接已存在于记事本中！', 'warn');
+            return false
         }
     } catch (error) {
         log('添加链接到记事本失败: ' + error.message, 'error');
         showNotepadMessage('添加链接失败！', 'error');
+        showToast('添加链接失败！', 'error');
+        return false
     }
 }
 
@@ -817,7 +823,7 @@ function findParentAnchor(element) {
 }
 
 // 处理复制链接点击事件
-function handleCopyClick(img) {
+async function handleCopyClick(img) {
     try {
         // 阻止事件冒泡和默认行为
         event.preventDefault();
@@ -853,7 +859,10 @@ function handleCopyClick(img) {
         }
 
         // 添加到记事本
-        addToNotepad(link);
+        const isAdded = await addToNotepad(link);
+        if (!isAdded) {
+            return
+        }
 
         // 立即保存到存储
         saveLinksToStorage();

@@ -62,6 +62,60 @@
             color: #333;
             margin-bottom: 10px;
         }
+        
+        /* 折叠按钮样式 */
+        .toggle-blacklist-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            margin: 0 0 10px 0;
+            transition: all 0.2s ease;
+        }
+        .toggle-blacklist-btn:hover {
+            background: #e8e8e8;
+            border-color: #ccc;
+        }
+        .toggle-blacklist-btn:active {
+            background: #e0e0e0;
+        }
+        
+        /* 黑名单徽章 */
+        .blacklist-badge {
+            background: #4285f4;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: auto;
+            margin-right: 8px;
+            min-width: 20px;
+            text-align: center;
+        }
+        
+        /* 箭头样式 */
+        .arrow {
+            font-size: 12px;
+            color: #666;
+            transition: transform 0.3s ease;
+        }
+        .arrow.expanded {
+            transform: rotate(-180deg);
+        }
+        
+        /* 黑名单内容区域 */
+        .blacklist-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
         .input-group {
             display: flex;
             flex-direction: column;
@@ -134,12 +188,6 @@
             font-size: 12px;
             padding: 10px;
         }
-        .blacklist-count {
-            font-size: 11px;
-            color: #666;
-            margin-top: 5px;
-            text-align: center;
-        }
     </style>
 </head>
 <body>
@@ -159,15 +207,21 @@
     
     <!-- 黑名单管理区域 -->
     <div class="blacklist-section">
-        <div class="section-title">作者黑名单</div>
-        <div class="input-group">
-            <textarea id="authorInput" placeholder="输入作者名（支持批量添加）&#10;示例：paisley, author2, author3&#10;或每行一个作者" rows="2"></textarea>
+        <button id="toggleBlacklistBtn" class="toggle-blacklist-btn">
+            <span id="blacklistToggleText">作者黑名单</span>
+            <span id="blacklistBadge" class="blacklist-badge">0</span>
+            <span id="blacklistArrow" class="arrow">▼</span>
+        </button>
+        
+        <div id="blacklistContent" class="blacklist-content" style="display: none;">
+            <div class="input-group">
+                <textarea id="authorInput" placeholder="输入作者名（支持批量添加）&#10;示例：paisley, author2, author3&#10;或每行一个作者" rows="2"></textarea>
+            </div>
+            <button id="addAuthorBtn" style="margin-bottom: 10px;">添加</button>
+            <div class="blacklist-list" id="blacklistContainer">
+                <div class="blacklist-empty">暂无黑名单作者</div>
+            </div>
         </div>
-        <button id="addAuthorBtn" style="margin-bottom: 10px;">添加</button>
-        <div class="blacklist-list" id="blacklistContainer">
-            <div class="blacklist-empty">暂无黑名单作者</div>
-        </div>
-        <div class="blacklist-count" id="blacklistCount">共 0 个作者</div>
     </div>
     
     <div id="status" class="status" style="display: none;"></div>
